@@ -1,0 +1,35 @@
+diff --git a/README.md b/README.md
+index b36b88c..504b658 100644
+--- a/README.md
++++ b/README.md
+@@ -12,24 +12,18 @@ old approach is left behind. Any agent executes the tasks; there is no orchestra
+ 
+ ## Install
+ 
+-Claude Code and GitHub Copilot CLI, from the plugin marketplace:
++From your project's folder:
+ 
+ ```sh
+-claude plugin marketplace add SebassContreras/spectrace --sparse .claude-plugin skills && claude plugin install spectrace@spectrace
+-copilot plugin marketplace add SebassContreras/spectrace && copilot plugin install spectrace@spectrace
++pnpm dlx skills add SebassContreras/spectrace
+ ```
+ 
+-Any harness that reads `.agents/skills/` (OpenCode, Codex, Cursor, Copilot, Antigravity):
++The [`skills` CLI](https://github.com/vercel-labs/skills) copies the three skills into
++the folder your agent reads — `.claude/skills/` for Claude Code, `.agents/skills/` for
++OpenCode, Codex, Cursor, Copilot and most others. Add `-g` to install for every
++project; `pnpm dlx skills update` updates them.
+ 
+-```sh
+-curl -fsSL https://raw.githubusercontent.com/SebassContreras/spectrace/main/install.sh | bash
+-```
+-
+-```powershell
+-irm https://raw.githubusercontent.com/SebassContreras/spectrace/main/install.ps1 | iex
+-```
+-
+-Needs git and Python 3.9+ in the project. Nothing else.
++Running spectrace needs git and Python 3.9+ in the project. Nothing else.
+ 
+ ## Three skills

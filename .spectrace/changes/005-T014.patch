@@ -1,0 +1,11 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 8a9b95f..0f78269 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -1,6 +1,6 @@
+ name: ci
+ 
+-# Tests for trace.py, the skills' structure and the release helper, then the trace
++# Tests for trace.py and the skills' structure, then the trace
+ # check on this repo's own planning/ (errors only: pending items are normal while a
+ # change is being worked through).

@@ -1,0 +1,28 @@
+diff --git a/skills/spectrace-change/SKILL.md b/skills/spectrace-change/SKILL.md
+index 4422bc8..8396598 100644
+--- a/skills/spectrace-change/SKILL.md
++++ b/skills/spectrace-change/SKILL.md
+@@ -66,6 +66,23 @@ are still in the code (`file deleted` when gone). A finished task with no patch
+ recorded is listed as "search by hand" — grep for what its text describes and show
+ what you find before relying on it.
+ 
++**Sweep — what the trace can't see.** The trace only knows lines added by tasks that
++covered the old item. A README sentence, a comment in a file another task wrote, a
++spec's context section or an `AGENTS.md` line can still describe the old decision.
++Build the search terms — every path the old decision's tasks created, the names it
++introduced (commands, flags, files, env vars, functions), and its key nouns ("plugin",
++"release") — and grep the whole repo for each. Classify every hit and show the list
++with the manifest:
++
++- **History** — `tasks.md`, `changes.md`, `.spectrace/`, a retired item line: keep.
++- **Stale, outside `planning/`** — becomes a task in Phase 4 (covering the item that
++  replaces it, or the spec's own item for that file).
++- **Stale, inside `planning/`** (a spec's context, deliverables, a non-item line) —
++  edit it directly as part of this change, after the user confirms.
++
++Once tasks have deleted files, `trace check` also flags any remaining mention of their
++paths; the sweep exists for everything else.
++
+ ## Phase 4 — Classify and write tasks
+ 
+ For each **finished** task in the manifest, propose one, and let the user decide:

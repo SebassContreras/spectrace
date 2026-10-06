@@ -1,0 +1,23 @@
+diff --git a/skills/start/assets/format.md b/skills/start/assets/format.md
+index d279bc3..23ef121 100644
+--- a/skills/start/assets/format.md
++++ b/skills/start/assets/format.md
+@@ -12,6 +12,7 @@ planning/product.md               what this is, who it's for, out of scope
+ planning/architecture.md          project-wide decisions (A items)
+ planning/styles.md                preferences (optional)
+ planning/roadmap.md               index of specs
++planning/changes.md               history of changes to A items
+ planning/specs/NNN-name/
+   requirements.md                 R items
+   design.md                       D items
+@@ -119,7 +120,9 @@ item line is context and is never traced.
+ 
+ ## History (`changes.md`)
+ 
+-One entry per change to the spec, newest last, written by the `change` skill:
++One entry per change, newest last, written by the `change` skill: in the spec's
++`changes.md` for R and D items, in `planning/changes.md` for A items. A change that
++touches both gets an entry in each.
+ 
+ ```
+ ## 2026-10-12 — sessions move to cookies

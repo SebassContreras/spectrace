@@ -1,0 +1,35 @@
+diff --git a/skills/spectrace-change/SKILL.md b/skills/spectrace-change/SKILL.md
+index 8396598..730a322 100644
+--- a/skills/spectrace-change/SKILL.md
++++ b/skills/spectrace-change/SKILL.md
+@@ -34,10 +34,15 @@ before the user confirms what is about to change.
+    `planning/architecture.md`.
+ 2. Propose the edit for each affected item — show the current line and the new one:
+    - **Revise** — the meaning changes: next revision (`D3@1` → `D3@2`), new text.
+-     A wording fix is not a revision; just fix the wording.
++   - **Reword** — the user confirms the meaning is unchanged: fix the text, keep the
++     revision, then run `trace review <ref>` so the trace accepts it. Record it in
++     `changes.md` as a wording fix and skip Phases 3–4. When in doubt, it's a revise.
+    - **Retire** — it no longer holds: wrap the statement in `~~`, append
+      `retired YYYY-MM-DD` and `→ <replacement>` if there is one.
+    - **Add** — the next free number in that file, at `@1`.
++   - **Reinstate** — "go back to what we had": retire the current item (→ the new
++     one) and add the old statement back as the next item number. Phase 4 brings its
++     code back.
+    For a revised or retired R, also ask whether each D implementing it still holds.
+ 3. Ask for an explicit yes. On anything else, stop without writing.
+ 4. Apply the edits. Never renumber or delete an item line.
+@@ -101,6 +106,13 @@ For each **finished** task in the manifest, propose one, and let the user decide
+ For each **not-started** task covering a changed item: re-point it if it still
+ applies, otherwise delete its line (nothing was built) and say so in the entry.
+ 
++**Reinstate.** Find the tasks that removed the old work (`impact` on the old item:
++the tasks listed under "retired by"). For each, add a task covering the reinstated
++item whose text says to run `trace restore NNN/TNNN` on it inside that task, then
++re-verify the result; the restored code is recorded as that task's change. Also
++retire what the current item's tasks built (the usual redo). If `restore` reports the
++changes no longer apply, that task becomes a redo instead.
++
+ New tasks follow the `spectrace-plan` skill's task rules (single-action, verifiable, `covers:`,
+ owner, `kind: test` for checkable R items). Number them after the spec's last task —
+ in the spec of the task being retired when the change spans specs. Show the full list

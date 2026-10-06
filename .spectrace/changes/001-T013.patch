@@ -1,0 +1,76 @@
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index 15d53d1..4460c8b 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -116,6 +116,7 @@ class Repo:
+                 self.fingerprints = json.load(f)
+         except (OSError, ValueError):
+             self.fingerprints = {}
++        self.saved_fingerprints = dict(self.fingerprints)
+         self.load()
+         self.trace()
+         self.compute()
+@@ -335,7 +336,7 @@ class Repo:
+         fresh = {i.ref: i.fingerprint for i in self.items()}
+         kept = {k: v for k, v in self.fingerprints.items() if k in built}
+         merged = {**fresh, **kept}
+-        if merged != self.fingerprints:
++        if merged != self.saved_fingerprints:
+             os.makedirs(self.path(".spectrace"), exist_ok=True)
+             with open(self.path(".spectrace/fingerprints.json"), "w", encoding="utf-8", newline="\n") as f:
+                 json.dump(dict(sorted(merged.items())), f, indent=1)
+diff --git a/tests/test_trace.py b/tests/test_trace.py
+index ffc2d08..618bb85 100644
+--- a/tests/test_trace.py
++++ b/tests/test_trace.py
+@@ -306,6 +306,50 @@ class TraceTest(unittest.TestCase):
+         self.assertIn("malformed task line", out)
+         self.assertIn("malformed item line", out)
+ 
++    def test_text_change_under_finished_work_needs_a_bump_or_review(self):
++        design = "planning/specs/001-auth/design.md"
++        # Not built on yet: editing is free, the fingerprint is re-baselined.
++        self.replace(design, "Expiry is checked on every request.", "Expiry is checked per request.")
++        run(self.root, "status", "--write")
++        self.assertNotIn("changed under finished work", self.check()[1])
++        for ref, f in (("001/T001", "a"), ("001/T002", "b"), ("001/T003", "c")):
++            self.task(ref, {f"src/{f}.txt": f * 4 + "\n"})
++        self.assertEqual(self.status()["specs"][0]["status"], "done")
++        # Built on: a silent edit is reported and keeps the spec open.
++        self.replace(design, "Sessions live in localStorage.", "Sessions live in a cookie.")
++        run(self.root, "status", "--write")
++        self.assertIn("text of 001/D1@1 changed under finished work", self.check()[1])
++        self.assertEqual(self.status()["specs"][0]["status"], "in_progress")
++        # Wording only: review accepts it.
++        self.assertEqual(run(self.root, "review", "001/D1")[0], 0)
++        run(self.root, "status", "--write")
++        self.assertNotIn("changed under finished work", self.check()[1])
++        self.assertEqual(self.status()["specs"][0]["status"], "done")
++        # Meaning: a bump makes the task suspect instead.
++        self.replace(design, "- D1@1 (implements R1): Sessions live in a cookie.",
++                     "- D1@2 (implements R1): Sessions live in a signed token.")
++        out = self.check()[1]
++        self.assertIn("suspect: covers D1@1, now @2", out)
++        self.assertNotIn("changed under finished work", out)
++
++    def test_restore_brings_back_what_a_task_removed(self):
++        self.task("001/T001", {"src/store.txt": "localStorage.setItem(session)\n"})
++        self.write("planning/specs/001-auth/tasks.md", self.read("planning/specs/001-auth/tasks.md") +
++                   "- [ ] T004 [agent] [status:todo] Remove the store\n      covers: D1@1\n      retires: T001\n"
++                   "- [ ] T005 [agent] [status:todo] Bring the store back\n      covers: D1@1\n")
++        run(self.root, "status", "--write")
++        self.assertEqual(run(self.root, "start", "001/T004")[0], 0)
++        os.remove(os.path.join(self.root, "src", "store.txt"))
++        run(self.root, "done", "001/T004")
++        self.assertEqual(run(self.root, "restore", "001/T004")[0], 1, "needs an open task")
++        self.assertEqual(run(self.root, "start", "001/T005")[0], 0)
++        self.assertEqual(run(self.root, "restore", "001/T004")[0], 0)
++        self.assertEqual(self.read("src/store.txt"), "localStorage.setItem(session)\n")
++        run(self.root, "done", "001/T005")
++        self.assertIn("+localStorage.setItem(session)", self.read(".spectrace/changes/001-T005.patch"))
++        self.assertEqual(run(self.root, "start", "001/T002")[0], 0)
++        self.assertEqual(run(self.root, "restore", "001/T004")[0], 1, "no longer applies: the file is back")
++
+     def test_examples_in_fences_are_ignored(self):
+         self.write("planning/specs/001-auth/requirements.md",
+                    REQUIREMENTS + "\n```\n- R9@1: an example, not a requirement\n```\n")

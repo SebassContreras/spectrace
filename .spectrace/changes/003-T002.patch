@@ -1,0 +1,14 @@
+diff --git a/skills/spectrace-plan/SKILL.md b/skills/spectrace-plan/SKILL.md
+index 2c6a98b..fcf0713 100644
+--- a/skills/spectrace-plan/SKILL.md
++++ b/skills/spectrace-plan/SKILL.md
+@@ -91,6 +91,9 @@ Draft a numbered list from `requirements.md` and `design.md`:
+   Phrase it for the project type.
+ - Each task's `covers:` names the D (or R) items it implements. Every task traces to
+   something written in the spec — never invent scope.
++- A task that installs, configures or encodes a project-wide decision (an A item: the
++  runtime, a framework, a convention enforced in code) lists that A item in `covers:`
++  too — otherwise changing the decision later can't find the task.
+ - Every R item that states a checkable outcome gets a `kind: test` task covering it:
+   the executable form of the spec's definition of done.
+ - Owner: `human` for anything needing a credential, an approval, a purchase, a physical

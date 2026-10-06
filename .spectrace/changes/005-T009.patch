@@ -1,0 +1,3564 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 37ace8f..8a9b95f 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -22,4 +22,4 @@ jobs:
+         run: python3 -m unittest discover -s tests -v
+ 
+       - name: Trace check
+-        run: python3 skills/start/assets/trace.py check
++        run: python3 skills/spectrace-start/assets/trace.py check
+diff --git a/AGENTS.md b/AGENTS.md
+index 1ff666b..0aec9c1 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -7,14 +7,14 @@ lists exactly what to remove or redo. See `planning/product.md`.
+ 
+ - `planning/product.md` — what this is, who it's for, out of scope.
+ - `planning/architecture.md` — project-wide decisions (A items). Read before proposing structure.
+-- `planning/roadmap.md` — specs, order, status. `python skills/start/assets/trace.py status` is the live view.
++- `planning/roadmap.md` — specs, order, status. `python skills/spectrace-start/assets/trace.py status` is the live view.
+ - `planning/specs/NNN-name/` — `requirements.md` (R), `design.md` (D), `tasks.md`, `changes.md`.
+-- `skills/start/assets/format.md` — the format. Single source; cite it, never restate it.
++- `skills/spectrace-start/assets/format.md` — the format. Single source; cite it, never restate it.
+ 
+ ## Rules for agents
+ 
+ - Every `SKILL.md` follows the Agent Skills spec (agentskills.io/specification): frontmatter `name` (equal to its folder name) and `description` (what it does and when to use it, at most 1024 characters) only; paths relative to the skill root; body at most 200 lines (A5).
+-- Never change an R, D or A item's meaning by hand: bump or retire it and record it in the spec's `changes.md` (the `change` skill, once spec 004 exists).
++- Never change an R, D or A item's meaning by hand: bump or retire it and record it in the spec's `changes.md` (the `spectrace-change` skill).
+ - Never edit `Status`/`Stage` in the roadmap, a task's status, or a `changes:` line — `trace.py` owns them (A3).
+ - Never guess a CLI flag or file format — verify it before writing it into a skill.
+ - No GitHub repository, remote or push until the maintainer asks.
+@@ -22,13 +22,13 @@ lists exactly what to remove or redo. See `planning/product.md`.
+ <!-- spectrace:protocol -->
+ ## Working on tasks
+ 
+-In this repo the script is `skills/start/assets/trace.py` (target repos get it at
++In this repo the script is `skills/spectrace-start/assets/trace.py` (target repos get it at
+ `.spectrace/trace.py`). Use `python` on Windows, `python3` elsewhere.
+ 
+-1. `python skills/start/assets/trace.py status` — pick the `next` task, or the one you were asked for.
+-2. `python skills/start/assets/trace.py start NNN/TNNN` — before editing anything.
++1. `python skills/spectrace-start/assets/trace.py status` — pick the `next` task, or the one you were asked for.
++2. `python skills/spectrace-start/assets/trace.py start NNN/TNNN` — before editing anything.
+ 3. Read the spec's `requirements.md` and `design.md`; do only that task.
+ 4. Verify it against the task text and the R items it covers.
+-5. `python skills/start/assets/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`.
+-6. Before saying you're finished: `python skills/start/assets/trace.py check` must exit 0.
++5. `python skills/spectrace-start/assets/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`.
++6. Before saying you're finished: `python skills/spectrace-start/assets/trace.py check` must exit 0.
+ <!-- /spectrace:protocol -->
+diff --git a/README.md b/README.md
+index fa27da9..b36b88c 100644
+--- a/README.md
++++ b/README.md
+@@ -35,9 +35,9 @@ Needs git and Python 3.9+ in the project. Nothing else.
+ 
+ | Skill | What it does |
+ |---|---|
+-| `start` | Interviews you one question at a time and writes `planning/` — product, architecture (A items), roadmap, each spec's requirements (R items) — plus `.spectrace/trace.py` and the task protocol in `AGENTS.md`. |
+-| `plan` | Closes a spec's design (D items, each naming the R items it implements) and breaks it into tasks, each declaring what it `covers:`. |
+-| `change` | Revises or retires decisions, records why, and turns everything that implemented the old one into cleanup tasks — redo by default, refactor only with a written reason. |
++| `spectrace-start` | Interviews you one question at a time and writes `planning/` — product, architecture (A items), roadmap, each spec's requirements (R items) — plus `.spectrace/trace.py` and the task protocol in `AGENTS.md`. |
++| `spectrace-plan` | Closes a spec's design (D items, each naming the R items it implements) and breaks it into tasks, each declaring what it `covers:`. |
++| `spectrace-change` | Revises or retires decisions, records why, and turns everything that implemented the old one into cleanup tasks — redo by default, refactor only with a written reason. |
+ 
+ ## Executing tasks
+ 
+@@ -69,13 +69,13 @@ $ python3 .spectrace/trace.py impact 001/D1
+ 
+ Every finished task that covered `D1@1` is now *suspect*; the spec can't read as done
+ until a task retires it. The format is defined once, in
+-[`skills/start/assets/format.md`](skills/start/assets/format.md).
++[`skills/spectrace-start/assets/format.md`](skills/spectrace-start/assets/format.md).
+ 
+ ## Develop
+ 
+ ```sh
+ python3 -m unittest discover -s tests
+-python3 skills/start/assets/trace.py check
++python3 skills/spectrace-start/assets/trace.py check
+ ```
+ 
+ This repo is planned with spectrace itself: see `planning/` and `AGENTS.md`.
+diff --git a/skills/change/SKILL.md b/skills/change/SKILL.md
+deleted file mode 100644
+index 2d57d90..0000000
+--- a/skills/change/SKILL.md
++++ /dev/null
+@@ -1,106 +0,0 @@
+----
+-name: change
+-description: >-
+-  The way to change direction in a spectrace project without leaving anything behind.
+-  Revises or retires requirements (R), design (D) or project-wide (A) decisions,
+-  records why in changes.md, uses the trace to list every task, file, line and test
+-  that implemented the old decision, and turns that list into cleanup tasks (redo by
+-  default, refactor only with a written reason) so the spec cannot read as done while
+-  old code remains. Use when the user changed their mind or an approach turned out
+-  wrong after specs, design or code exist: "change the auth design to JWT", "we no
+-  longer need X", "that decision was wrong", "revert the approach in spec 003",
+-  "cambiamos de idea", "ya no queremos X". Also for corrections found after the fact.
+----
+-
+-# spectrace: change
+-
+-Run **inside the target repo**. Grammar: `.spectrace/format.md` — read it first. Run
+-the trace with `python3` (`python` on Windows): `python3 .spectrace/trace.py <command>`.
+-Ask **one question at a time**. This skill edits closed decisions, so nothing is written
+-before the user confirms what is about to change.
+-
+-## Phase 0 — Preconditions
+-
+-1. **Refuse** if `.spectrace/trace.py` is missing (point to the `start` skill).
+-2. **Refuse** if `trace status` shows an open task: tell the user to finish it
+-   (`done`), `block` it or `abort` it first — changing decisions under a task in
+-   flight leaves it half on each side.
+-3. Run `trace check` and note existing `error`s; this skill must not add new ones.
+-
+-## Phase 1 — What changed
+-
+-1. Ask what changed and why, in the user's words. If they name a spec, start there;
+-   otherwise find the affected items by reading `requirements.md`, `design.md` and
+-   `planning/architecture.md`.
+-2. Propose the edit for each affected item — show the current line and the new one:
+-   - **Revise** — the meaning changes: next revision (`D3@1` → `D3@2`), new text.
+-     A wording fix is not a revision; just fix the wording.
+-   - **Retire** — it no longer holds: wrap the statement in `~~`, append
+-     `retired YYYY-MM-DD` and `→ <replacement>` if there is one.
+-   - **Add** — the next free number in that file, at `@1`.
+-   For a revised or retired R, also ask whether each D implementing it still holds.
+-3. Ask for an explicit yes. On anything else, stop without writing.
+-4. Apply the edits. Never renumber or delete an item line.
+-
+-## Phase 2 — History
+-
+-Append one entry, newest last, in the format's History shape — the spec's
+-`changes.md` for R and D items, `planning/changes.md` for A items (both if both
+-changed); create the file with a `# … — Changes` title if missing:
+-
+-```
+-## YYYY-MM-DD — <short title>
+-Why: <the user's reason>
+-- MODIFIED D3@1 → D3@2
+-- REMOVED R4@1
+-- ADDED D7@1
+-- Tasks: <filled in Phase 4>
+-```
+-
+-## Phase 3 — Manifest
+-
+-Run `trace impact NNN/<item>` (or `A<n>`) for every revised or retired item, and show
+-the combined result as the **retirement manifest**: each task that covered the old
+-item, its status, whether it is a test, and per file how many of the lines it added
+-are still in the code (`file deleted` when gone). A finished task with no patch
+-recorded is listed as "search by hand" — grep for what its text describes and show
+-what you find before relying on it.
+-
+-## Phase 4 — Classify and write tasks
+-
+-For each **finished** task in the manifest, propose one, and let the user decide:
+-
+-- **Still valid** — the task's work holds under the new revision. Re-point its
+-  `covers:` to the new revision and add `└─ reviewed YYYY-MM-DD: <why it holds>`.
+-- **Redo** — *the default.* A new task that removes what it built
+-  (`retires: TNNN`, covering the replacement item), plus the tasks that build the new
+-  decision. Deleting and rebuilding beats bending old code into a new shape.
+-- **Refactor in place** — only if the user gives a one-sentence reason why changing
+-  the existing code is better than removing it; record that sentence in the
+-  `changes.md` entry. The task `retires:` the old one and covers the new item.
+-- A **test** covering a retired R: a task that deletes the test (`retires:` it) —
+-  never adapt a test to a requirement it no longer guards.
+-
+-For each **not-started** task covering a changed item: re-point it if it still
+-applies, otherwise delete its line (nothing was built) and say so in the entry.
+-
+-New tasks follow the `plan` skill's task rules (single-action, verifiable, `covers:`,
+-owner, `kind: test` for checkable R items). Number them after the spec's last task —
+-in the spec of the task being retired when the change spans specs. Show the full list
+-for confirmation, then write it, and complete the entry's `Tasks:` line.
+-
+-## Phase 5 — Gate, report, stop
+-
+-1. Run `trace status --write`, then `trace check`. There must be no `error`. The only
+-   `pending` items left must be suspect tasks whose cleanup tasks are now `todo` — any
+-   other pending item means the change is incomplete: fix it with the user.
+-2. Report: what changed, the manifest in short, the new tasks, and that the spec
+-   stays open until they are done (`trace check --strict` passes then). Any agent
+-   executes them through the protocol in `AGENTS.md`.
+-3. **Stop.** Never execute the cleanup tasks here.
+-
+-## Style
+-
+-- Terse; the user's language in conversation, the project's in files.
+-- Never invent the reason for a change — ask.
+-- Never edit `Status`/`Stage`, a task's status or a `changes:` line — the trace owns them.
+diff --git a/skills/plan/SKILL.md b/skills/plan/SKILL.md
+deleted file mode 100644
+index f1aeee2..0000000
+--- a/skills/plan/SKILL.md
++++ /dev/null
+@@ -1,121 +0,0 @@
+----
+-name: plan
+-description: >-
+-  Closes a spectrace spec's design and breaks it into tasks in one flow: design
+-  decisions become D items that name the requirements (R items) they implement,
+-  project-wide decisions become A items, and every task declares what it covers, so
+-  later changes can be traced to the code each task produced. Use when a spec has
+-  requirements but no design or no tasks yet: "plan spec 002", "design and break down
+-  the auth spec", "close the design for X", "make the tasks for NNN", "planifica la
+-  spec 003", "arma las tareas". Requires the start skill to have run (.spectrace/).
+----
+-
+-# spectrace: plan
+-
+-Run **inside the target repo**. Grammar of items and tasks: `.spectrace/format.md` —
+-read it first; never restate it to the user from memory. Run the trace with `python3`
+-(`python` on Windows): `python3 .spectrace/trace.py <command>`.
+-
+-## Phase 0 — Pick the spec, refuse if not ready
+-
+-1. The user named a spec → use it. Otherwise run `trace status` and ask which spec at
+-   stage `design` or `tasks` to plan.
+-2. **Refuse** if `.spectrace/trace.py` is missing (point to the `start` skill), or the
+-   spec's `requirements.md` has no active R item (point to `start`, which writes or
+-   drafts them).
+-3. **Refuse** if the spec already has D items *and* tasks: changing a closed design or
+-   an existing task list is the `change` skill's job.
+-4. Read `requirements.md`, `planning/product.md` (project type), `planning/architecture.md`,
+-   `AGENTS.md`, and `.spectrace/interview.md` if present. The design must stay
+-   consistent with existing A items.
+-
+-## Phase 1 — Design (skip if the spec already has D items)
+-
+-Ask once: close the design here, one question at a time, or have it **drafted** for
+-approval. Draft mode uses the same rules as `start`'s draft mode: every line the user
+-didn't give is marked `_(standard: <name> — <url>)_` or `_(judgement, no standard)_`,
+-the full draft is shown for yes / changes / defer, and only a fact the user alone knows
+-is asked live.
+-
+-Q&A mode — one at a time, phrased for the project type, writing `design.md` after
+-each answer:
+-
+-1. **Approach** — "How should this get built, in plain terms?"
+-2. **Deliverables** — "What does this create or change?" (files/modules; assets/pages;
+-   runbook steps; datasets/analyses).
+-3. **Sequencing** — "Does anything here have to happen in a specific order, or need
+-   something from another spec the roadmap doesn't record?"
+-4. **Decisions settled** — "Does this settle any stack, tooling or convention question
+-   not recorded yet?"
+-5. **Open questions** — "Anything genuinely undecided that should be flagged rather
+-   than guessed?"
+-
+-Write `design.md` as:
+-
+-```markdown
+-# NNN — name — Design
+-
+-## Approach
+-
+-- D1@1 (implements R1, R3): <one decision>
+-
+-## Deliverables
+-
+-## Sequencing
+-
+-## Open questions
+-```
+-
+-- Each D item is **one** decision and names the R items it serves. Deliverables,
+-  sequencing and open questions are context, not items. Omit an empty section.
+-- A project-wide decision (answer 4) is appended to `planning/architecture.md` as the
+-  next A item under its header, with its operative line in `AGENTS.md` → "Stack &
+-  conventions". Append only: if it contradicts an existing A item, stop and point to
+-  the `change` skill.
+-- Never invent a decision the user didn't make — it goes under "Open questions".
+-
+-## Phase 2 — Design gate
+-
+-1. Run `trace check`. For each `uncovered: NNN/Rn` in this spec, ask how the design
+-   addresses it — a new D item, or a task that covers the R directly — until none is
+-   left. Fix any `error` in the files this skill wrote.
+-2. Ask once: **"What haven't we covered in this design?"** Address anything new, then
+-   ask again; stop when a pass returns nothing.
+-
+-## Phase 3 — Tasks
+-
+-Draft a numbered list from `requirements.md` and `design.md`:
+-
+-- **Single-action** (one file, function, asset, decision or config change — not
+-  "implement the feature") and **verifiable** (an unambiguous way to tell it's done).
+-  Phrase it for the project type.
+-- Each task's `covers:` names the D (or R) items it implements. Every task traces to
+-  something written in the spec — never invent scope.
+-- Every R item that states a checkable outcome gets a `kind: test` task covering it:
+-  the executable form of the spec's definition of done.
+-- Owner: `human` for anything needing a credential, an approval, a purchase, a physical
+-  act or a live session; `agent` otherwise. Use the ledger's `owner-split` and
+-  `automatability` answers; ask when unsure.
+-- Order follows the design's sequencing.
+-
+-Show the list (ID, owner, text, covers) in one message. Ask the user to approve or
+-add / remove / reorder, then ask once: **"Anything in this design that no task
+-covers?"** Write nothing before confirmation.
+-
+-Then write `tasks.md` in the format's task grammar, every task `[status:todo]`, IDs
+-`T001`, `T002`, …, task lines at column 0, fields indented six spaces.
+-
+-## Phase 4 — Task gate, report, stop
+-
+-1. Run `trace status --write`, then `trace check`. No `uncovered` D may remain in this
+-   spec and no `error` in the files this skill wrote; fix and re-check.
+-2. Report: the spec is at stage `build`; list its `[human]` tasks — they are the
+-   user's. Any agent can now execute the rest by following the protocol in
+-   `AGENTS.md` (or the user can just say "execute the specs").
+-3. **Stop.** Never start executing a task here.
+-
+-## Style
+-
+-- Terse and structural; the user's language in conversation, the project's in files.
+-- One question at a time, always waiting for the reply.
+-- Never edit `Status`/`Stage`, a task's status or a `changes:` line — the trace owns them.
+diff --git a/skills/spectrace-change/SKILL.md b/skills/spectrace-change/SKILL.md
+new file mode 100644
+index 0000000..4422bc8
+--- /dev/null
++++ b/skills/spectrace-change/SKILL.md
+@@ -0,0 +1,106 @@
++---
++name: spectrace-change
++description: >-
++  The way to change direction in a spectrace project without leaving anything behind.
++  Revises or retires requirements (R), design (D) or project-wide (A) decisions,
++  records why in changes.md, uses the trace to list every task, file, line and test
++  that implemented the old decision, and turns that list into cleanup tasks (redo by
++  default, refactor only with a written reason) so the spec cannot read as done while
++  old code remains. Use when the user changed their mind or an approach turned out
++  wrong after specs, design or code exist: "change the auth design to JWT", "we no
++  longer need X", "that decision was wrong", "revert the approach in spec 003",
++  "cambiamos de idea", "ya no queremos X". Also for corrections found after the fact.
++---
++
++# spectrace-change
++
++Run **inside the target repo**. Grammar: `.spectrace/format.md` — read it first. Run
++the trace with `python3` (`python` on Windows): `python3 .spectrace/trace.py <command>`.
++Ask **one question at a time**. This skill edits closed decisions, so nothing is written
++before the user confirms what is about to change.
++
++## Phase 0 — Preconditions
++
++1. **Refuse** if `.spectrace/trace.py` is missing (point to the `spectrace-start` skill).
++2. **Refuse** if `trace status` shows an open task: tell the user to finish it
++   (`done`), `block` it or `abort` it first — changing decisions under a task in
++   flight leaves it half on each side.
++3. Run `trace check` and note existing `error`s; this skill must not add new ones.
++
++## Phase 1 — What changed
++
++1. Ask what changed and why, in the user's words. If they name a spec, start there;
++   otherwise find the affected items by reading `requirements.md`, `design.md` and
++   `planning/architecture.md`.
++2. Propose the edit for each affected item — show the current line and the new one:
++   - **Revise** — the meaning changes: next revision (`D3@1` → `D3@2`), new text.
++     A wording fix is not a revision; just fix the wording.
++   - **Retire** — it no longer holds: wrap the statement in `~~`, append
++     `retired YYYY-MM-DD` and `→ <replacement>` if there is one.
++   - **Add** — the next free number in that file, at `@1`.
++   For a revised or retired R, also ask whether each D implementing it still holds.
++3. Ask for an explicit yes. On anything else, stop without writing.
++4. Apply the edits. Never renumber or delete an item line.
++
++## Phase 2 — History
++
++Append one entry, newest last, in the format's History shape — the spec's
++`changes.md` for R and D items, `planning/changes.md` for A items (both if both
++changed); create the file with a `# … — Changes` title if missing:
++
++```
++## YYYY-MM-DD — <short title>
++Why: <the user's reason>
++- MODIFIED D3@1 → D3@2
++- REMOVED R4@1
++- ADDED D7@1
++- Tasks: <filled in Phase 4>
++```
++
++## Phase 3 — Manifest
++
++Run `trace impact NNN/<item>` (or `A<n>`) for every revised or retired item, and show
++the combined result as the **retirement manifest**: each task that covered the old
++item, its status, whether it is a test, and per file how many of the lines it added
++are still in the code (`file deleted` when gone). A finished task with no patch
++recorded is listed as "search by hand" — grep for what its text describes and show
++what you find before relying on it.
++
++## Phase 4 — Classify and write tasks
++
++For each **finished** task in the manifest, propose one, and let the user decide:
++
++- **Still valid** — the task's work holds under the new revision. Re-point its
++  `covers:` to the new revision and add `└─ reviewed YYYY-MM-DD: <why it holds>`.
++- **Redo** — *the default.* A new task that removes what it built
++  (`retires: TNNN`, covering the replacement item), plus the tasks that build the new
++  decision. Deleting and rebuilding beats bending old code into a new shape.
++- **Refactor in place** — only if the user gives a one-sentence reason why changing
++  the existing code is better than removing it; record that sentence in the
++  `changes.md` entry. The task `retires:` the old one and covers the new item.
++- A **test** covering a retired R: a task that deletes the test (`retires:` it) —
++  never adapt a test to a requirement it no longer guards.
++
++For each **not-started** task covering a changed item: re-point it if it still
++applies, otherwise delete its line (nothing was built) and say so in the entry.
++
++New tasks follow the `spectrace-plan` skill's task rules (single-action, verifiable, `covers:`,
++owner, `kind: test` for checkable R items). Number them after the spec's last task —
++in the spec of the task being retired when the change spans specs. Show the full list
++for confirmation, then write it, and complete the entry's `Tasks:` line.
++
++## Phase 5 — Gate, report, stop
++
++1. Run `trace status --write`, then `trace check`. There must be no `error`. The only
++   `pending` items left must be suspect tasks whose cleanup tasks are now `todo` — any
++   other pending item means the change is incomplete: fix it with the user.
++2. Report: what changed, the manifest in short, the new tasks, and that the spec
++   stays open until they are done (`trace check --strict` passes then). Any agent
++   executes them through the protocol in `AGENTS.md`.
++3. **Stop.** Never execute the cleanup tasks here.
++
++## Style
++
++- Terse; the user's language in conversation, the project's in files.
++- Never invent the reason for a change — ask.
++- Never edit `Status`/`Stage`, a task's status or a `changes:` line — the trace owns them.
+diff --git a/skills/spectrace-plan/SKILL.md b/skills/spectrace-plan/SKILL.md
+new file mode 100644
+index 0000000..2c6a98b
+--- /dev/null
++++ b/skills/spectrace-plan/SKILL.md
+@@ -0,0 +1,121 @@
++---
++name: spectrace-plan
++description: >-
++  Closes a spectrace spec's design and breaks it into tasks in one flow: design
++  decisions become D items that name the requirements (R items) they implement,
++  project-wide decisions become A items, and every task declares what it covers, so
++  later changes can be traced to the code each task produced. Use when a spec has
++  requirements but no design or no tasks yet: "plan spec 002", "design and break down
++  the auth spec", "close the design for X", "make the tasks for NNN", "planifica la
++  spec 003", "arma las tareas". Requires the spectrace-start skill to have run (.spectrace/).
++---
++
++# spectrace-plan
++
++Run **inside the target repo**. Grammar of items and tasks: `.spectrace/format.md` —
++read it first; never restate it to the user from memory. Run the trace with `python3`
++(`python` on Windows): `python3 .spectrace/trace.py <command>`.
++
++## Phase 0 — Pick the spec, refuse if not ready
++
++1. The user named a spec → use it. Otherwise run `trace status` and ask which spec at
++   stage `design` or `tasks` to plan.
++2. **Refuse** if `.spectrace/trace.py` is missing (point to the `spectrace-start` skill), or the
++   spec's `requirements.md` has no active R item (point to `spectrace-start`, which writes or
++   drafts them).
++3. **Refuse** if the spec already has D items *and* tasks: changing a closed design or
++   an existing task list is the `spectrace-change` skill's job.
++4. Read `requirements.md`, `planning/product.md` (project type), `planning/architecture.md`,
++   `AGENTS.md`, and `.spectrace/interview.md` if present. The design must stay
++   consistent with existing A items.
++
++## Phase 1 — Design (skip if the spec already has D items)
++
++Ask once: close the design here, one question at a time, or have it **drafted** for
++approval. Draft mode uses the same rules as `spectrace-start`'s draft mode: every line the user
++didn't give is marked `_(standard: <name> — <url>)_` or `_(judgement, no standard)_`,
++the full draft is shown for yes / changes / defer, and only a fact the user alone knows
++is asked live.
++
++Q&A mode — one at a time, phrased for the project type, writing `design.md` after
++each answer:
++
++1. **Approach** — "How should this get built, in plain terms?"
++2. **Deliverables** — "What does this create or change?" (files/modules; assets/pages;
++   runbook steps; datasets/analyses).
++3. **Sequencing** — "Does anything here have to happen in a specific order, or need
++   something from another spec the roadmap doesn't record?"
++4. **Decisions settled** — "Does this settle any stack, tooling or convention question
++   not recorded yet?"
++5. **Open questions** — "Anything genuinely undecided that should be flagged rather
++   than guessed?"
++
++Write `design.md` as:
++
++```markdown
++# NNN — name — Design
++
++## Approach
++
++- D1@1 (implements R1, R3): <one decision>
++
++## Deliverables
++
++## Sequencing
++
++## Open questions
++```
++
++- Each D item is **one** decision and names the R items it serves. Deliverables,
++  sequencing and open questions are context, not items. Omit an empty section.
++- A project-wide decision (answer 4) is appended to `planning/architecture.md` as the
++  next A item under its header, with its operative line in `AGENTS.md` → "Stack &
++  conventions". Append only: if it contradicts an existing A item, stop and point to
++  the `spectrace-change` skill.
++- Never invent a decision the user didn't make — it goes under "Open questions".
++
++## Phase 2 — Design gate
++
++1. Run `trace check`. For each `uncovered: NNN/Rn` in this spec, ask how the design
++   addresses it — a new D item, or a task that covers the R directly — until none is
++   left. Fix any `error` in the files this skill wrote.
++2. Ask once: **"What haven't we covered in this design?"** Address anything new, then
++   ask again; stop when a pass returns nothing.
++
++## Phase 3 — Tasks
++
++Draft a numbered list from `requirements.md` and `design.md`:
++
++- **Single-action** (one file, function, asset, decision or config change — not
++  "implement the feature") and **verifiable** (an unambiguous way to tell it's done).
++  Phrase it for the project type.
++- Each task's `covers:` names the D (or R) items it implements. Every task traces to
++  something written in the spec — never invent scope.
++- Every R item that states a checkable outcome gets a `kind: test` task covering it:
++  the executable form of the spec's definition of done.
++- Owner: `human` for anything needing a credential, an approval, a purchase, a physical
++  act or a live session; `agent` otherwise. Use the ledger's `owner-split` and
++  `automatability` answers; ask when unsure.
++- Order follows the design's sequencing.
++
++Show the list (ID, owner, text, covers) in one message. Ask the user to approve or
++add / remove / reorder, then ask once: **"Anything in this design that no task
++covers?"** Write nothing before confirmation.
++
++Then write `tasks.md` in the format's task grammar, every task `[status:todo]`, IDs
++`T001`, `T002`, …, task lines at column 0, fields indented six spaces.
++
++## Phase 4 — Task gate, report, stop
++
++1. Run `trace status --write`, then `trace check`. No `uncovered` D may remain in this
++   spec and no `error` in the files this skill wrote; fix and re-check.
++2. Report: the spec is at stage `build`; list its `[human]` tasks — they are the
++   user's. Any agent can now execute the rest by following the protocol in
++   `AGENTS.md` (or the user can just say "execute the specs").
++3. **Stop.** Never start executing a task here.
++
++## Style
++
++- Terse and structural; the user's language in conversation, the project's in files.
++- One question at a time, always waiting for the reply.
++- Never edit `Status`/`Stage`, a task's status or a `changes:` line — the trace owns them.
+diff --git a/skills/spectrace-start/SKILL.md b/skills/spectrace-start/SKILL.md
+new file mode 100644
+index 0000000..875c1e1
+--- /dev/null
++++ b/skills/spectrace-start/SKILL.md
+@@ -0,0 +1,158 @@
++---
++name: spectrace-start
++description: >-
++  Starts a spectrace project or adds a spec to one. Runs a guided interview in
++  natural language (project type, goal, stack and tools, agent rules, styles), then
++  writes planning/product.md, planning/architecture.md (decisions as A items),
++  planning/roadmap.md and each spec's requirements.md (R items with IDs and
++  revisions), installs the trace script in .spectrace/ and the task protocol in
++  AGENTS.md. Use for any new app, site, content, operations or research project, or
++  a new feature spec, in English or Spanish, even with typos: "I want to build X",
++  "start a new spec for Y", "quiero crear una app", "nueva spec para Z". Works in a
++  folder without git (initializes it after asking).
++---
++
++# spectrace-start
++
++Run **inside the target repo**. Ask **one question at a time** and wait for the reply.
++Everything this skill writes is described in `references/templates.md`; the grammar of
++items, tasks and the roadmap is in `assets/format.md` (copied to `.spectrace/format.md`).
++
++**Owns only:** `AGENTS.md` (its sections and the protocol block), `planning/product.md`,
++`planning/architecture.md`, `planning/styles.md`, `planning/roadmap.md` (rows, never
++`Status`/`Stage`), `planning/specs/*/requirements.md` and the stubs beside it,
++`planning/handoff.md`, and `.spectrace/` (`trace.py`, `format.md`, `interview.md`). Never
++create `CLAUDE.md`, a README, CI config or anything else — those are project
++deliverables the roadmap decides.
++
++## Interview contract
++
++Applies to every Q&A phase. `references/question-bank.md` defines the dimensions.
++
++- **Ledger.** `.spectrace/interview.md`, one row per dimension
++  (`covered` / `skipped` / `open`), written after every answer, in the user's own words.
++  It makes an interrupted interview resumable and a skip distinguishable from an
++  oversight.
++- **A phase ends** when each of its dimensions is `covered` or `skipped` and the
++  closing sweep (question bank, Phase F) comes back with nothing new.
++- **Never infer an answer** to close a dimension — leave it `open`, ask again in the
++  sweep. `TBD` on disk beats a guess.
++- **Follow up** on anything named but unspecified ("the dashboard", "our brand").
++- **Unsure user** → the question bank's help-me-decide protocol.
++- **Plain chat questions** by default. A selectable-options tool only for a closed
++  choice with 2–6 real answers (project type, yes/no) — never with a skip preselected.
++- **Stopping.** The user can stop at any point. Before stopping, ask whether to write
++  `planning/handoff.md`; if yes, follow `references/handoff.md`.
++
++## Phase 0 — Detect state
++
++1. `.spectrace/interview.md` exists → resumed interview: report what's covered and
++   continue from the first `open` dimension. Add any question-bank dimension the ledger
++   lacks as `open`.
++2. `planning/product.md` has real content → the project exists: go to Phase 6 for a new
++   spec (or Phase 7 for a seeded spec without requirements). Offer to revisit Phases
++   3–5 only if the user says a decision changed — and then point to the `spectrace-change` skill
++   for anything already recorded as an A item.
++3. Otherwise → a new project: Phase 1.
++
++Never overwrite a file with real content without explicit confirmation.
++
++## Phase 1 — Ledger only
++
++Create `.spectrace/interview.md` with every Phase A dimension `open`. Write nothing
++else yet: the user's first sight of the run is a question, not a wall of files.
++
++## Phase 2 — Type & vision (question bank, Phase A)
++
++The opening request is context, not an answer. Start with `idea-detail` in the user's
++language (quote the opening request back and ask them to expand). Record it verbatim,
++then structure it — problem, users, main flow, data, integrations — without inventing
++choices. Settle `project-type` (for software, the concrete form). Draft `goal` from the
++narrative and show it for yes / changes. Then the remaining Phase A dimensions, grounded
++in the narrative. Close with the sweep.
++
++## Phase 3 — Scaffold
++
++1. **git.** No repository here → ask, then `git init`. The trace needs git.
++2. **Files** (only if missing), from `references/templates.md`: `AGENTS.md`,
++   `planning/product.md` (filled from `goal`, `audience`, `mvp`), `planning/architecture.md`
++   (headers keyed to `project-type`), `planning/roadmap.md`, `planning/specs/`.
++3. **Trace.** Copy `assets/trace.py` and `assets/format.md` (paths relative to this
++   skill's folder) into `.spectrace/`. If `.spectrace/trace.py` already exists with a
++   lower `VERSION`, show both versions and ask before replacing it.
++4. **Protocol.** Write `assets/agents-protocol.md` into `AGENTS.md`, replacing the text
++   between `<!-- spectrace:protocol -->` and `<!-- /spectrace:protocol -->` if present,
++   appending it otherwise. Touch nothing else in `AGENTS.md`.
++
++## Phase 4 — Technologies, architecture & tools (Phase B)
++
++Ask the block matching `project-type` — no software questions for a marketing project.
++Each settled answer becomes an A item in `planning/architecture.md`
++(`- A<n>@1: <decision> — why: <reason>`) and its short operative form goes into
++`AGENTS.md` → "Stack & conventions". Nothing decided → a bullet under "Still to define",
++and a decision spec in Phase 6. Never invent a stack. Close with the sweep.
++
++## Phase 5 — Helper skills, agent rules, styles (Phases C, D)
++
++- Recommend only helper skills relevant to the Phase B answers; install nothing without
++  explicit confirmation; what can't be installed becomes a roadmap spec.
++- `agent-rules` → `AGENTS.md` → "Rules for agents".
++- Styles: detail (hex values, type stacks) into `planning/styles.md`, the operative
++  summary into `AGENTS.md` → "Style", each marked hard rule or default. Never invent a
++  style value. Close with the sweep.
++
++## Phase 6 — Roadmap
++
++1. Propose the ordered specs needed to reach the goal: setup first (from Phases 3–5,
++   including uninstallable helpers and `open` decisions), then features. Use
++   type-appropriate examples — software: scaffold, database, test harness; marketing:
++   audience research, brand guidelines, channel setup.
++2. Ask the `mvp` cut: which are in the first phase.
++3. Show the list; confirm add / remove / reorder; ask each item's dependencies
++   explicitly; ask whether to record the confirmed order as `Priority`.
++4. For each confirmed spec: folder `planning/specs/NNN-name/` (kebab-case,
++   `NNN` = highest ID + 1), stub `design.md` and `tasks.md`, and a roadmap row with
++   `Status`/`Stage` empty. Then run `python3 .spectrace/trace.py status --write`
++   (`python` on Windows) — never type those two cells yourself.
++5. Sweep against `done-when`: anything no spec covers is a missing row.
++
++## Phase 7 — Requirements, per spec
++
++Before the first spec, ask once: answer each spec's requirements here, one question at
++a time, or have them **drafted** from the interview for approval. "Sigue solo" / "decide
++tú" at any point switches to drafting.
++
++**Q&A mode.** Question bank Phase E, one question at a time, writing after each answer.
++
++**Draft mode.** For one spec at a time:
++1. Read the ledger, `planning/*.md`, the spec's roadmap row and every sibling spec's
++   `requirements.md`, so drafts don't overlap.
++2. Derive each section. Where the interview doesn't settle something, use the current
++   industry standard, confirmed by a short web search; mark every line the user didn't
++   give: `_(standard: <name> — <primary source URL>)_`, `_(judgement, no standard)_`, or
++   `_(standard, unverified — no web search)_`. A fact only the user knows (an account,
++   a budget, a preference) is asked live — just that one question.
++3. Show the **full draft** — not a summary — for **yes**, **changes** (revise, re-show)
++   or **defer** (leave it, move on). If the user said to proceed without confirming,
++   still print each draft, treat it as yes, and list every marked line in the report.
++4. On yes, write it and record the spec's Phase E rows in the ledger as
++   `covered (drafted)`.
++
++Either mode: R items are numbered from `R1@1`, each one checkable (templates). After
++each spec, run `trace status --write`, then ask whether to continue to the next spec —
++never chain silently through all of them.
++
++## Phase 8 — Report
++
++1. Run `python3 .spectrace/trace.py check` and fix any error it reports in files this
++   skill wrote.
++2. Tell the user what exists, every dimension left `open` or `skipped`, and the next
++   step: the `spectrace-plan` skill on the first spec `trace status` shows at stage `design`.
++3. Ask whether to write `planning/handoff.md`.
++
++## Style
++
++- Terse and structural; no filler, no marketing language; the user's language for the
++  conversation, the project's language (Phase D `tone`) for the files.
++- Never fabricate product, architecture, requirements or style content — `TBD` instead.
++- One question at a time.
+diff --git a/skills/spectrace-start/assets/agents-protocol.md b/skills/spectrace-start/assets/agents-protocol.md
+new file mode 100644
+index 0000000..3179530
+--- /dev/null
++++ b/skills/spectrace-start/assets/agents-protocol.md
+@@ -0,0 +1,18 @@
++<!-- spectrace:protocol -->
++## Working on tasks
++
++Specs live in `planning/`; how they are written is in `.spectrace/format.md`. Run the
++trace with `python3` (`python` on Windows).
++
++1. `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
++2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them.
++3. Read the spec's `requirements.md` and `design.md`; do only that task, following `planning/architecture.md`.
++4. Verify it against the task text and the R items it covers.
++5. `python3 .spectrace/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`.
++6. Before saying you're finished: `python3 .spectrace/trace.py check` must exit 0.
++
++Never edit by hand: a task's status or `changes:` line, the roadmap's `Status`/`Stage`
++(the trace owns them), or the meaning of an R, D or A item (the `spectrace-change` skill does it,
++so the history and the trace stay right). One commit per task is welcome but optional;
++if you commit, add a `Spec: NNN/TNNN` trailer.
++<!-- /spectrace:protocol -->
+diff --git a/skills/spectrace-start/assets/format.md b/skills/spectrace-start/assets/format.md
+new file mode 100644
+index 0000000..2850648
+--- /dev/null
++++ b/skills/spectrace-start/assets/format.md
+@@ -0,0 +1,151 @@
++# spectrace format
++
++The single definition of how specs, decisions and tasks are written. Skills cite this
++file; `trace.py` implements it. If the two ever disagree, `trace.py` is wrong — fix it
++and add a test. Format version: 1.
++
++## Files
++
++```
++AGENTS.md                         instructions for any agent (one file, no CLAUDE.md)
++planning/product.md               what this is, who it's for, out of scope
++planning/architecture.md          project-wide decisions (A items)
++planning/styles.md                preferences (optional)
++planning/roadmap.md               index of specs
++planning/changes.md               history of changes to A items
++planning/specs/NNN-name/
++  requirements.md                 R items
++  design.md                       D items
++  tasks.md                        tasks
++  changes.md                      history of changes to this spec
++.spectrace/
++  trace.py  format.md             copied in by `spectrace-start`
++  interview.md                    interview ledger
++  changes/NNN-TNNN.patch          exact diff of each finished task (committed)
++  state.json                      open task (git-ignored)
++```
++
++## Items: R, D, A
++
++An item is one normative statement with an ID and a revision. Anything that is not an
++item line is context and is never traced.
++
++```
++- R2@1: A user signs in with email and password.
++- D3@1 (implements R2): Sessions live in an httpOnly cookie.
++- A4@1: Runtime is Node 22 — why: LTS, team knows it.
++- ~~D1@1 (implements R2): Sessions live in localStorage.~~ retired 2026-10-12 → D3
++```
++
++- `R` items live only in a spec's `requirements.md`, `D` items only in its `design.md`,
++  `A` items only in `planning/architecture.md`.
++- IDs are numbered per file kind and never reused: a retired item stays, struck through.
++- `@N` is the revision. Bump it when the meaning changes; never for a wording fix.
++- `(implements R2, R5)` on a D item names the requirements it serves (same spec).
++- Retired: the whole statement wrapped in `~~`, then `retired YYYY-MM-DD`, optionally
++  `→ <replacement ID>`.
++- Never edit an item's meaning by hand — the `spectrace-change` skill does it, so the history in
++  `changes.md` and the trace stay right.
++
++## References
++
++| Written as | Means |
++|---|---|
++| `R2@1`, `D3@1` | item in the same spec |
++| `001/D3@1` | item in spec 001 |
++| `A4@1` | project-wide item in `architecture.md` |
++| `001/T005` | task 5 of spec 001 |
++
++## Tasks (`tasks.md`)
++
++```
++- [ ] T005 [agent] [status:todo] Session middleware
++      covers: D3@1
++- [x] T006 [agent] [status:done] Session expiry test
++      covers: R2@1
++      kind: test
++      changes: src/auth/session.ts (+42 -3), test/session.test.ts (+30)
++- [ ] T009 [agent] [status:todo] Remove the localStorage session code
++      covers: D3@1
++      retires: T002
++- [ ] T010 [human] [status:blocked] Create the mail provider account
++      covers: R4@1
++      └─ blocked: waiting for billing approval
++```
++
++- A task line starts at column 0: checkbox, `T` + 3 digits, owner, status, text.
++  The checkbox is `[x]` exactly when the status is `done`.
++- Owner: `agent` (any agent may do it) or `human` (the user does it; agents report and
++  skip it).
++- Status: `todo` · `in_progress` · `blocked` · `done`.
++- Fields are indented lines under the task:
++  - `covers:` — required. The items this task implements or verifies.
++  - `kind: test` — the task writes a test for the R items it covers.
++  - `retires: T002` — the task removes what an earlier task built.
++  - `changes:` — written only by `trace done`. Never by hand.
++  - `└─ <note>` — free text.
++- Who writes what: `trace` writes `in_progress`, `done`, `blocked`, the checkbox and
++  `changes:`. The `spectrace-plan` and `spectrace-change` skills write new task lines;
++  `spectrace-change` may also
++  re-point a `covers:` to a new revision (adding a `└─ reviewed YYYY-MM-DD: …` note)
++  and delete a task that was never started. Nobody else edits a task line.
++
++## Roadmap (`planning/roadmap.md`)
++
++```
++| ID  | Spec  | Status      | Depends on | Stage | Priority |
++|-----|-------|-------------|------------|-------|----------|
++| 001 | auth  | done        | —          | —     | 1        |
++| 002 | feed  | in_progress | 001        | build | 2        |
++```
++
++- People and skills write `ID`, `Spec`, `Depends on`, `Priority`. Only `trace` writes
++  `Status` and `Stage`; `trace check` fails if they differ from what the files say.
++- `Spec` is exactly the folder name after `NNN-`.
++- `Depends on`: comma-separated spec IDs, or `—`.
++- `Priority`: a number, lower first among specs the dependencies don't already order;
++  `—` if unranked.
++- Stage — what the spec needs next:
++  `requirements` (no R items) · `design` (no D items) · `tasks` (no tasks) ·
++  `build` (tasks left) · `—` (done).
++- Status: `todo` (nothing started) · `in_progress` · `blocked` (an agent task is
++  blocked) · `done` (every agent task done, nothing suspect or uncovered). `human`
++  tasks never hold a spec open.
++
++## Trace states (computed, never written)
++
++- **suspect** — a done task covers an older revision of an item, or a retired item, and
++  no done task retires it. Resolved by the `spectrace-change` skill: re-point `covers:` to the
++  new revision (the task is still right) or add a task that `retires:` it.
++- **orphan** — a reference to an item or task that doesn't exist.
++- **uncovered** — an active R that no active D implements and no task covers (checked
++  once the spec has D items); an active D no task covers (checked once it has tasks).
++
++## History (`changes.md`)
++
++One entry per change, newest last, written by the `spectrace-change` skill: in the spec's
++`changes.md` for R and D items, in `planning/changes.md` for A items. A change that
++touches both gets an entry in each.
++
++```
++## 2026-10-12 — sessions move to cookies
++Why: localStorage sessions are readable by any script on the page.
++- MODIFIED R2@1 → R2@2
++- REMOVED D1@1
++- ADDED D3@1
++- Tasks: T009 retires T002; T006 re-pointed to R2@2 (still valid)
++```
++
++## Executing tasks
++
++```
++python3 .spectrace/trace.py status            # (python on Windows)
++python3 .spectrace/trace.py start 001/T005    # before editing anything
++python3 .spectrace/trace.py done 001/T005     # writes changes: and the patch
++python3 .spectrace/trace.py check             # must exit 0 before you finish
++```
++
++`start` snapshots the working tree without committing or touching the staging area;
++`done` diffs against that snapshot, so each task's changes are exact even if several
++tasks share one commit or none. One task is open at a time. Changes under `planning/`
++and `.spectrace/` are never counted as task changes.
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+new file mode 100644
+index 0000000..efb7db8
+--- /dev/null
++++ b/skills/spectrace-start/assets/trace.py
+@@ -0,0 +1,748 @@
++#!/usr/bin/env python3
++"""spectrace trace: status, per-task change capture, and the spec trace check.
++
++Implements .spectrace/format.md. Python 3.9+, standard library only.
++"""
++import argparse
++import json
++import os
++import re
++import shutil
++import subprocess
++import sys
++from datetime import date
++
++VERSION = "1"
++EXCLUDE = (":(exclude)planning", ":(exclude).spectrace")
++PATCH_LIMIT = 200_000
++EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
++IDENT = {"GIT_AUTHOR_NAME": "spectrace", "GIT_AUTHOR_EMAIL": "spectrace@localhost",
++         "GIT_COMMITTER_NAME": "spectrace", "GIT_COMMITTER_EMAIL": "spectrace@localhost"}
++
++ITEM_RE = re.compile(r"^\s*-\s+(?P<kind>[RDA])(?P<num>\d+)@(?P<rev>\d+)"
++                     r"(?:\s*\((?P<rel>[^)]*)\))?:\s*\S")
++RETIRED_RE = re.compile(r"^\s*-\s+~~(?P<kind>[RDA])(?P<num>\d+)@(?P<rev>\d+)"
++                        r"(?:\s*\((?P<rel>[^)]*)\))?:.*~~\s*retired\s+\d{4}-\d{2}-\d{2}")
++ITEMISH_RE = re.compile(r"^\s*-\s+(~~)?[RDA]\d+@")
++TASK_RE = re.compile(r"^- \[(?P<box>[ x])\] T(?P<num>\d{3}) \[(?P<owner>agent|human)\] "
++                     r"\[status:(?P<status>todo|in_progress|blocked|done)\] (?P<text>\S.*?)\s*$")
++TASKISH_RE = re.compile(r"^- \[[ xX]\] ")
++FIELD_RE = re.compile(r"^\s+(?P<key>covers|kind|retires|changes):\s*(?P<val>.*?)\s*$")
++REF_RE = re.compile(r"^(?:(?P<spec>\d{3})/)?(?P<kind>[RDA])(?P<num>\d+)(?:@(?P<rev>\d+))?$")
++TASKREF_RE = re.compile(r"^(?:(?P<spec>\d{3})/)?T(?P<num>\d+)$")
++SEVERITY = {"error": 0, "pending": 1, "warning": 2}
++
++
++class TraceError(Exception):
++    pass
++
++
++# ---------- files ----------
++
++def read_lines(path):
++    with open(path, encoding="utf-8", newline="") as f:
++        return f.read().splitlines(keepends=True)
++
++
++def write_lines(path, lines):
++    with open(path, "w", encoding="utf-8", newline="") as f:
++        f.write("".join(lines))
++
++
++def eol(line):
++    return line[len(line.rstrip("\r\n")):] or "\n"
++
++
++def unfenced(lines):
++    """Yield (index, line) outside ``` fences, so examples in docs are never parsed."""
++    fenced = False
++    for i, line in enumerate(lines):
++        if line.lstrip().startswith("```"):
++            fenced = not fenced
++            continue
++        if not fenced:
++            yield i, line.rstrip("\r\n")
++
++
++# ---------- model ----------
++
++class Item:
++    def __init__(self, kind, num, rev, retired, implements, where):
++        self.kind, self.num, self.rev = kind, num, rev
++        self.retired, self.implements, self.where = retired, implements, where
++
++    @property
++    def key(self):
++        return f"{self.kind}{self.num}"
++
++
++class Task:
++    def __init__(self, spec, num, owner, status, box, text, line):
++        self.spec, self.num, self.owner, self.status = spec, num, owner, status
++        self.box, self.text, self.line = box, text, line
++        self.covers, self.retires, self.kind, self.changes = [], [], None, None
++
++    @property
++    def ref(self):
++        return f"{self.spec}/T{self.num:03d}"
++
++
++class Spec:
++    def __init__(self, sid, name, row):
++        self.id, self.name, self.row = sid, name, row
++        self.dir = f"planning/specs/{sid}-{name}"
++        self.items, self.tasks, self.deps, self.cells = {}, [], [], {}
++        self.priority = self.status = self.stage = None
++
++
++class Repo:
++    def __init__(self, root):
++        self.root = root
++        self.issues = []  # (severity, where, message, spec id or None)
++        self.global_items, self.specs = {}, {}
++        self.columns, self.rows = {}, []
++        self.load()
++        self.trace()
++        self.compute()
++
++    def issue(self, severity, where, message, spec=None):
++        self.issues.append((severity, where, message, spec))
++
++    def path(self, rel):
++        return os.path.join(self.root, *rel.split("/"))
++
++    # --- parsing ---
++
++    def load(self):
++        if os.path.exists(self.path("planning/architecture.md")):
++            self.parse_items("planning/architecture.md", "A", self.global_items)
++        self.parse_roadmap()
++        specs_dir = self.path("planning/specs")
++        folders = sorted(os.listdir(specs_dir)) if os.path.isdir(specs_dir) else []
++        known = {f"{s.id}-{s.name}" for s in self.specs.values()}
++        for folder in folders:
++            if re.match(r"^\d{3}-", folder) and folder not in known:
++                self.issue("error", f"planning/specs/{folder}", "folder has no roadmap row")
++        for spec in self.specs.values():
++            if not os.path.isdir(self.path(spec.dir)):
++                self.issue("error", "planning/roadmap.md", f"{spec.id}: no folder {spec.dir}", spec.id)
++                continue
++            for name, kind in (("requirements.md", "R"), ("design.md", "D")):
++                rel = f"{spec.dir}/{name}"
++                if os.path.exists(self.path(rel)):
++                    self.parse_items(rel, kind, spec.items, spec.id)
++            if os.path.exists(self.path(f"{spec.dir}/tasks.md")):
++                self.parse_tasks(f"{spec.dir}/tasks.md", spec)
++
++    def parse_items(self, rel, kind, into, sid=None):
++        for i, line in unfenced(read_lines(self.path(rel))):
++            where = f"{rel}:{i + 1}"
++            m = RETIRED_RE.match(line) or ITEM_RE.match(line)
++            if not m:
++                if ITEMISH_RE.match(line):
++                    self.issue("error", where, "malformed item line", sid)
++                continue
++            if m.group("kind") != kind:
++                self.issue("error", where, f"{m.group('kind')} item does not belong in {rel.rsplit('/', 1)[-1]}", sid)
++                continue
++            rel_text = (m.group("rel") or "").strip()
++            implements = re.findall(r"\bR(\d+)\b", rel_text) if rel_text.startswith("implements") else []
++            item = Item(kind, int(m.group("num")), int(m.group("rev")), m.re is RETIRED_RE,
++                        [f"R{int(n)}" for n in implements], where)
++            if item.key in into:
++                self.issue("error", where, f"duplicate ID {item.key}", sid)
++            into[item.key] = item
++
++    def parse_roadmap(self):
++        rel = "planning/roadmap.md"
++        if not os.path.exists(self.path(rel)):
++            self.issue("error", rel, "missing")
++            return
++        for i, line in unfenced(read_lines(self.path(rel))):
++            if not line.lstrip().startswith("|"):
++                continue
++            cells = [c.strip() for c in line.strip().strip("|").split("|")]
++            if not self.columns:
++                if "ID" in cells and "Spec" in cells:
++                    self.columns = {c: n for n, c in enumerate(cells)}
++                    missing = {"ID", "Spec", "Status", "Depends on", "Stage", "Priority"} - set(cells)
++                    if missing:
++                        self.issue("error", rel, f"missing columns: {', '.join(sorted(missing))}")
++                continue
++            if set("".join(cells)) <= set("-: "):
++                continue
++
++            def get(col):
++                n = self.columns.get(col)
++                return cells[n] if n is not None and n < len(cells) else ""
++            sid = get("ID")
++            if not re.fullmatch(r"\d{3}", sid):
++                self.issue("error", f"{rel}:{i + 1}", f"bad spec ID {sid!r}")
++                continue
++            spec = Spec(sid, get("Spec"), i)
++            deps = get("Depends on")
++            spec.deps = [] if deps in ("", "—", "-") else [d.strip() for d in deps.split(",")]
++            prio = get("Priority")
++            spec.priority = int(prio) if prio.isdigit() else None
++            spec.cells = {"Status": get("Status"), "Stage": get("Stage")}
++            self.specs[sid] = spec
++            self.rows.append(sid)
++        for spec in self.specs.values():
++            for dep in spec.deps:
++                if dep not in self.specs:
++                    self.issue("error", rel, f"{spec.id} depends on unknown spec {dep}", spec.id)
++
++    def parse_tasks(self, rel, spec):
++        task = None
++        for i, line in unfenced(read_lines(self.path(rel))):
++            where = f"{rel}:{i + 1}"
++            m = TASK_RE.match(line)
++            if m:
++                task = Task(spec.id, int(m.group("num")), m.group("owner"), m.group("status"),
++                            m.group("box"), m.group("text"), i)
++                if any(t.num == task.num for t in spec.tasks):
++                    self.issue("error", where, f"duplicate task T{task.num:03d}", spec.id)
++                if (task.box == "x") != (task.status == "done"):
++                    self.issue("error", where, "checkbox and status disagree", spec.id)
++                spec.tasks.append(task)
++                continue
++            if TASKISH_RE.match(line):
++                self.issue("error", where, "malformed task line", spec.id)
++                task = None
++                continue
++            if not line.strip():
++                continue
++            if not line[0].isspace():
++                task = None
++                continue
++            f = FIELD_RE.match(line)
++            if task and f:
++                key, val = f.group("key"), f.group("val")
++                values = [v.strip() for v in val.split(",") if v.strip()]
++                if key == "covers":
++                    task.covers += values
++                elif key == "retires":
++                    task.retires += values
++                elif key == "kind":
++                    task.kind = val
++                else:
++                    task.changes = val
++        for t in spec.tasks:
++            if not t.covers:
++                self.issue("error", f"{rel}:{t.line + 1}", f"{t.ref} has no covers:", spec.id)
++
++    # --- resolution ---
++
++    def resolve(self, raw, spec_id):
++        m = REF_RE.match(raw)
++        if not m or not m.group("rev"):
++            return None, None
++        key = f"{m.group('kind')}{int(m.group('num'))}"
++        if m.group("kind") == "A":
++            return self.global_items.get(key), int(m.group("rev"))
++        spec = self.specs.get(m.group("spec") or spec_id)
++        return (spec.items.get(key) if spec else None), int(m.group("rev"))
++
++    def find_task(self, raw, spec_id=None):
++        m = TASKREF_RE.match(raw.strip())
++        spec = self.specs.get(m.group("spec") or spec_id) if m else None
++        if not spec:
++            return None
++        return next((t for t in spec.tasks if t.num == int(m.group("num"))), None)
++
++    # --- trace states ---
++
++    def trace(self):
++        retired_by_done = set()
++        for spec in self.specs.values():
++            for t in spec.tasks:
++                for raw in t.retires:
++                    target = self.find_task(raw, spec.id)
++                    if not target:
++                        self.issue("error", t.ref, f"retires unknown task {raw}", spec.id)
++                    elif t.status == "done":
++                        retired_by_done.add(target.ref)
++        for spec in self.specs.values():
++            for item in spec.items.values():
++                for r in item.implements:
++                    target = spec.items.get(r)
++                    if not target:
++                        self.issue("error", item.where, f"{item.key} implements unknown {r}", spec.id)
++                    elif target.retired and not item.retired:
++                        self.issue("pending", item.where, f"{spec.id}/{item.key} implements retired {r}", spec.id)
++            for t in spec.tasks:
++                for raw in t.covers:
++                    item, rev = self.resolve(raw, spec.id)
++                    if item is None:
++                        self.issue("error", t.ref, f"covers unknown item {raw}", spec.id)
++                        continue
++                    if not (item.retired or item.rev != rev) or t.ref in retired_by_done:
++                        continue
++                    why = "retired" if item.retired else f"now @{item.rev}"
++                    if t.status == "done":
++                        self.issue("pending", t.ref, f"suspect: covers {raw}, {why}", spec.id)
++                    else:
++                        self.issue("pending", t.ref, f"covers outdated {raw} ({why})", spec.id)
++                if t.status == "done" and t.owner == "agent" and t.changes is None:
++                    self.issue("warning", t.ref, "done without changes: (finished outside trace)", spec.id)
++            self.uncovered(spec)
++
++    def covered_now(self, item):
++        for spec in self.specs.values():
++            for t in spec.tasks:
++                for raw in t.covers:
++                    found, rev = self.resolve(raw, spec.id)
++                    if found is item and rev == item.rev:
++                        return True
++        return False
++
++    def uncovered(self, spec):
++        active = [i for i in spec.items.values() if not i.retired]
++        ds = [i for i in active if i.kind == "D"]
++        if ds:
++            for r in (i for i in active if i.kind == "R"):
++                if not any(r.key in d.implements for d in ds) and not self.covered_now(r):
++                    self.issue("pending", r.where, f"uncovered: {spec.id}/{r.key} has no design item or task", spec.id)
++        if spec.tasks:
++            for d in ds:
++                if not self.covered_now(d):
++                    self.issue("pending", d.where, f"uncovered: {spec.id}/{d.key} has no task", spec.id)
++
++    # --- computed roadmap columns ---
++
++    def compute(self):
++        for spec in self.specs.values():
++            active = [i for i in spec.items.values() if not i.retired]
++            agent = [t for t in spec.tasks if t.owner == "agent"]
++            pending = any(sev == "pending" and sid == spec.id for sev, _, _, sid in self.issues)
++            if not any(i.kind == "R" for i in active):
++                stage = "requirements"
++            elif not any(i.kind == "D" for i in active):
++                stage = "design"
++            elif not spec.tasks:
++                stage = "tasks"
++            else:
++                stage = "build"
++            if any(t.status == "blocked" for t in agent):
++                status = "blocked"
++            elif stage == "build" and all(t.status == "done" for t in agent) and not pending:
++                status = "done"
++            elif any(t.status in ("in_progress", "done") for t in spec.tasks):
++                status = "in_progress"
++            else:
++                status = "todo"
++            spec.status, spec.stage = status, ("—" if status == "done" else stage)
++        for spec in self.specs.values():
++            for col, value in (("Status", spec.status), ("Stage", spec.stage)):
++                if spec.cells.get(col) != value:
++                    self.issue("error", "planning/roadmap.md",
++                               f"{spec.id} {col} is {spec.cells.get(col) or 'empty'!r}, files say {value!r}"
++                               " (run: status --write)", spec.id)
++
++    def next_task(self):
++        def order(s):
++            return (s.priority if s.priority is not None else 10**9, s.id)
++        for spec in sorted(self.specs.values(), key=order):
++            if spec.status == "done" or any(self.specs[d].status != "done" for d in spec.deps if d in self.specs):
++                continue
++            for t in spec.tasks:
++                if t.owner == "agent" and t.status == "todo":
++                    return t
++        return None
++
++    def write_roadmap(self):
++        rel = self.path("planning/roadmap.md")
++        lines = read_lines(rel)
++        for spec in self.specs.values():
++            line = lines[spec.row]
++            body = line.rstrip("\r\n")
++            lead = body[:len(body) - len(body.lstrip())]
++            parts = body.strip().split("|")  # ['', cell, ..., '']
++            for col, value in (("Status", spec.status), ("Stage", spec.stage)):
++                n = self.columns[col] + 1
++                cell = f" {value} "
++                parts[n] = cell + " " * max(0, len(parts[n]) - len(cell))
++            lines[spec.row] = lead + "|".join(parts) + eol(line)
++        write_lines(rel, lines)
++
++
++# ---------- git ----------
++
++def git(root, *args, env=None):
++    p = subprocess.run(["git", "-c", "core.quotepath=false", *args], cwd=root,
++                       capture_output=True, env=dict(os.environ, **(env or {})))
++    if p.returncode != 0:
++        raise TraceError(f"git {' '.join(args)}: {p.stderr.decode(errors='replace').strip()}")
++    return p.stdout.decode("utf-8", errors="replace").strip()
++
++
++def snapshot(root):
++    """Tree of the whole working tree (honoring .gitignore), without touching the real index."""
++    index = os.path.join(root, git(root, "rev-parse", "--git-path", "index"))
++    tmp = os.path.join(root, git(root, "rev-parse", "--git-path", "spectrace-index"))
++    if os.path.exists(index):
++        shutil.copyfile(index, tmp)
++    elif os.path.exists(tmp):
++        os.remove(tmp)
++    try:
++        env = {"GIT_INDEX_FILE": tmp}
++        git(root, "add", "-A", env=env)
++        return git(root, "write-tree", env=env)
++    finally:
++        if os.path.exists(tmp):
++            os.remove(tmp)
++
++
++def keep(root, name, tree):
++    commit = git(root, "commit-tree", tree, "-m", f"spectrace {name}", env=IDENT)
++    git(root, "update-ref", f"refs/spectrace/{name}", commit)
++
++
++def kept(root, name):
++    try:
++        return git(root, "rev-parse", "--verify", "--quiet", f"refs/spectrace/{name}^{{tree}}")
++    except TraceError:
++        return None
++
++
++def drop(root, name):
++    if kept(root, name):
++        git(root, "update-ref", "-d", f"refs/spectrace/{name}")
++
++
++def reference_tree(root):
++    """The tree when the last task closed; else HEAD; else empty."""
++    last = kept(root, "last")
++    if last:
++        return last
++    try:
++        return git(root, "rev-parse", "--verify", "--quiet", "HEAD^{tree}")
++    except TraceError:
++        return EMPTY_TREE
++
++
++def diff(root, a, b, *flags):
++    return git(root, "diff", "--no-color", "--no-ext-diff", "--no-renames", *flags, a, b, "--", ".", *EXCLUDE)
++
++
++def numstat(root, a, b):
++    out = []
++    for line in diff(root, a, b, "--numstat").splitlines():
++        add, rem, path = line.split("\t", 2)
++        out.append(f"{path} (binary)" if add == "-" else f"{path} (+{add} -{rem})")
++    return out
++
++
++# ---------- state ----------
++
++def state_path(root):
++    return os.path.join(root, ".spectrace", "state.json")
++
++
++def load_state(root):
++    try:
++        with open(state_path(root), encoding="utf-8") as f:
++            return json.load(f)
++    except (OSError, ValueError):
++        return {}
++
++
++def save_state(root, state):
++    os.makedirs(os.path.dirname(state_path(root)), exist_ok=True)
++    ignore = os.path.join(root, ".spectrace", ".gitignore")
++    if not os.path.exists(ignore):
++        with open(ignore, "w", encoding="utf-8") as f:
++            f.write("state.json\n")
++    if state:
++        with open(state_path(root), "w", encoding="utf-8") as f:
++            json.dump(state, f, indent=2)
++    elif os.path.exists(state_path(root)):
++        os.remove(state_path(root))
++
++
++# ---------- task edits ----------
++
++def edit_task(repo, task, status=None, changes=None, note=None):
++    rel = repo.path(f"{repo.specs[task.spec].dir}/tasks.md")
++    lines = read_lines(rel)
++    i = task.line
++    end_of_line = eol(lines[i])
++    if status:
++        box = "x" if status == "done" else " "
++        lines[i] = f"- [{box}] T{task.num:03d} [{task.owner}] [status:{status}] {task.text}{end_of_line}"
++    end = i + 1
++    while end < len(lines) and lines[end].strip() and lines[end][0].isspace():
++        end += 1
++    block = lines[i + 1:end]
++    if changes is not None:
++        block = [l for l in block if not re.match(r"^\s+changes:", l)]
++        fields = [n for n, l in enumerate(block) if FIELD_RE.match(l.rstrip("\r\n"))]
++        block.insert((fields[-1] + 1) if fields else 0, f"      changes: {changes}{end_of_line}")
++    if note:
++        block.append(f"      └─ {note}{end_of_line}")
++    lines[i + 1:end] = block
++    write_lines(rel, lines)
++
++
++# ---------- commands ----------
++
++def need_task(repo, raw):
++    task = repo.find_task(raw)
++    if not task:
++        raise TraceError(f"no task {raw} (use NNN/TNNN, e.g. 001/T005)")
++    return task
++
++
++def cmd_status(repo, args):
++    if args.write:
++        repo.write_roadmap()
++        repo = Repo(repo.root)
++    state = load_state(repo.root)
++    nxt = repo.next_task()
++    if args.json:
++        print(json.dumps({
++            "specs": [{"id": s.id, "spec": s.name, "status": s.status, "stage": s.stage}
++                      for s in (repo.specs[i] for i in repo.rows)],
++            "open": state.get("open"), "next": nxt.ref if nxt else None}, indent=2))
++        return 0
++    print(f"{'ID':<5}{'Spec':<28}{'Status':<13}Stage")
++    for sid in repo.rows:
++        s = repo.specs[sid]
++        print(f"{s.id:<5}{s.name:<28}{s.status:<13}{s.stage}")
++    print(f"\nopen: {state.get('open') or '—'}")
++    print(f"next: {nxt.ref + '  ' + nxt.text if nxt else '—'}")
++    errors = sum(1 for i in repo.issues if i[0] == "error")
++    if errors:
++        print(f"\n{errors} error(s) — run: check")
++    return 0
++
++
++def cmd_start(repo, args):
++    root = repo.root
++    task = need_task(repo, args.task)
++    state = load_state(root)
++    if state.get("open"):
++        raise TraceError(f"{state['open']} is still open — finish it (done/block/abort) first")
++    if task.status == "done":
++        raise TraceError(f"{task.ref} is already done")
++    current = snapshot(root)
++    reference = reference_tree(root)
++    stray = numstat(root, reference, current)
++    if stray and not (args.adopt or args.ignore):
++        print("Files changed outside any task since the last one closed:")
++        print("\n".join(f"  {s}" for s in stray))
++        print(f"\nRe-run with --adopt (count them as part of {task.ref}) or --ignore (leave them out).")
++        return 2
++    keep(root, "base", reference if args.adopt else current)
++    save_state(root, {"open": task.ref, "started": date.today().isoformat()})
++    edit_task(repo, task, status="in_progress")
++    Repo(root).write_roadmap()
++    print(f"started {task.ref}: {task.text}")
++    return 0
++
++
++def close_open(repo, raw):
++    task = need_task(repo, raw)
++    current = load_state(repo.root).get("open")
++    if current != task.ref:
++        raise TraceError(f"{task.ref} is not the open task (open: {current or 'none'})")
++    return task
++
++
++def cmd_done(repo, args):
++    root = repo.root
++    task = close_open(repo, args.task)
++    base, current = kept(root, "base"), snapshot(root)
++    files = numstat(root, base, current)
++    patch_abs = os.path.join(root, ".spectrace", "changes", f"{task.spec}-T{task.num:03d}.patch")
++    if files:
++        patch = diff(root, base, current) + "\n"
++        if len(patch.encode()) > PATCH_LIMIT:
++            patch = "# patch over size limit — file summary only\n" + "\n".join(files) + "\n"
++        os.makedirs(os.path.dirname(patch_abs), exist_ok=True)
++        with open(patch_abs, "w", encoding="utf-8", newline="\n") as f:
++            f.write(patch)
++    elif os.path.exists(patch_abs):
++        os.remove(patch_abs)
++    edit_task(repo, task, status="done", changes=", ".join(files) or "none")
++    keep(root, "last", current)
++    drop(root, "base")
++    save_state(root, {})
++    Repo(root).write_roadmap()
++    print(f"done {task.ref}: {len(files)} file(s)")
++    for f in files:
++        print(f"  {f}")
++    return 0
++
++
++def cmd_abort(repo, args):
++    task = close_open(repo, args.task)
++    drop(repo.root, "base")
++    save_state(repo.root, {})
++    edit_task(repo, task, status="todo")
++    Repo(repo.root).write_roadmap()
++    print(f"aborted {task.ref}; files on disk are untouched")
++    return 0
++
++
++def cmd_block(repo, args):
++    task = need_task(repo, args.task)
++    if load_state(repo.root).get("open") == task.ref:
++        drop(repo.root, "base")
++        save_state(repo.root, {})
++    edit_task(repo, task, status="blocked", note=f"blocked: {args.reason}")
++    Repo(repo.root).write_roadmap()
++    print(f"blocked {task.ref}")
++    return 0
++
++
++def cmd_check(repo, args):
++    root = repo.root
++    if not load_state(root).get("open"):
++        stray = numstat(root, reference_tree(root), snapshot(root))
++        if stray:
++            names = ", ".join(s.split(" (")[0] for s in stray[:5]) + (" …" if len(stray) > 5 else "")
++            repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}")
++    issues = sorted(repo.issues, key=lambda x: SEVERITY[x[0]])
++    if args.json:
++        print(json.dumps([{"severity": s, "where": w, "message": m, "spec": sid}
++                          for s, w, m, sid in issues], indent=2))
++    else:
++        for sev, where, msg, _ in issues:
++            print(f"{sev.upper():<8} {where}  {msg}")
++        counts = {k: sum(1 for i in issues if i[0] == k) for k in SEVERITY}
++        print(f"\n{counts['error']} error(s), {counts['pending']} pending, {counts['warning']} warning(s)")
++    failed = any(i[0] == "error" for i in issues) or (args.strict and any(i[0] == "pending" for i in issues))
++    return 1 if failed else 0
++
++
++def added_lines(patch_text):
++    files, current = {}, None
++    for line in patch_text.splitlines():
++        if line.startswith("+++ "):
++            current = None if line[4:] == "/dev/null" else (line[6:] if line.startswith("+++ b/") else line[4:])
++            if current:
++                files.setdefault(current, [])
++        elif current and line.startswith("+") and len(line[1:].strip()) >= 4:
++            files[current].append(line[1:].strip())
++    return files
++
++
++def file_presence(root, patch_path):
++    if not os.path.exists(patch_path):
++        return []
++    with open(patch_path, encoding="utf-8") as f:
++        added = added_lines(f.read())
++    out = []
++    for path, lines in added.items():
++        target = os.path.join(root, *path.split("/"))
++        if not os.path.exists(target):
++            out.append({"path": path, "present": 0, "added": len(lines), "deleted": True})
++            continue
++        with open(target, encoding="utf-8", errors="replace") as f:
++            now = {l.strip() for l in f}
++        out.append({"path": path, "present": sum(1 for a in lines if a in now),
++                    "added": len(lines), "deleted": False})
++    return out
++
++
++def cmd_impact(repo, args):
++    m = REF_RE.match(args.ref)
++    if not m or (m.group("kind") != "A" and not m.group("spec")):
++        raise TraceError("use NNN/R2, NNN/D3 or A4 (revision optional)")
++    key = f"{m.group('kind')}{int(m.group('num'))}"
++    spec = repo.specs.get(m.group("spec"))
++    home = repo.global_items if m.group("kind") == "A" else (spec.items if spec else {})
++    item = home.get(key)
++    if not item:
++        raise TraceError(f"no item {args.ref}")
++    targets = [item]
++    if item.kind == "R":
++        targets += [d for d in spec.items.values() if d.kind == "D" and key in d.implements]
++    rows = []
++    for s in repo.specs.values():
++        for t in s.tasks:
++            if not any(repo.resolve(raw, s.id)[0] in targets for raw in t.covers):
++                continue
++            patch = os.path.join(repo.root, ".spectrace", "changes", f"{t.spec}-T{t.num:03d}.patch")
++            retired_by = [o.ref for s2 in repo.specs.values() for o in s2.tasks
++                          if any(repo.find_task(r, s2.id) is t for r in o.retires)]
++            rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
++                         "covers": t.covers, "text": t.text, "changes": t.changes,
++                         "files": file_presence(repo.root, patch), "retired_by": retired_by})
++
++    def label(i):
++        prefix = "" if i.kind == "A" else f"{m.group('spec')}/"
++        return f"{prefix}{i.key}@{i.rev}" + (" (retired)" if i.retired else "")
++    if args.json:
++        print(json.dumps({"items": [label(i) for i in targets], "tasks": rows}, indent=2))
++        return 0
++    print(f"# Impact of {label(item)}\n")
++    if len(targets) > 1:
++        print("Design items implementing it: " + ", ".join(label(i) for i in targets[1:]) + "\n")
++    if not rows:
++        print("No task covers it.")
++    for r in rows:
++        tag = f" [{r['kind']}]" if r["kind"] else ""
++        print(f"- {r['task']} [{r['owner']}] [{r['status']}]{tag} {r['text']}")
++        print(f"    covers: {', '.join(r['covers'])}")
++        if r["retired_by"]:
++            print(f"    retired by: {', '.join(r['retired_by'])}")
++        for f in r["files"]:
++            where = "file deleted" if f["deleted"] else f"{f['present']}/{f['added']} added lines still present"
++            print(f"    {f['path']}: {where}")
++        if not r["files"] and r["status"] == "done":
++            print(f"    no patch recorded ({r['changes'] or 'finished outside trace'}) — search the code by hand")
++    return 0
++
++
++COMMANDS = {"status": cmd_status, "start": cmd_start, "done": cmd_done, "abort": cmd_abort,
++            "block": cmd_block, "check": cmd_check, "impact": cmd_impact}
++
++
++def parser():
++    p = argparse.ArgumentParser(prog="trace", description=f"spectrace trace (format v{VERSION})")
++    p.add_argument("-C", dest="cwd", default=".", help="run as if started in this directory")
++    p.add_argument("--version", action="version", version=f"spectrace trace {VERSION}")
++    sub = p.add_subparsers(dest="cmd", required=True)
++    s = sub.add_parser("status", help="spec status, stage and next task")
++    s.add_argument("--write", action="store_true", help="write Status/Stage into roadmap.md")
++    s.add_argument("--json", action="store_true")
++    s = sub.add_parser("start", help="open a task and snapshot the working tree")
++    s.add_argument("task")
++    g = s.add_mutually_exclusive_group()
++    g.add_argument("--adopt", action="store_true", help="count changes made outside any task as this task's")
++    g.add_argument("--ignore", action="store_true", help="leave changes made outside any task out")
++    for name, text in (("done", "close the open task and record its changes"),
++                       ("abort", "close the open task without recording it")):
++        sub.add_parser(name, help=text).add_argument("task")
++    s = sub.add_parser("block", help="mark a task blocked with a reason")
++    s.add_argument("task")
++    s.add_argument("reason")
++    s = sub.add_parser("check", help="verify the trace; exit 1 on errors")
++    s.add_argument("--strict", action="store_true", help="also fail on pending (suspect/uncovered)")
++    s.add_argument("--json", action="store_true")
++    s = sub.add_parser("impact", help="what implemented an item: tasks, files, lines still present")
++    s.add_argument("ref")
++    s.add_argument("--json", action="store_true")
++    return p
++
++
++def main(argv=None):
++    try:
++        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
++    except (AttributeError, ValueError):
++        pass
++    args = parser().parse_args(argv)
++    try:
++        root = os.path.normpath(git(os.path.abspath(args.cwd), "rev-parse", "--show-toplevel"))
++        if not os.path.isdir(os.path.join(root, "planning")):
++            raise TraceError(f"no planning/ folder in {root} — run the spectrace-start skill first")
++        return COMMANDS[args.cmd](Repo(root), args)
++    except TraceError as e:
++        print(f"trace: {e}", file=sys.stderr)
++        return 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/skills/spectrace-start/references/handoff.md b/skills/spectrace-start/references/handoff.md
+new file mode 100644
+index 0000000..095ed46
+--- /dev/null
++++ b/skills/spectrace-start/references/handoff.md
+@@ -0,0 +1,67 @@
++# Writing `planning/handoff.md`
++
++Read this at any stopping point where the user said yes to a handoff. A handoff is a
++point-in-time note for whoever resumes — a later session or a person. It is **not a
++source of truth**: `planning/roadmap.md` and `trace status` own order and status, each
++spec's `tasks.md` owns the work, `.spectrace/interview.md` owns the interview. Point at
++them, don't copy them.
++
++## Before writing
++
++1. Overwrite the file, don't append — history lives in `git log -- planning/handoff.md`.
++2. Run `trace status` and read the ledger first. Write only what you saw there or the
++   user said; leave gaps as "unknown", never guess.
++3. Get the session id (below), once, before the first line is written.
++
++## Session id
++
++One line right under the title, so a resume is one command.
++
++- **Claude Code**: read `$CLAUDE_CODE_SESSION_ID` with the shell tool (`echo
++  "$CLAUDE_CODE_SESSION_ID"`; PowerShell: `$env:CLAUDE_CODE_SESSION_ID`). Write
++  `Session: <id> — resume with \`claude --resume <id>\` from this repo's root.`
++- **Any other harness**: only if it exposes a session id you can read from its own
++  environment or documentation. Otherwise omit the line.
++- Empty or unset → omit the line. Never invent, shorten or reuse an id.
++
++The handoff must still be enough to resume without the session id.
++
++## Shape
++
++Sections in this order; drop one only when it would be empty.
++
++```
++# Handoff — YYYY-MM-DD
++
++Session: <id> — resume with `claude --resume <id>`      ← omit if unavailable
++
++One paragraph: point-in-time note, not a source of truth; what owns each thing.
++Branch and working-tree state; the open task, if any (`trace status`).
++
++## Done this session
++What changed and why, one bullet each, with the spec or file it lives in.
++
++## Next
++Ordered. Each item: what, and why it's next (priority, dependency, blocker).
++Name the exact step to resume: the `spectrace-start` skill (the ledger picks up at the first
++`open` dimension), the `spectrace-plan` skill for spec NNN, or `trace status` → next task.
++
++## Open / skipped
++Every ledger `open` or `skipped` dimension and every deferred spec, with the reason.
++
++## Traps
++Things that already cost time or will: non-obvious ordering, files `trace` owns, a
++decision the user already made that shouldn't be re-litigated.
++
++## Not verified — don't claim otherwise
++What was written but never run.
++```
++
++## Rules
++
++- Terse, structural, no filler (`planning/styles.md` rules apply if present).
++- Dates are absolute (`2026-10-06`), never "today".
++- Reference code as `path:line` or a task ID (`002/T005`), not by pasting it.
++- Never record an answer the user didn't give; quote or omit.
++- If only per-spec requirements remain, say so and name both paths — draft mode or
++  one question at a time — and which the user chose, if they did.
+diff --git a/skills/spectrace-start/references/question-bank.md b/skills/spectrace-start/references/question-bank.md
+new file mode 100644
+index 0000000..41a05b3
+--- /dev/null
++++ b/skills/spectrace-start/references/question-bank.md
+@@ -0,0 +1,165 @@
++# Interview question bank
++
++The source of interview *coverage* for `spectrace-start`, not a script to read aloud: ask one
++question at a time, in the user's own vocabulary, skipping what the conversation has
++already answered. The opening request that triggered the skill is context, not an
++answer: it seeds `idea-detail`, but never closes `project-type` or `goal` on its own.
++
++**A dimension is `covered` when the user has actually answered it, `skipped` when they
++declined it (record the reason), and `open` otherwise.** Every dimension below must end
++in one of those three states in `.spectrace/interview.md` before a phase may end. Never
++infer an answer to close a dimension. The one sanctioned derivation is draft mode
++(SKILL.md, Phase 6): a spec's requirements drafted from the finished interview plus
++web-verified standards, shown in full for yes / changes / defer.
++
++---
++
++## Phase A — Type & vision (all project types)
++
++| Dimension | Questions |
++|---|---|
++| `idea-detail` | "Tell me in your own words, in detail, what this idea is — what problem it solves, how you picture it working step by step, and anything you've tried or seen that makes you think it's possible. Take as long as you need." · Then structure what was said into problem, users, main flow, entities/data and integrations, without inventing choices; use it as the starting point for the rest of the interview. |
++| `project-type` | "What kind of thing is this — software, a marketing or content project, an operations/process project, a research project, or something else?" · For software, also the concrete form: mobile app (iOS/Android/both), web app, desktop app, backend service/API, CLI, library, or a combination. "An app" alone is not an answer — ask which. |
++| `goal` | Drafted by the agent from `idea-detail` and `project-type` as a short statement (what it is, for whom, what it achieves), then shown: "Is this the goal, or would you change it?" Covered only on the user's yes or edit. |
++| `audience` | "Who or what is this for?" |
++| `mvp` | "What's the MVP, or first phase, you want to reach?" · "What's explicitly *not* in the first phase?" |
++| `done-when` | "How will you know the whole thing is finished? What's observably true then?" |
++| `constraints-hard` | "Any hard constraints — deadline, budget, a platform or vendor you must use, a rule you can't break?" |
++| `stakeholders` | "Does anyone else need to review or approve work as it goes?" |
++| `automatability` | "Which parts of this do you expect an agent to do unattended, and which do you want to keep in your own hands?" — drives each task's `agent`/`human` owner. |
++
++## Phase B — Technologies, architecture & tools
++
++Ask the block matching `project-type`. Each answer that settles something becomes an
++A item in `planning/architecture.md`: `- A<n>@1: <decision> — why: <reason>`.
++
++### B-software
++
++| Dimension | Questions |
++|---|---|
++| `runtime` | "What language and runtime version?" |
++| `framework` | "Which framework(s) and key libraries? Anything you specifically *don't* want used?" |
++| `toolchain` | "Package manager, test runner, formatter/linter — and the exact commands to run each?" Record only tools that are actually installed or will be installed by a spec — never a tool by name alone. |
++| `datastore` | "Where does data live? Which database, and how are schema changes managed?" |
++| `data-model` | "What are the main entities and how do they relate?" |
++| `interface` | "What's the interface — REST, GraphQL, RPC, CLI, library API? Any versioning rule?" |
++| `identity` | "How do users authenticate, and how is authorization decided?" |
++| `hosting` | "Where does this run in production, and how does it get there?" |
++| `ci` | "What has to pass before a change is acceptable?" |
++| `env-secrets` | "How are configuration and secrets handled? What must never be committed?" |
++| `verification` | "How do you want changes verified — unit tests, integration, manual, a smoke script?" |
++| `third-party` | "Any third-party services or accounts this depends on?" |
++| `observability` | "How would you find out this broke in production?" |
++
++Version pins (a compiler target, a runtime version) must be values the chosen
++toolchain actually accepts — verify, don't assume the newest exists.
++
++### B-marketing-content
++
++| Dimension | Questions |
++|---|---|
++| `channels` | "Which channels — site, email, social, paid, events, press? Which matter most?" |
++| `positioning` | "What's the core message, and who are you positioning against?" |
++| `assets` | "What assets does this need — copy, design, video, landing pages — and who makes each?" |
++| `tools` | "Which tools/platforms are you working in (CMS, ESP, analytics, scheduler, ad manager)?" |
++| `data-sources` | "Where does the data for measurement come from, and who has access?" |
++| `measurement` | "What metric decides whether this worked, and what's the target?" |
++| `calendar` | "Any fixed dates — launch, campaign window, event, embargo?" |
++| `approvals` | "Who signs off on published material, and what can't go out without review?" |
++| `compliance` | "Any legal, brand or regulatory constraints on what you can claim or publish?" |
++
++### B-operations-process
++
++| Dimension | Questions |
++|---|---|
++| `current-state` | "How does this get done today, step by step?" |
++| `systems` | "Which systems are involved, and which can be accessed programmatically?" |
++| `volume-cadence` | "How often does this run, and at what volume?" |
++| `failure-cost` | "What happens if a step is done wrong or skipped? What's unrecoverable?" |
++| `handoffs` | "Where does work pass between people or teams?" |
++| `access` | "What credentials or permissions are needed, and who grants them?" |
++
++### B-research
++
++| Dimension | Questions |
++|---|---|
++| `question` | "What's the actual question being answered?" |
++| `sources` | "What sources or datasets are in scope? Which are off-limits?" |
++| `method` | "How will you analyse it, and what would falsify the conclusion?" |
++| `output-form` | "What's the deliverable — a report, a dataset, a model, a decision?" |
++| `rigour` | "What standard does this need to meet, and who's the audience for it?" |
++
++### B-other
++
++Ask the generic set: `tools`, `inputs`, `outputs`, `who-does-what`, `sequence-constraints`,
++`quality-bar`. Derive further dimensions from the goal statement — this branch exists so
++an unanticipated project type is interviewed properly rather than forced into B-software.
++
++## Phase C — Helper skills & agent rules
++
++| Dimension | Questions |
++|---|---|
++| `helper-skills` | Given the Phase B answers, name the skills/plugins available in this session (other than spectrace) that would help agents working here. Ask which, if any, to install. **Never install without explicit confirmation.** If no install mechanism resolves, print manual instructions instead of guessing a command. Anything wanted but not installable now becomes a roadmap spec. |
++| `agent-rules` | "Any rule you want every agent working in this repo to follow, or anything you want them never to do?" |
++
++## Phase D — Styles & preferences
++
++Gate on `visual-surface` first; skip the visual rows for a project with no visual output.
++
++| Dimension | Questions |
++|---|---|
++| `visual-surface` | "Does this project have a visual surface — a UI, a site, a deck, brand artefacts?" |
++| `palette` | "Any colors you want used, or an existing brand to match? Anything to avoid?" |
++| `typography` | "Any typeface or type-scale preference?" |
++| `density-mode` | "Dense or spacious? Light, dark, or both?" |
++| `brand-refs` | "Any existing brand assets, or reference sites/products whose look you want?" |
++| `tone` | "What tone should the writing take, and in which language?" |
++| `accessibility` | "Any accessibility target, or devices/browsers that must work?" |
++| `code-conventions` | "Naming, file layout, comment density, commit-message style — anything you want enforced?" |
++| `anti-preferences` | "Anything you actively dislike and don't want to see?" |
++| `preference-strength` | For each preference: "is that a hard rule or a default an agent may deviate from with reason?" |
++
++## Phase E — Per-spec requirements
++
++Asked once per spec, in roadmap order. Ledger rows are prefixed with the spec ID
++(`002.requirements`).
++
++| Dimension | Questions |
++|---|---|
++| `what` | "What's being built in this spec?" |
++| `serves` | "Who or what does it serve?" |
++| `requirements` | "What must be true when this spec is done? Give each as one thing someone could check — what it does, and any hard constraint it must respect." Each answer becomes one R item; split compound answers, and turn a vague one ("fast", "secure") into a checkable statement with the user. |
++| `out-of-scope` | "What's explicitly *not* in this spec?" |
++| `dependencies` | "Does this need anything from another spec that the roadmap doesn't already record?" |
++| `owner-split` | "Any task here that you want to do yourself rather than have an agent do?" |
++
++## Phase F — Closing sweep
++
++Run at the end of every phase above. Not optional, and not a formality.
++
++1. Re-read what was just written. For every noun the user named but never specified
++   ("the dashboard", "the integration", "the brand guidelines"), ask about it.
++2. List the dimensions still `open` for this phase and ask about each one.
++3. Ask: **"What haven't we covered that matters here?"**
++4. If steps 1–3 produced anything new, write it down and run the sweep again.
++5. The phase ends as soon as a full sweep produces nothing new. One clean pass is
++   enough; don't repeat the question once the user has said there's nothing more.
++
++## Help-me-decide protocol
++
++Runs whenever the user answers a dimension with genuine uncertainty ("no sé", "not
++sure", "I don't know" — any phase). Judge which kind of dimension it is first:
++
++**Researchable** — a technical or stylistic choice with real current options:
++`runtime`, `framework`, `toolchain`, `datastore`, `hosting`, `palette`, `typography`,
++`brand-refs`, and their equivalents in other branches. Search for current, fitting
++options (a web-search tool if the session has one) and present 3–5 ranked options with
++a one-line reason each, tailored to what's already been answered. No web-search tool?
++Say so and offer options from your own knowledge — never pass a guess off as researched.
++
++**Not researchable** — a fact about the user's own project or business: `audience`,
++`stakeholders`, `mvp`, `goal`, and their equivalents. Say a generic search wouldn't
++help, and ask a narrower question instead of manufacturing a list.
++
++Either way the user picks, asks for more, or leaves it `open` — never infer a choice.
++Record the answer `covered` with a note that it was resolved via researched options.
+diff --git a/skills/spectrace-start/references/templates.md b/skills/spectrace-start/references/templates.md
+new file mode 100644
+index 0000000..dcc4e1c
+--- /dev/null
++++ b/skills/spectrace-start/references/templates.md
+@@ -0,0 +1,143 @@
++# File templates
++
++The shapes of the files `spectrace-start` writes. Item, task and roadmap grammar is defined in
++`.spectrace/format.md` — not here. Write content only from the ledger; anything not
++yet answered stays `TBD`.
++
++## `AGENTS.md`
++
++```markdown
++# <project>
++
++<one-line goal> For: <audience>. Type: <project-type>.
++
++## Doc map
++
++- `planning/product.md` — what this is, who it's for, out of scope.
++- `planning/architecture.md` — project-wide decisions (A items).
++- `planning/styles.md` — style detail (if present).
++- `planning/roadmap.md` — specs, order, status.
++- `planning/specs/NNN-name/` — requirements (R), design (D), tasks, changes.
++- `.spectrace/format.md` — how all of the above is written.
++
++## Stack & conventions
++
++<short operative form of each A item: "Node 22 (A1)">
++
++## Style
++
++<operative summary from Phase D; hard rules marked as such; points to planning/styles.md>
++
++## Rules for agents
++
++<agent-rules answers>
++
++<protocol block from assets/agents-protocol.md>
++```
++
++`AGENTS.md` is the only instructions file. Never create `CLAUDE.md`. If the repo
++already has an `AGENTS.md`, add the sections that are missing and the protocol block;
++change nothing else without asking.
++
++## `planning/product.md`
++
++```markdown
++# Product
++
++## What this is
++
++## Who uses it
++
++## Out of scope
++```
++
++## `planning/architecture.md`
++
++```markdown
++# Architecture
++
++Project-wide decisions. Grammar: `.spectrace/format.md`.
++
++## <type-keyed headers>
++
++## Still to define
++```
++
++Headers by `project-type` (only the category picks the set):
++
++| Type | Headers |
++|---|---|
++| software | `Container`, `Stack`, `Conventions` |
++| marketing/content | `Channels`, `Tools`, `Data sources` |
++| operations/process | `Systems`, `Cadence`, `Handoffs` |
++| research | `Sources`, `Method`, `Output` |
++| other / skipped | `Tools`, `Inputs/Outputs` |
++
++Each decision is an A item under the header it belongs to:
++`- A3@1: PostgreSQL 16 — why: relational data, team knows it.`
++An undecided dimension is a bullet under `Still to define`, never an invented A item.
++
++## `planning/roadmap.md`
++
++```markdown
++# Roadmap
++
++Index of every spec. `Status` and `Stage` are written only by `trace`. Grammar:
++`.spectrace/format.md`.
++
++| ID  | Spec | Status | Depends on | Stage | Priority |
++|-----|------|--------|------------|-------|----------|
++```
++
++Nothing else goes in this file — no history, no prose ordering.
++
++## `planning/specs/NNN-name/requirements.md`
++
++```markdown
++# NNN — name — Requirements
++
++## What's being built
++
++## Who it serves
++
++## Requirements
++
++- R1@1: <one checkable statement>
++
++## Out of scope
++
++## Dependencies
++
++## Owner split
++```
++
++Every R item is observably checkable: someone could tell, by looking or running
++something, whether it holds. A hard constraint is an R item too. `## Dependencies` is
++written even when the answer is "None."
++
++## `planning/specs/NNN-name/design.md` and `tasks.md` (stubs)
++
++```markdown
++# NNN — name — Design
++
++TBD — closed by the `spectrace-plan` skill.
++```
++
++```markdown
++# NNN — name — Tasks
++
++TBD — written by the `spectrace-plan` skill.
++```
++
++## `.spectrace/interview.md`
++
++```markdown
++# Interview ledger
++
++| dimension | status | answer |
++|-----------|--------|--------|
++| idea-detail | open | |
++```
++
++One row per question-bank dimension, in phase order; per-spec rows prefixed with the
++spec ID (`002.requirements`). Write the user's own words in `answer`, not a paraphrase.
+diff --git a/skills/start/SKILL.md b/skills/start/SKILL.md
+deleted file mode 100644
+index 5a4fac2..0000000
+--- a/skills/start/SKILL.md
++++ /dev/null
+@@ -1,158 +0,0 @@
+----
+-name: start
+-description: >-
+-  Starts a spectrace project or adds a spec to one. Runs a guided interview in
+-  natural language (project type, goal, stack and tools, agent rules, styles), then
+-  writes planning/product.md, planning/architecture.md (decisions as A items),
+-  planning/roadmap.md and each spec's requirements.md (R items with IDs and
+-  revisions), installs the trace script in .spectrace/ and the task protocol in
+-  AGENTS.md. Use for any new app, site, content, operations or research project, or
+-  a new feature spec, in English or Spanish, even with typos: "I want to build X",
+-  "start a new spec for Y", "quiero crear una app", "nueva spec para Z". Works in a
+-  folder without git (initializes it after asking).
+----
+-
+-# spectrace: start
+-
+-Run **inside the target repo**. Ask **one question at a time** and wait for the reply.
+-Everything this skill writes is described in `references/templates.md`; the grammar of
+-items, tasks and the roadmap is in `assets/format.md` (copied to `.spectrace/format.md`).
+-
+-**Owns only:** `AGENTS.md` (its sections and the protocol block), `planning/product.md`,
+-`planning/architecture.md`, `planning/styles.md`, `planning/roadmap.md` (rows, never
+-`Status`/`Stage`), `planning/specs/*/requirements.md` and the stubs beside it,
+-`planning/handoff.md`, and `.spectrace/` (`trace.py`, `format.md`, `interview.md`). Never
+-create `CLAUDE.md`, a README, CI config or anything else — those are project
+-deliverables the roadmap decides.
+-
+-## Interview contract
+-
+-Applies to every Q&A phase. `references/question-bank.md` defines the dimensions.
+-
+-- **Ledger.** `.spectrace/interview.md`, one row per dimension
+-  (`covered` / `skipped` / `open`), written after every answer, in the user's own words.
+-  It makes an interrupted interview resumable and a skip distinguishable from an
+-  oversight.
+-- **A phase ends** when each of its dimensions is `covered` or `skipped` and the
+-  closing sweep (question bank, Phase F) comes back with nothing new.
+-- **Never infer an answer** to close a dimension — leave it `open`, ask again in the
+-  sweep. `TBD` on disk beats a guess.
+-- **Follow up** on anything named but unspecified ("the dashboard", "our brand").
+-- **Unsure user** → the question bank's help-me-decide protocol.
+-- **Plain chat questions** by default. A selectable-options tool only for a closed
+-  choice with 2–6 real answers (project type, yes/no) — never with a skip preselected.
+-- **Stopping.** The user can stop at any point. Before stopping, ask whether to write
+-  `planning/handoff.md`; if yes, follow `references/handoff.md`.
+-
+-## Phase 0 — Detect state
+-
+-1. `.spectrace/interview.md` exists → resumed interview: report what's covered and
+-   continue from the first `open` dimension. Add any question-bank dimension the ledger
+-   lacks as `open`.
+-2. `planning/product.md` has real content → the project exists: go to Phase 6 for a new
+-   spec (or Phase 7 for a seeded spec without requirements). Offer to revisit Phases
+-   3–5 only if the user says a decision changed — and then point to the `change` skill
+-   for anything already recorded as an A item.
+-3. Otherwise → a new project: Phase 1.
+-
+-Never overwrite a file with real content without explicit confirmation.
+-
+-## Phase 1 — Ledger only
+-
+-Create `.spectrace/interview.md` with every Phase A dimension `open`. Write nothing
+-else yet: the user's first sight of the run is a question, not a wall of files.
+-
+-## Phase 2 — Type & vision (question bank, Phase A)
+-
+-The opening request is context, not an answer. Start with `idea-detail` in the user's
+-language (quote the opening request back and ask them to expand). Record it verbatim,
+-then structure it — problem, users, main flow, data, integrations — without inventing
+-choices. Settle `project-type` (for software, the concrete form). Draft `goal` from the
+-narrative and show it for yes / changes. Then the remaining Phase A dimensions, grounded
+-in the narrative. Close with the sweep.
+-
+-## Phase 3 — Scaffold
+-
+-1. **git.** No repository here → ask, then `git init`. The trace needs git.
+-2. **Files** (only if missing), from `references/templates.md`: `AGENTS.md`,
+-   `planning/product.md` (filled from `goal`, `audience`, `mvp`), `planning/architecture.md`
+-   (headers keyed to `project-type`), `planning/roadmap.md`, `planning/specs/`.
+-3. **Trace.** Copy `assets/trace.py` and `assets/format.md` (paths relative to this
+-   skill's folder) into `.spectrace/`. If `.spectrace/trace.py` already exists with a
+-   lower `VERSION`, show both versions and ask before replacing it.
+-4. **Protocol.** Write `assets/agents-protocol.md` into `AGENTS.md`, replacing the text
+-   between `<!-- spectrace:protocol -->` and `<!-- /spectrace:protocol -->` if present,
+-   appending it otherwise. Touch nothing else in `AGENTS.md`.
+-
+-## Phase 4 — Technologies, architecture & tools (Phase B)
+-
+-Ask the block matching `project-type` — no software questions for a marketing project.
+-Each settled answer becomes an A item in `planning/architecture.md`
+-(`- A<n>@1: <decision> — why: <reason>`) and its short operative form goes into
+-`AGENTS.md` → "Stack & conventions". Nothing decided → a bullet under "Still to define",
+-and a decision spec in Phase 6. Never invent a stack. Close with the sweep.
+-
+-## Phase 5 — Helper skills, agent rules, styles (Phases C, D)
+-
+-- Recommend only helper skills relevant to the Phase B answers; install nothing without
+-  explicit confirmation; what can't be installed becomes a roadmap spec.
+-- `agent-rules` → `AGENTS.md` → "Rules for agents".
+-- Styles: detail (hex values, type stacks) into `planning/styles.md`, the operative
+-  summary into `AGENTS.md` → "Style", each marked hard rule or default. Never invent a
+-  style value. Close with the sweep.
+-
+-## Phase 6 — Roadmap
+-
+-1. Propose the ordered specs needed to reach the goal: setup first (from Phases 3–5,
+-   including uninstallable helpers and `open` decisions), then features. Use
+-   type-appropriate examples — software: scaffold, database, test harness; marketing:
+-   audience research, brand guidelines, channel setup.
+-2. Ask the `mvp` cut: which are in the first phase.
+-3. Show the list; confirm add / remove / reorder; ask each item's dependencies
+-   explicitly; ask whether to record the confirmed order as `Priority`.
+-4. For each confirmed spec: folder `planning/specs/NNN-name/` (kebab-case,
+-   `NNN` = highest ID + 1), stub `design.md` and `tasks.md`, and a roadmap row with
+-   `Status`/`Stage` empty. Then run `python3 .spectrace/trace.py status --write`
+-   (`python` on Windows) — never type those two cells yourself.
+-5. Sweep against `done-when`: anything no spec covers is a missing row.
+-
+-## Phase 7 — Requirements, per spec
+-
+-Before the first spec, ask once: answer each spec's requirements here, one question at
+-a time, or have them **drafted** from the interview for approval. "Sigue solo" / "decide
+-tú" at any point switches to drafting.
+-
+-**Q&A mode.** Question bank Phase E, one question at a time, writing after each answer.
+-
+-**Draft mode.** For one spec at a time:
+-1. Read the ledger, `planning/*.md`, the spec's roadmap row and every sibling spec's
+-   `requirements.md`, so drafts don't overlap.
+-2. Derive each section. Where the interview doesn't settle something, use the current
+-   industry standard, confirmed by a short web search; mark every line the user didn't
+-   give: `_(standard: <name> — <primary source URL>)_`, `_(judgement, no standard)_`, or
+-   `_(standard, unverified — no web search)_`. A fact only the user knows (an account,
+-   a budget, a preference) is asked live — just that one question.
+-3. Show the **full draft** — not a summary — for **yes**, **changes** (revise, re-show)
+-   or **defer** (leave it, move on). If the user said to proceed without confirming,
+-   still print each draft, treat it as yes, and list every marked line in the report.
+-4. On yes, write it and record the spec's Phase E rows in the ledger as
+-   `covered (drafted)`.
+-
+-Either mode: R items are numbered from `R1@1`, each one checkable (templates). After
+-each spec, run `trace status --write`, then ask whether to continue to the next spec —
+-never chain silently through all of them.
+-
+-## Phase 8 — Report
+-
+-1. Run `python3 .spectrace/trace.py check` and fix any error it reports in files this
+-   skill wrote.
+-2. Tell the user what exists, every dimension left `open` or `skipped`, and the next
+-   step: the `plan` skill on the first spec `trace status` shows at stage `design`.
+-3. Ask whether to write `planning/handoff.md`.
+-
+-## Style
+-
+-- Terse and structural; no filler, no marketing language; the user's language for the
+-  conversation, the project's language (Phase D `tone`) for the files.
+-- Never fabricate product, architecture, requirements or style content — `TBD` instead.
+-- One question at a time.
+diff --git a/skills/start/assets/agents-protocol.md b/skills/start/assets/agents-protocol.md
+deleted file mode 100644
+index cee6f14..0000000
+--- a/skills/start/assets/agents-protocol.md
++++ /dev/null
+@@ -1,18 +0,0 @@
+-<!-- spectrace:protocol -->
+-## Working on tasks
+-
+-Specs live in `planning/`; how they are written is in `.spectrace/format.md`. Run the
+-trace with `python3` (`python` on Windows).
+-
+-1. `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
+-2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them.
+-3. Read the spec's `requirements.md` and `design.md`; do only that task, following `planning/architecture.md`.
+-4. Verify it against the task text and the R items it covers.
+-5. `python3 .spectrace/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`.
+-6. Before saying you're finished: `python3 .spectrace/trace.py check` must exit 0.
+-
+-Never edit by hand: a task's status or `changes:` line, the roadmap's `Status`/`Stage`
+-(the trace owns them), or the meaning of an R, D or A item (the `change` skill does it,
+-so the history and the trace stay right). One commit per task is welcome but optional;
+-if you commit, add a `Spec: NNN/TNNN` trailer.
+-<!-- /spectrace:protocol -->
+diff --git a/skills/start/assets/format.md b/skills/start/assets/format.md
+deleted file mode 100644
+index 19c6f04..0000000
+--- a/skills/start/assets/format.md
++++ /dev/null
+@@ -1,150 +0,0 @@
+-# spectrace format
+-
+-The single definition of how specs, decisions and tasks are written. Skills cite this
+-file; `trace.py` implements it. If the two ever disagree, `trace.py` is wrong — fix it
+-and add a test. Format version: 1.
+-
+-## Files
+-
+-```
+-AGENTS.md                         instructions for any agent (one file, no CLAUDE.md)
+-planning/product.md               what this is, who it's for, out of scope
+-planning/architecture.md          project-wide decisions (A items)
+-planning/styles.md                preferences (optional)
+-planning/roadmap.md               index of specs
+-planning/changes.md               history of changes to A items
+-planning/specs/NNN-name/
+-  requirements.md                 R items
+-  design.md                       D items
+-  tasks.md                        tasks
+-  changes.md                      history of changes to this spec
+-.spectrace/
+-  trace.py  format.md             copied in by `start`
+-  interview.md                    interview ledger
+-  changes/NNN-TNNN.patch          exact diff of each finished task (committed)
+-  state.json                      open task (git-ignored)
+-```
+-
+-## Items: R, D, A
+-
+-An item is one normative statement with an ID and a revision. Anything that is not an
+-item line is context and is never traced.
+-
+-```
+-- R2@1: A user signs in with email and password.
+-- D3@1 (implements R2): Sessions live in an httpOnly cookie.
+-- A4@1: Runtime is Node 22 — why: LTS, team knows it.
+-- ~~D1@1 (implements R2): Sessions live in localStorage.~~ retired 2026-10-12 → D3
+-```
+-
+-- `R` items live only in a spec's `requirements.md`, `D` items only in its `design.md`,
+-  `A` items only in `planning/architecture.md`.
+-- IDs are numbered per file kind and never reused: a retired item stays, struck through.
+-- `@N` is the revision. Bump it when the meaning changes; never for a wording fix.
+-- `(implements R2, R5)` on a D item names the requirements it serves (same spec).
+-- Retired: the whole statement wrapped in `~~`, then `retired YYYY-MM-DD`, optionally
+-  `→ <replacement ID>`.
+-- Never edit an item's meaning by hand — the `change` skill does it, so the history in
+-  `changes.md` and the trace stay right.
+-
+-## References
+-
+-| Written as | Means |
+-|---|---|
+-| `R2@1`, `D3@1` | item in the same spec |
+-| `001/D3@1` | item in spec 001 |
+-| `A4@1` | project-wide item in `architecture.md` |
+-| `001/T005` | task 5 of spec 001 |
+-
+-## Tasks (`tasks.md`)
+-
+-```
+-- [ ] T005 [agent] [status:todo] Session middleware
+-      covers: D3@1
+-- [x] T006 [agent] [status:done] Session expiry test
+-      covers: R2@1
+-      kind: test
+-      changes: src/auth/session.ts (+42 -3), test/session.test.ts (+30)
+-- [ ] T009 [agent] [status:todo] Remove the localStorage session code
+-      covers: D3@1
+-      retires: T002
+-- [ ] T010 [human] [status:blocked] Create the mail provider account
+-      covers: R4@1
+-      └─ blocked: waiting for billing approval
+-```
+-
+-- A task line starts at column 0: checkbox, `T` + 3 digits, owner, status, text.
+-  The checkbox is `[x]` exactly when the status is `done`.
+-- Owner: `agent` (any agent may do it) or `human` (the user does it; agents report and
+-  skip it).
+-- Status: `todo` · `in_progress` · `blocked` · `done`.
+-- Fields are indented lines under the task:
+-  - `covers:` — required. The items this task implements or verifies.
+-  - `kind: test` — the task writes a test for the R items it covers.
+-  - `retires: T002` — the task removes what an earlier task built.
+-  - `changes:` — written only by `trace done`. Never by hand.
+-  - `└─ <note>` — free text.
+-- Who writes what: `trace` writes `in_progress`, `done`, `blocked`, the checkbox and
+-  `changes:`. The `plan` and `change` skills write new task lines; `change` may also
+-  re-point a `covers:` to a new revision (adding a `└─ reviewed YYYY-MM-DD: …` note)
+-  and delete a task that was never started. Nobody else edits a task line.
+-
+-## Roadmap (`planning/roadmap.md`)
+-
+-```
+-| ID  | Spec  | Status      | Depends on | Stage | Priority |
+-|-----|-------|-------------|------------|-------|----------|
+-| 001 | auth  | done        | —          | —     | 1        |
+-| 002 | feed  | in_progress | 001        | build | 2        |
+-```
+-
+-- People and skills write `ID`, `Spec`, `Depends on`, `Priority`. Only `trace` writes
+-  `Status` and `Stage`; `trace check` fails if they differ from what the files say.
+-- `Spec` is exactly the folder name after `NNN-`.
+-- `Depends on`: comma-separated spec IDs, or `—`.
+-- `Priority`: a number, lower first among specs the dependencies don't already order;
+-  `—` if unranked.
+-- Stage — what the spec needs next:
+-  `requirements` (no R items) · `design` (no D items) · `tasks` (no tasks) ·
+-  `build` (tasks left) · `—` (done).
+-- Status: `todo` (nothing started) · `in_progress` · `blocked` (an agent task is
+-  blocked) · `done` (every agent task done, nothing suspect or uncovered). `human`
+-  tasks never hold a spec open.
+-
+-## Trace states (computed, never written)
+-
+-- **suspect** — a done task covers an older revision of an item, or a retired item, and
+-  no done task retires it. Resolved by the `change` skill: re-point `covers:` to the
+-  new revision (the task is still right) or add a task that `retires:` it.
+-- **orphan** — a reference to an item or task that doesn't exist.
+-- **uncovered** — an active R that no active D implements and no task covers (checked
+-  once the spec has D items); an active D no task covers (checked once it has tasks).
+-
+-## History (`changes.md`)
+-
+-One entry per change, newest last, written by the `change` skill: in the spec's
+-`changes.md` for R and D items, in `planning/changes.md` for A items. A change that
+-touches both gets an entry in each.
+-
+-```
+-## 2026-10-12 — sessions move to cookies
+-Why: localStorage sessions are readable by any script on the page.
+-- MODIFIED R2@1 → R2@2
+-- REMOVED D1@1
+-- ADDED D3@1
+-- Tasks: T009 retires T002; T006 re-pointed to R2@2 (still valid)
+-```
+-
+-## Executing tasks
+-
+-```
+-python3 .spectrace/trace.py status            # (python on Windows)
+-python3 .spectrace/trace.py start 001/T005    # before editing anything
+-python3 .spectrace/trace.py done 001/T005     # writes changes: and the patch
+-python3 .spectrace/trace.py check             # must exit 0 before you finish
+-```
+-
+-`start` snapshots the working tree without committing or touching the staging area;
+-`done` diffs against that snapshot, so each task's changes are exact even if several
+-tasks share one commit or none. One task is open at a time. Changes under `planning/`
+-and `.spectrace/` are never counted as task changes.
+diff --git a/skills/start/assets/trace.py b/skills/start/assets/trace.py
+deleted file mode 100644
+index 2edc33b..0000000
+--- a/skills/start/assets/trace.py
++++ /dev/null
+@@ -1,748 +0,0 @@
+-#!/usr/bin/env python3
+-"""spectrace trace: status, per-task change capture, and the spec trace check.
+-
+-Implements .spectrace/format.md. Python 3.9+, standard library only.
+-"""
+-import argparse
+-import json
+-import os
+-import re
+-import shutil
+-import subprocess
+-import sys
+-from datetime import date
+-
+-VERSION = "1"
+-EXCLUDE = (":(exclude)planning", ":(exclude).spectrace")
+-PATCH_LIMIT = 200_000
+-EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+-IDENT = {"GIT_AUTHOR_NAME": "spectrace", "GIT_AUTHOR_EMAIL": "spectrace@localhost",
+-         "GIT_COMMITTER_NAME": "spectrace", "GIT_COMMITTER_EMAIL": "spectrace@localhost"}
+-
+-ITEM_RE = re.compile(r"^\s*-\s+(?P<kind>[RDA])(?P<num>\d+)@(?P<rev>\d+)"
+-                     r"(?:\s*\((?P<rel>[^)]*)\))?:\s*\S")
+-RETIRED_RE = re.compile(r"^\s*-\s+~~(?P<kind>[RDA])(?P<num>\d+)@(?P<rev>\d+)"
+-                        r"(?:\s*\((?P<rel>[^)]*)\))?:.*~~\s*retired\s+\d{4}-\d{2}-\d{2}")
+-ITEMISH_RE = re.compile(r"^\s*-\s+(~~)?[RDA]\d+@")
+-TASK_RE = re.compile(r"^- \[(?P<box>[ x])\] T(?P<num>\d{3}) \[(?P<owner>agent|human)\] "
+-                     r"\[status:(?P<status>todo|in_progress|blocked|done)\] (?P<text>\S.*?)\s*$")
+-TASKISH_RE = re.compile(r"^- \[[ xX]\] ")
+-FIELD_RE = re.compile(r"^\s+(?P<key>covers|kind|retires|changes):\s*(?P<val>.*?)\s*$")
+-REF_RE = re.compile(r"^(?:(?P<spec>\d{3})/)?(?P<kind>[RDA])(?P<num>\d+)(?:@(?P<rev>\d+))?$")
+-TASKREF_RE = re.compile(r"^(?:(?P<spec>\d{3})/)?T(?P<num>\d+)$")
+-SEVERITY = {"error": 0, "pending": 1, "warning": 2}
+-
+-
+-class TraceError(Exception):
+-    pass
+-
+-
+-# ---------- files ----------
+-
+-def read_lines(path):
+-    with open(path, encoding="utf-8", newline="") as f:
+-        return f.read().splitlines(keepends=True)
+-
+-
+-def write_lines(path, lines):
+-    with open(path, "w", encoding="utf-8", newline="") as f:
+-        f.write("".join(lines))
+-
+-
+-def eol(line):
+-    return line[len(line.rstrip("\r\n")):] or "\n"
+-
+-
+-def unfenced(lines):
+-    """Yield (index, line) outside ``` fences, so examples in docs are never parsed."""
+-    fenced = False
+-    for i, line in enumerate(lines):
+-        if line.lstrip().startswith("```"):
+-            fenced = not fenced
+-            continue
+-        if not fenced:
+-            yield i, line.rstrip("\r\n")
+-
+-
+-# ---------- model ----------
+-
+-class Item:
+-    def __init__(self, kind, num, rev, retired, implements, where):
+-        self.kind, self.num, self.rev = kind, num, rev
+-        self.retired, self.implements, self.where = retired, implements, where
+-
+-    @property
+-    def key(self):
+-        return f"{self.kind}{self.num}"
+-
+-
+-class Task:
+-    def __init__(self, spec, num, owner, status, box, text, line):
+-        self.spec, self.num, self.owner, self.status = spec, num, owner, status
+-        self.box, self.text, self.line = box, text, line
+-        self.covers, self.retires, self.kind, self.changes = [], [], None, None
+-
+-    @property
+-    def ref(self):
+-        return f"{self.spec}/T{self.num:03d}"
+-
+-
+-class Spec:
+-    def __init__(self, sid, name, row):
+-        self.id, self.name, self.row = sid, name, row
+-        self.dir = f"planning/specs/{sid}-{name}"
+-        self.items, self.tasks, self.deps, self.cells = {}, [], [], {}
+-        self.priority = self.status = self.stage = None
+-
+-
+-class Repo:
+-    def __init__(self, root):
+-        self.root = root
+-        self.issues = []  # (severity, where, message, spec id or None)
+-        self.global_items, self.specs = {}, {}
+-        self.columns, self.rows = {}, []
+-        self.load()
+-        self.trace()
+-        self.compute()
+-
+-    def issue(self, severity, where, message, spec=None):
+-        self.issues.append((severity, where, message, spec))
+-
+-    def path(self, rel):
+-        return os.path.join(self.root, *rel.split("/"))
+-
+-    # --- parsing ---
+-
+-    def load(self):
+-        if os.path.exists(self.path("planning/architecture.md")):
+-            self.parse_items("planning/architecture.md", "A", self.global_items)
+-        self.parse_roadmap()
+-        specs_dir = self.path("planning/specs")
+-        folders = sorted(os.listdir(specs_dir)) if os.path.isdir(specs_dir) else []
+-        known = {f"{s.id}-{s.name}" for s in self.specs.values()}
+-        for folder in folders:
+-            if re.match(r"^\d{3}-", folder) and folder not in known:
+-                self.issue("error", f"planning/specs/{folder}", "folder has no roadmap row")
+-        for spec in self.specs.values():
+-            if not os.path.isdir(self.path(spec.dir)):
+-                self.issue("error", "planning/roadmap.md", f"{spec.id}: no folder {spec.dir}", spec.id)
+-                continue
+-            for name, kind in (("requirements.md", "R"), ("design.md", "D")):
+-                rel = f"{spec.dir}/{name}"
+-                if os.path.exists(self.path(rel)):
+-                    self.parse_items(rel, kind, spec.items, spec.id)
+-            if os.path.exists(self.path(f"{spec.dir}/tasks.md")):
+-                self.parse_tasks(f"{spec.dir}/tasks.md", spec)
+-
+-    def parse_items(self, rel, kind, into, sid=None):
+-        for i, line in unfenced(read_lines(self.path(rel))):
+-            where = f"{rel}:{i + 1}"
+-            m = RETIRED_RE.match(line) or ITEM_RE.match(line)
+-            if not m:
+-                if ITEMISH_RE.match(line):
+-                    self.issue("error", where, "malformed item line", sid)
+-                continue
+-            if m.group("kind") != kind:
+-                self.issue("error", where, f"{m.group('kind')} item does not belong in {rel.rsplit('/', 1)[-1]}", sid)
+-                continue
+-            rel_text = (m.group("rel") or "").strip()
+-            implements = re.findall(r"\bR(\d+)\b", rel_text) if rel_text.startswith("implements") else []
+-            item = Item(kind, int(m.group("num")), int(m.group("rev")), m.re is RETIRED_RE,
+-                        [f"R{int(n)}" for n in implements], where)
+-            if item.key in into:
+-                self.issue("error", where, f"duplicate ID {item.key}", sid)
+-            into[item.key] = item
+-
+-    def parse_roadmap(self):
+-        rel = "planning/roadmap.md"
+-        if not os.path.exists(self.path(rel)):
+-            self.issue("error", rel, "missing")
+-            return
+-        for i, line in unfenced(read_lines(self.path(rel))):
+-            if not line.lstrip().startswith("|"):
+-                continue
+-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+-            if not self.columns:
+-                if "ID" in cells and "Spec" in cells:
+-                    self.columns = {c: n for n, c in enumerate(cells)}
+-                    missing = {"ID", "Spec", "Status", "Depends on", "Stage", "Priority"} - set(cells)
+-                    if missing:
+-                        self.issue("error", rel, f"missing columns: {', '.join(sorted(missing))}")
+-                continue
+-            if set("".join(cells)) <= set("-: "):
+-                continue
+-
+-            def get(col):
+-                n = self.columns.get(col)
+-                return cells[n] if n is not None and n < len(cells) else ""
+-            sid = get("ID")
+-            if not re.fullmatch(r"\d{3}", sid):
+-                self.issue("error", f"{rel}:{i + 1}", f"bad spec ID {sid!r}")
+-                continue
+-            spec = Spec(sid, get("Spec"), i)
+-            deps = get("Depends on")
+-            spec.deps = [] if deps in ("", "—", "-") else [d.strip() for d in deps.split(",")]
+-            prio = get("Priority")
+-            spec.priority = int(prio) if prio.isdigit() else None
+-            spec.cells = {"Status": get("Status"), "Stage": get("Stage")}
+-            self.specs[sid] = spec
+-            self.rows.append(sid)
+-        for spec in self.specs.values():
+-            for dep in spec.deps:
+-                if dep not in self.specs:
+-                    self.issue("error", rel, f"{spec.id} depends on unknown spec {dep}", spec.id)
+-
+-    def parse_tasks(self, rel, spec):
+-        task = None
+-        for i, line in unfenced(read_lines(self.path(rel))):
+-            where = f"{rel}:{i + 1}"
+-            m = TASK_RE.match(line)
+-            if m:
+-                task = Task(spec.id, int(m.group("num")), m.group("owner"), m.group("status"),
+-                            m.group("box"), m.group("text"), i)
+-                if any(t.num == task.num for t in spec.tasks):
+-                    self.issue("error", where, f"duplicate task T{task.num:03d}", spec.id)
+-                if (task.box == "x") != (task.status == "done"):
+-                    self.issue("error", where, "checkbox and status disagree", spec.id)
+-                spec.tasks.append(task)
+-                continue
+-            if TASKISH_RE.match(line):
+-                self.issue("error", where, "malformed task line", spec.id)
+-                task = None
+-                continue
+-            if not line.strip():
+-                continue
+-            if not line[0].isspace():
+-                task = None
+-                continue
+-            f = FIELD_RE.match(line)
+-            if task and f:
+-                key, val = f.group("key"), f.group("val")
+-                values = [v.strip() for v in val.split(",") if v.strip()]
+-                if key == "covers":
+-                    task.covers += values
+-                elif key == "retires":
+-                    task.retires += values
+-                elif key == "kind":
+-                    task.kind = val
+-                else:
+-                    task.changes = val
+-        for t in spec.tasks:
+-            if not t.covers:
+-                self.issue("error", f"{rel}:{t.line + 1}", f"{t.ref} has no covers:", spec.id)
+-
+-    # --- resolution ---
+-
+-    def resolve(self, raw, spec_id):
+-        m = REF_RE.match(raw)
+-        if not m or not m.group("rev"):
+-            return None, None
+-        key = f"{m.group('kind')}{int(m.group('num'))}"
+-        if m.group("kind") == "A":
+-            return self.global_items.get(key), int(m.group("rev"))
+-        spec = self.specs.get(m.group("spec") or spec_id)
+-        return (spec.items.get(key) if spec else None), int(m.group("rev"))
+-
+-    def find_task(self, raw, spec_id=None):
+-        m = TASKREF_RE.match(raw.strip())
+-        spec = self.specs.get(m.group("spec") or spec_id) if m else None
+-        if not spec:
+-            return None
+-        return next((t for t in spec.tasks if t.num == int(m.group("num"))), None)
+-
+-    # --- trace states ---
+-
+-    def trace(self):
+-        retired_by_done = set()
+-        for spec in self.specs.values():
+-            for t in spec.tasks:
+-                for raw in t.retires:
+-                    target = self.find_task(raw, spec.id)
+-                    if not target:
+-                        self.issue("error", t.ref, f"retires unknown task {raw}", spec.id)
+-                    elif t.status == "done":
+-                        retired_by_done.add(target.ref)
+-        for spec in self.specs.values():
+-            for item in spec.items.values():
+-                for r in item.implements:
+-                    target = spec.items.get(r)
+-                    if not target:
+-                        self.issue("error", item.where, f"{item.key} implements unknown {r}", spec.id)
+-                    elif target.retired and not item.retired:
+-                        self.issue("pending", item.where, f"{spec.id}/{item.key} implements retired {r}", spec.id)
+-            for t in spec.tasks:
+-                for raw in t.covers:
+-                    item, rev = self.resolve(raw, spec.id)
+-                    if item is None:
+-                        self.issue("error", t.ref, f"covers unknown item {raw}", spec.id)
+-                        continue
+-                    if not (item.retired or item.rev != rev) or t.ref in retired_by_done:
+-                        continue
+-                    why = "retired" if item.retired else f"now @{item.rev}"
+-                    if t.status == "done":
+-                        self.issue("pending", t.ref, f"suspect: covers {raw}, {why}", spec.id)
+-                    else:
+-                        self.issue("pending", t.ref, f"covers outdated {raw} ({why})", spec.id)
+-                if t.status == "done" and t.owner == "agent" and t.changes is None:
+-                    self.issue("warning", t.ref, "done without changes: (finished outside trace)", spec.id)
+-            self.uncovered(spec)
+-
+-    def covered_now(self, item):
+-        for spec in self.specs.values():
+-            for t in spec.tasks:
+-                for raw in t.covers:
+-                    found, rev = self.resolve(raw, spec.id)
+-                    if found is item and rev == item.rev:
+-                        return True
+-        return False
+-
+-    def uncovered(self, spec):
+-        active = [i for i in spec.items.values() if not i.retired]
+-        ds = [i for i in active if i.kind == "D"]
+-        if ds:
+-            for r in (i for i in active if i.kind == "R"):
+-                if not any(r.key in d.implements for d in ds) and not self.covered_now(r):
+-                    self.issue("pending", r.where, f"uncovered: {spec.id}/{r.key} has no design item or task", spec.id)
+-        if spec.tasks:
+-            for d in ds:
+-                if not self.covered_now(d):
+-                    self.issue("pending", d.where, f"uncovered: {spec.id}/{d.key} has no task", spec.id)
+-
+-    # --- computed roadmap columns ---
+-
+-    def compute(self):
+-        for spec in self.specs.values():
+-            active = [i for i in spec.items.values() if not i.retired]
+-            agent = [t for t in spec.tasks if t.owner == "agent"]
+-            pending = any(sev == "pending" and sid == spec.id for sev, _, _, sid in self.issues)
+-            if not any(i.kind == "R" for i in active):
+-                stage = "requirements"
+-            elif not any(i.kind == "D" for i in active):
+-                stage = "design"
+-            elif not spec.tasks:
+-                stage = "tasks"
+-            else:
+-                stage = "build"
+-            if any(t.status == "blocked" for t in agent):
+-                status = "blocked"
+-            elif stage == "build" and all(t.status == "done" for t in agent) and not pending:
+-                status = "done"
+-            elif any(t.status in ("in_progress", "done") for t in spec.tasks):
+-                status = "in_progress"
+-            else:
+-                status = "todo"
+-            spec.status, spec.stage = status, ("—" if status == "done" else stage)
+-        for spec in self.specs.values():
+-            for col, value in (("Status", spec.status), ("Stage", spec.stage)):
+-                if spec.cells.get(col) != value:
+-                    self.issue("error", "planning/roadmap.md",
+-                               f"{spec.id} {col} is {spec.cells.get(col) or 'empty'!r}, files say {value!r}"
+-                               " (run: status --write)", spec.id)
+-
+-    def next_task(self):
+-        def order(s):
+-            return (s.priority if s.priority is not None else 10**9, s.id)
+-        for spec in sorted(self.specs.values(), key=order):
+-            if spec.status == "done" or any(self.specs[d].status != "done" for d in spec.deps if d in self.specs):
+-                continue
+-            for t in spec.tasks:
+-                if t.owner == "agent" and t.status == "todo":
+-                    return t
+-        return None
+-
+-    def write_roadmap(self):
+-        rel = self.path("planning/roadmap.md")
+-        lines = read_lines(rel)
+-        for spec in self.specs.values():
+-            line = lines[spec.row]
+-            body = line.rstrip("\r\n")
+-            lead = body[:len(body) - len(body.lstrip())]
+-            parts = body.strip().split("|")  # ['', cell, ..., '']
+-            for col, value in (("Status", spec.status), ("Stage", spec.stage)):
+-                n = self.columns[col] + 1
+-                cell = f" {value} "
+-                parts[n] = cell + " " * max(0, len(parts[n]) - len(cell))
+-            lines[spec.row] = lead + "|".join(parts) + eol(line)
+-        write_lines(rel, lines)
+-
+-
+-# ---------- git ----------
+-
+-def git(root, *args, env=None):
+-    p = subprocess.run(["git", "-c", "core.quotepath=false", *args], cwd=root,
+-                       capture_output=True, env=dict(os.environ, **(env or {})))
+-    if p.returncode != 0:
+-        raise TraceError(f"git {' '.join(args)}: {p.stderr.decode(errors='replace').strip()}")
+-    return p.stdout.decode("utf-8", errors="replace").strip()
+-
+-
+-def snapshot(root):
+-    """Tree of the whole working tree (honoring .gitignore), without touching the real index."""
+-    index = os.path.join(root, git(root, "rev-parse", "--git-path", "index"))
+-    tmp = os.path.join(root, git(root, "rev-parse", "--git-path", "spectrace-index"))
+-    if os.path.exists(index):
+-        shutil.copyfile(index, tmp)
+-    elif os.path.exists(tmp):
+-        os.remove(tmp)
+-    try:
+-        env = {"GIT_INDEX_FILE": tmp}
+-        git(root, "add", "-A", env=env)
+-        return git(root, "write-tree", env=env)
+-    finally:
+-        if os.path.exists(tmp):
+-            os.remove(tmp)
+-
+-
+-def keep(root, name, tree):
+-    commit = git(root, "commit-tree", tree, "-m", f"spectrace {name}", env=IDENT)
+-    git(root, "update-ref", f"refs/spectrace/{name}", commit)
+-
+-
+-def kept(root, name):
+-    try:
+-        return git(root, "rev-parse", "--verify", "--quiet", f"refs/spectrace/{name}^{{tree}}")
+-    except TraceError:
+-        return None
+-
+-
+-def drop(root, name):
+-    if kept(root, name):
+-        git(root, "update-ref", "-d", f"refs/spectrace/{name}")
+-
+-
+-def reference_tree(root):
+-    """The tree when the last task closed; else HEAD; else empty."""
+-    last = kept(root, "last")
+-    if last:
+-        return last
+-    try:
+-        return git(root, "rev-parse", "--verify", "--quiet", "HEAD^{tree}")
+-    except TraceError:
+-        return EMPTY_TREE
+-
+-
+-def diff(root, a, b, *flags):
+-    return git(root, "diff", "--no-color", "--no-ext-diff", "--no-renames", *flags, a, b, "--", ".", *EXCLUDE)
+-
+-
+-def numstat(root, a, b):
+-    out = []
+-    for line in diff(root, a, b, "--numstat").splitlines():
+-        add, rem, path = line.split("\t", 2)
+-        out.append(f"{path} (binary)" if add == "-" else f"{path} (+{add} -{rem})")
+-    return out
+-
+-
+-# ---------- state ----------
+-
+-def state_path(root):
+-    return os.path.join(root, ".spectrace", "state.json")
+-
+-
+-def load_state(root):
+-    try:
+-        with open(state_path(root), encoding="utf-8") as f:
+-            return json.load(f)
+-    except (OSError, ValueError):
+-        return {}
+-
+-
+-def save_state(root, state):
+-    os.makedirs(os.path.dirname(state_path(root)), exist_ok=True)
+-    ignore = os.path.join(root, ".spectrace", ".gitignore")
+-    if not os.path.exists(ignore):
+-        with open(ignore, "w", encoding="utf-8") as f:
+-            f.write("state.json\n")
+-    if state:
+-        with open(state_path(root), "w", encoding="utf-8") as f:
+-            json.dump(state, f, indent=2)
+-    elif os.path.exists(state_path(root)):
+-        os.remove(state_path(root))
+-
+-
+-# ---------- task edits ----------
+-
+-def edit_task(repo, task, status=None, changes=None, note=None):
+-    rel = repo.path(f"{repo.specs[task.spec].dir}/tasks.md")
+-    lines = read_lines(rel)
+-    i = task.line
+-    end_of_line = eol(lines[i])
+-    if status:
+-        box = "x" if status == "done" else " "
+-        lines[i] = f"- [{box}] T{task.num:03d} [{task.owner}] [status:{status}] {task.text}{end_of_line}"
+-    end = i + 1
+-    while end < len(lines) and lines[end].strip() and lines[end][0].isspace():
+-        end += 1
+-    block = lines[i + 1:end]
+-    if changes is not None:
+-        block = [l for l in block if not re.match(r"^\s+changes:", l)]
+-        fields = [n for n, l in enumerate(block) if FIELD_RE.match(l.rstrip("\r\n"))]
+-        block.insert((fields[-1] + 1) if fields else 0, f"      changes: {changes}{end_of_line}")
+-    if note:
+-        block.append(f"      └─ {note}{end_of_line}")
+-    lines[i + 1:end] = block
+-    write_lines(rel, lines)
+-
+-
+-# ---------- commands ----------
+-
+-def need_task(repo, raw):
+-    task = repo.find_task(raw)
+-    if not task:
+-        raise TraceError(f"no task {raw} (use NNN/TNNN, e.g. 001/T005)")
+-    return task
+-
+-
+-def cmd_status(repo, args):
+-    if args.write:
+-        repo.write_roadmap()
+-        repo = Repo(repo.root)
+-    state = load_state(repo.root)
+-    nxt = repo.next_task()
+-    if args.json:
+-        print(json.dumps({
+-            "specs": [{"id": s.id, "spec": s.name, "status": s.status, "stage": s.stage}
+-                      for s in (repo.specs[i] for i in repo.rows)],
+-            "open": state.get("open"), "next": nxt.ref if nxt else None}, indent=2))
+-        return 0
+-    print(f"{'ID':<5}{'Spec':<28}{'Status':<13}Stage")
+-    for sid in repo.rows:
+-        s = repo.specs[sid]
+-        print(f"{s.id:<5}{s.name:<28}{s.status:<13}{s.stage}")
+-    print(f"\nopen: {state.get('open') or '—'}")
+-    print(f"next: {nxt.ref + '  ' + nxt.text if nxt else '—'}")
+-    errors = sum(1 for i in repo.issues if i[0] == "error")
+-    if errors:
+-        print(f"\n{errors} error(s) — run: check")
+-    return 0
+-
+-
+-def cmd_start(repo, args):
+-    root = repo.root
+-    task = need_task(repo, args.task)
+-    state = load_state(root)
+-    if state.get("open"):
+-        raise TraceError(f"{state['open']} is still open — finish it (done/block/abort) first")
+-    if task.status == "done":
+-        raise TraceError(f"{task.ref} is already done")
+-    current = snapshot(root)
+-    reference = reference_tree(root)
+-    stray = numstat(root, reference, current)
+-    if stray and not (args.adopt or args.ignore):
+-        print("Files changed outside any task since the last one closed:")
+-        print("\n".join(f"  {s}" for s in stray))
+-        print(f"\nRe-run with --adopt (count them as part of {task.ref}) or --ignore (leave them out).")
+-        return 2
+-    keep(root, "base", reference if args.adopt else current)
+-    save_state(root, {"open": task.ref, "started": date.today().isoformat()})
+-    edit_task(repo, task, status="in_progress")
+-    Repo(root).write_roadmap()
+-    print(f"started {task.ref}: {task.text}")
+-    return 0
+-
+-
+-def close_open(repo, raw):
+-    task = need_task(repo, raw)
+-    current = load_state(repo.root).get("open")
+-    if current != task.ref:
+-        raise TraceError(f"{task.ref} is not the open task (open: {current or 'none'})")
+-    return task
+-
+-
+-def cmd_done(repo, args):
+-    root = repo.root
+-    task = close_open(repo, args.task)
+-    base, current = kept(root, "base"), snapshot(root)
+-    files = numstat(root, base, current)
+-    patch_abs = os.path.join(root, ".spectrace", "changes", f"{task.spec}-T{task.num:03d}.patch")
+-    if files:
+-        patch = diff(root, base, current) + "\n"
+-        if len(patch.encode()) > PATCH_LIMIT:
+-            patch = "# patch over size limit — file summary only\n" + "\n".join(files) + "\n"
+-        os.makedirs(os.path.dirname(patch_abs), exist_ok=True)
+-        with open(patch_abs, "w", encoding="utf-8", newline="\n") as f:
+-            f.write(patch)
+-    elif os.path.exists(patch_abs):
+-        os.remove(patch_abs)
+-    edit_task(repo, task, status="done", changes=", ".join(files) or "none")
+-    keep(root, "last", current)
+-    drop(root, "base")
+-    save_state(root, {})
+-    Repo(root).write_roadmap()
+-    print(f"done {task.ref}: {len(files)} file(s)")
+-    for f in files:
+-        print(f"  {f}")
+-    return 0
+-
+-
+-def cmd_abort(repo, args):
+-    task = close_open(repo, args.task)
+-    drop(repo.root, "base")
+-    save_state(repo.root, {})
+-    edit_task(repo, task, status="todo")
+-    Repo(repo.root).write_roadmap()
+-    print(f"aborted {task.ref}; files on disk are untouched")
+-    return 0
+-
+-
+-def cmd_block(repo, args):
+-    task = need_task(repo, args.task)
+-    if load_state(repo.root).get("open") == task.ref:
+-        drop(repo.root, "base")
+-        save_state(repo.root, {})
+-    edit_task(repo, task, status="blocked", note=f"blocked: {args.reason}")
+-    Repo(repo.root).write_roadmap()
+-    print(f"blocked {task.ref}")
+-    return 0
+-
+-
+-def cmd_check(repo, args):
+-    root = repo.root
+-    if not load_state(root).get("open"):
+-        stray = numstat(root, reference_tree(root), snapshot(root))
+-        if stray:
+-            names = ", ".join(s.split(" (")[0] for s in stray[:5]) + (" …" if len(stray) > 5 else "")
+-            repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}")
+-    issues = sorted(repo.issues, key=lambda x: SEVERITY[x[0]])
+-    if args.json:
+-        print(json.dumps([{"severity": s, "where": w, "message": m, "spec": sid}
+-                          for s, w, m, sid in issues], indent=2))
+-    else:
+-        for sev, where, msg, _ in issues:
+-            print(f"{sev.upper():<8} {where}  {msg}")
+-        counts = {k: sum(1 for i in issues if i[0] == k) for k in SEVERITY}
+-        print(f"\n{counts['error']} error(s), {counts['pending']} pending, {counts['warning']} warning(s)")
+-    failed = any(i[0] == "error" for i in issues) or (args.strict and any(i[0] == "pending" for i in issues))
+-    return 1 if failed else 0
+-
+-
+-def added_lines(patch_text):
+-    files, current = {}, None
+-    for line in patch_text.splitlines():
+-        if line.startswith("+++ "):
+-            current = None if line[4:] == "/dev/null" else (line[6:] if line.startswith("+++ b/") else line[4:])
+-            if current:
+-                files.setdefault(current, [])
+-        elif current and line.startswith("+") and len(line[1:].strip()) >= 4:
+-            files[current].append(line[1:].strip())
+-    return files
+-
+-
+-def file_presence(root, patch_path):
+-    if not os.path.exists(patch_path):
+-        return []
+-    with open(patch_path, encoding="utf-8") as f:
+-        added = added_lines(f.read())
+-    out = []
+-    for path, lines in added.items():
+-        target = os.path.join(root, *path.split("/"))
+-        if not os.path.exists(target):
+-            out.append({"path": path, "present": 0, "added": len(lines), "deleted": True})
+-            continue
+-        with open(target, encoding="utf-8", errors="replace") as f:
+-            now = {l.strip() for l in f}
+-        out.append({"path": path, "present": sum(1 for a in lines if a in now),
+-                    "added": len(lines), "deleted": False})
+-    return out
+-
+-
+-def cmd_impact(repo, args):
+-    m = REF_RE.match(args.ref)
+-    if not m or (m.group("kind") != "A" and not m.group("spec")):
+-        raise TraceError("use NNN/R2, NNN/D3 or A4 (revision optional)")
+-    key = f"{m.group('kind')}{int(m.group('num'))}"
+-    spec = repo.specs.get(m.group("spec"))
+-    home = repo.global_items if m.group("kind") == "A" else (spec.items if spec else {})
+-    item = home.get(key)
+-    if not item:
+-        raise TraceError(f"no item {args.ref}")
+-    targets = [item]
+-    if item.kind == "R":
+-        targets += [d for d in spec.items.values() if d.kind == "D" and key in d.implements]
+-    rows = []
+-    for s in repo.specs.values():
+-        for t in s.tasks:
+-            if not any(repo.resolve(raw, s.id)[0] in targets for raw in t.covers):
+-                continue
+-            patch = os.path.join(repo.root, ".spectrace", "changes", f"{t.spec}-T{t.num:03d}.patch")
+-            retired_by = [o.ref for s2 in repo.specs.values() for o in s2.tasks
+-                          if any(repo.find_task(r, s2.id) is t for r in o.retires)]
+-            rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
+-                         "covers": t.covers, "text": t.text, "changes": t.changes,
+-                         "files": file_presence(repo.root, patch), "retired_by": retired_by})
+-
+-    def label(i):
+-        prefix = "" if i.kind == "A" else f"{m.group('spec')}/"
+-        return f"{prefix}{i.key}@{i.rev}" + (" (retired)" if i.retired else "")
+-    if args.json:
+-        print(json.dumps({"items": [label(i) for i in targets], "tasks": rows}, indent=2))
+-        return 0
+-    print(f"# Impact of {label(item)}\n")
+-    if len(targets) > 1:
+-        print("Design items implementing it: " + ", ".join(label(i) for i in targets[1:]) + "\n")
+-    if not rows:
+-        print("No task covers it.")
+-    for r in rows:
+-        tag = f" [{r['kind']}]" if r["kind"] else ""
+-        print(f"- {r['task']} [{r['owner']}] [{r['status']}]{tag} {r['text']}")
+-        print(f"    covers: {', '.join(r['covers'])}")
+-        if r["retired_by"]:
+-            print(f"    retired by: {', '.join(r['retired_by'])}")
+-        for f in r["files"]:
+-            where = "file deleted" if f["deleted"] else f"{f['present']}/{f['added']} added lines still present"
+-            print(f"    {f['path']}: {where}")
+-        if not r["files"] and r["status"] == "done":
+-            print(f"    no patch recorded ({r['changes'] or 'finished outside trace'}) — search the code by hand")
+-    return 0
+-
+-
+-COMMANDS = {"status": cmd_status, "start": cmd_start, "done": cmd_done, "abort": cmd_abort,
+-            "block": cmd_block, "check": cmd_check, "impact": cmd_impact}
+-
+-
+-def parser():
+-    p = argparse.ArgumentParser(prog="trace", description=f"spectrace trace (format v{VERSION})")
+-    p.add_argument("-C", dest="cwd", default=".", help="run as if started in this directory")
+-    p.add_argument("--version", action="version", version=f"spectrace trace {VERSION}")
+-    sub = p.add_subparsers(dest="cmd", required=True)
+-    s = sub.add_parser("status", help="spec status, stage and next task")
+-    s.add_argument("--write", action="store_true", help="write Status/Stage into roadmap.md")
+-    s.add_argument("--json", action="store_true")
+-    s = sub.add_parser("start", help="open a task and snapshot the working tree")
+-    s.add_argument("task")
+-    g = s.add_mutually_exclusive_group()
+-    g.add_argument("--adopt", action="store_true", help="count changes made outside any task as this task's")
+-    g.add_argument("--ignore", action="store_true", help="leave changes made outside any task out")
+-    for name, text in (("done", "close the open task and record its changes"),
+-                       ("abort", "close the open task without recording it")):
+-        sub.add_parser(name, help=text).add_argument("task")
+-    s = sub.add_parser("block", help="mark a task blocked with a reason")
+-    s.add_argument("task")
+-    s.add_argument("reason")
+-    s = sub.add_parser("check", help="verify the trace; exit 1 on errors")
+-    s.add_argument("--strict", action="store_true", help="also fail on pending (suspect/uncovered)")
+-    s.add_argument("--json", action="store_true")
+-    s = sub.add_parser("impact", help="what implemented an item: tasks, files, lines still present")
+-    s.add_argument("ref")
+-    s.add_argument("--json", action="store_true")
+-    return p
+-
+-
+-def main(argv=None):
+-    try:
+-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+-    except (AttributeError, ValueError):
+-        pass
+-    args = parser().parse_args(argv)
+-    try:
+-        root = os.path.normpath(git(os.path.abspath(args.cwd), "rev-parse", "--show-toplevel"))
+-        if not os.path.isdir(os.path.join(root, "planning")):
+-            raise TraceError(f"no planning/ folder in {root} — run the start skill first")
+-        return COMMANDS[args.cmd](Repo(root), args)
+-    except TraceError as e:
+-        print(f"trace: {e}", file=sys.stderr)
+-        return 1
+-
+-
+-if __name__ == "__main__":
+-    sys.exit(main())
+diff --git a/skills/start/references/handoff.md b/skills/start/references/handoff.md
+deleted file mode 100644
+index 10de7b8..0000000
+--- a/skills/start/references/handoff.md
++++ /dev/null
+@@ -1,67 +0,0 @@
+-# Writing `planning/handoff.md`
+-
+-Read this at any stopping point where the user said yes to a handoff. A handoff is a
+-point-in-time note for whoever resumes — a later session or a person. It is **not a
+-source of truth**: `planning/roadmap.md` and `trace status` own order and status, each
+-spec's `tasks.md` owns the work, `.spectrace/interview.md` owns the interview. Point at
+-them, don't copy them.
+-
+-## Before writing
+-
+-1. Overwrite the file, don't append — history lives in `git log -- planning/handoff.md`.
+-2. Run `trace status` and read the ledger first. Write only what you saw there or the
+-   user said; leave gaps as "unknown", never guess.
+-3. Get the session id (below), once, before the first line is written.
+-
+-## Session id
+-
+-One line right under the title, so a resume is one command.
+-
+-- **Claude Code**: read `$CLAUDE_CODE_SESSION_ID` with the shell tool (`echo
+-  "$CLAUDE_CODE_SESSION_ID"`; PowerShell: `$env:CLAUDE_CODE_SESSION_ID`). Write
+-  `Session: <id> — resume with \`claude --resume <id>\` from this repo's root.`
+-- **Any other harness**: only if it exposes a session id you can read from its own
+-  environment or documentation. Otherwise omit the line.
+-- Empty or unset → omit the line. Never invent, shorten or reuse an id.
+-
+-The handoff must still be enough to resume without the session id.
+-
+-## Shape
+-
+-Sections in this order; drop one only when it would be empty.
+-
+-```
+-# Handoff — YYYY-MM-DD
+-
+-Session: <id> — resume with `claude --resume <id>`      ← omit if unavailable
+-
+-One paragraph: point-in-time note, not a source of truth; what owns each thing.
+-Branch and working-tree state; the open task, if any (`trace status`).
+-
+-## Done this session
+-What changed and why, one bullet each, with the spec or file it lives in.
+-
+-## Next
+-Ordered. Each item: what, and why it's next (priority, dependency, blocker).
+-Name the exact step to resume: the `start` skill (the ledger picks up at the first
+-`open` dimension), the `plan` skill for spec NNN, or `trace status` → next task.
+-
+-## Open / skipped
+-Every ledger `open` or `skipped` dimension and every deferred spec, with the reason.
+-
+-## Traps
+-Things that already cost time or will: non-obvious ordering, files `trace` owns, a
+-decision the user already made that shouldn't be re-litigated.
+-
+-## Not verified — don't claim otherwise
+-What was written but never run.
+-```
+-
+-## Rules
+-
+-- Terse, structural, no filler (`planning/styles.md` rules apply if present).
+-- Dates are absolute (`2026-10-06`), never "today".
+-- Reference code as `path:line` or a task ID (`002/T005`), not by pasting it.
+-- Never record an answer the user didn't give; quote or omit.
+-- If only per-spec requirements remain, say so and name both paths — draft mode or
+-  one question at a time — and which the user chose, if they did.
+diff --git a/skills/start/references/question-bank.md b/skills/start/references/question-bank.md
+deleted file mode 100644
+index 6300043..0000000
+--- a/skills/start/references/question-bank.md
++++ /dev/null
+@@ -1,165 +0,0 @@
+-# Interview question bank
+-
+-The source of interview *coverage* for `start`, not a script to read aloud: ask one
+-question at a time, in the user's own vocabulary, skipping what the conversation has
+-already answered. The opening request that triggered the skill is context, not an
+-answer: it seeds `idea-detail`, but never closes `project-type` or `goal` on its own.
+-
+-**A dimension is `covered` when the user has actually answered it, `skipped` when they
+-declined it (record the reason), and `open` otherwise.** Every dimension below must end
+-in one of those three states in `.spectrace/interview.md` before a phase may end. Never
+-infer an answer to close a dimension. The one sanctioned derivation is draft mode
+-(SKILL.md, Phase 6): a spec's requirements drafted from the finished interview plus
+-web-verified standards, shown in full for yes / changes / defer.
+-
+----
+-
+-## Phase A — Type & vision (all project types)
+-
+-| Dimension | Questions |
+-|---|---|
+-| `idea-detail` | "Tell me in your own words, in detail, what this idea is — what problem it solves, how you picture it working step by step, and anything you've tried or seen that makes you think it's possible. Take as long as you need." · Then structure what was said into problem, users, main flow, entities/data and integrations, without inventing choices; use it as the starting point for the rest of the interview. |
+-| `project-type` | "What kind of thing is this — software, a marketing or content project, an operations/process project, a research project, or something else?" · For software, also the concrete form: mobile app (iOS/Android/both), web app, desktop app, backend service/API, CLI, library, or a combination. "An app" alone is not an answer — ask which. |
+-| `goal` | Drafted by the agent from `idea-detail` and `project-type` as a short statement (what it is, for whom, what it achieves), then shown: "Is this the goal, or would you change it?" Covered only on the user's yes or edit. |
+-| `audience` | "Who or what is this for?" |
+-| `mvp` | "What's the MVP, or first phase, you want to reach?" · "What's explicitly *not* in the first phase?" |
+-| `done-when` | "How will you know the whole thing is finished? What's observably true then?" |
+-| `constraints-hard` | "Any hard constraints — deadline, budget, a platform or vendor you must use, a rule you can't break?" |
+-| `stakeholders` | "Does anyone else need to review or approve work as it goes?" |
+-| `automatability` | "Which parts of this do you expect an agent to do unattended, and which do you want to keep in your own hands?" — drives each task's `agent`/`human` owner. |
+-
+-## Phase B — Technologies, architecture & tools
+-
+-Ask the block matching `project-type`. Each answer that settles something becomes an
+-A item in `planning/architecture.md`: `- A<n>@1: <decision> — why: <reason>`.
+-
+-### B-software
+-
+-| Dimension | Questions |
+-|---|---|
+-| `runtime` | "What language and runtime version?" |
+-| `framework` | "Which framework(s) and key libraries? Anything you specifically *don't* want used?" |
+-| `toolchain` | "Package manager, test runner, formatter/linter — and the exact commands to run each?" Record only tools that are actually installed or will be installed by a spec — never a tool by name alone. |
+-| `datastore` | "Where does data live? Which database, and how are schema changes managed?" |
+-| `data-model` | "What are the main entities and how do they relate?" |
+-| `interface` | "What's the interface — REST, GraphQL, RPC, CLI, library API? Any versioning rule?" |
+-| `identity` | "How do users authenticate, and how is authorization decided?" |
+-| `hosting` | "Where does this run in production, and how does it get there?" |
+-| `ci` | "What has to pass before a change is acceptable?" |
+-| `env-secrets` | "How are configuration and secrets handled? What must never be committed?" |
+-| `verification` | "How do you want changes verified — unit tests, integration, manual, a smoke script?" |
+-| `third-party` | "Any third-party services or accounts this depends on?" |
+-| `observability` | "How would you find out this broke in production?" |
+-
+-Version pins (a compiler target, a runtime version) must be values the chosen
+-toolchain actually accepts — verify, don't assume the newest exists.
+-
+-### B-marketing-content
+-
+-| Dimension | Questions |
+-|---|---|
+-| `channels` | "Which channels — site, email, social, paid, events, press? Which matter most?" |
+-| `positioning` | "What's the core message, and who are you positioning against?" |
+-| `assets` | "What assets does this need — copy, design, video, landing pages — and who makes each?" |
+-| `tools` | "Which tools/platforms are you working in (CMS, ESP, analytics, scheduler, ad manager)?" |
+-| `data-sources` | "Where does the data for measurement come from, and who has access?" |
+-| `measurement` | "What metric decides whether this worked, and what's the target?" |
+-| `calendar` | "Any fixed dates — launch, campaign window, event, embargo?" |
+-| `approvals` | "Who signs off on published material, and what can't go out without review?" |
+-| `compliance` | "Any legal, brand or regulatory constraints on what you can claim or publish?" |
+-
+-### B-operations-process
+-
+-| Dimension | Questions |
+-|---|---|
+-| `current-state` | "How does this get done today, step by step?" |
+-| `systems` | "Which systems are involved, and which can be accessed programmatically?" |
+-| `volume-cadence` | "How often does this run, and at what volume?" |
+-| `failure-cost` | "What happens if a step is done wrong or skipped? What's unrecoverable?" |
+-| `handoffs` | "Where does work pass between people or teams?" |
+-| `access` | "What credentials or permissions are needed, and who grants them?" |
+-
+-### B-research
+-
+-| Dimension | Questions |
+-|---|---|
+-| `question` | "What's the actual question being answered?" |
+-| `sources` | "What sources or datasets are in scope? Which are off-limits?" |
+-| `method` | "How will you analyse it, and what would falsify the conclusion?" |
+-| `output-form` | "What's the deliverable — a report, a dataset, a model, a decision?" |
+-| `rigour` | "What standard does this need to meet, and who's the audience for it?" |
+-
+-### B-other
+-
+-Ask the generic set: `tools`, `inputs`, `outputs`, `who-does-what`, `sequence-constraints`,
+-`quality-bar`. Derive further dimensions from the goal statement — this branch exists so
+-an unanticipated project type is interviewed properly rather than forced into B-software.
+-
+-## Phase C — Helper skills & agent rules
+-
+-| Dimension | Questions |
+-|---|---|
+-| `helper-skills` | Given the Phase B answers, name the skills/plugins available in this session (other than spectrace) that would help agents working here. Ask which, if any, to install. **Never install without explicit confirmation.** If no install mechanism resolves, print manual instructions instead of guessing a command. Anything wanted but not installable now becomes a roadmap spec. |
+-| `agent-rules` | "Any rule you want every agent working in this repo to follow, or anything you want them never to do?" |
+-
+-## Phase D — Styles & preferences
+-
+-Gate on `visual-surface` first; skip the visual rows for a project with no visual output.
+-
+-| Dimension | Questions |
+-|---|---|
+-| `visual-surface` | "Does this project have a visual surface — a UI, a site, a deck, brand artefacts?" |
+-| `palette` | "Any colors you want used, or an existing brand to match? Anything to avoid?" |
+-| `typography` | "Any typeface or type-scale preference?" |
+-| `density-mode` | "Dense or spacious? Light, dark, or both?" |
+-| `brand-refs` | "Any existing brand assets, or reference sites/products whose look you want?" |
+-| `tone` | "What tone should the writing take, and in which language?" |
+-| `accessibility` | "Any accessibility target, or devices/browsers that must work?" |
+-| `code-conventions` | "Naming, file layout, comment density, commit-message style — anything you want enforced?" |
+-| `anti-preferences` | "Anything you actively dislike and don't want to see?" |
+-| `preference-strength` | For each preference: "is that a hard rule or a default an agent may deviate from with reason?" |
+-
+-## Phase E — Per-spec requirements
+-
+-Asked once per spec, in roadmap order. Ledger rows are prefixed with the spec ID
+-(`002.requirements`).
+-
+-| Dimension | Questions |
+-|---|---|
+-| `what` | "What's being built in this spec?" |
+-| `serves` | "Who or what does it serve?" |
+-| `requirements` | "What must be true when this spec is done? Give each as one thing someone could check — what it does, and any hard constraint it must respect." Each answer becomes one R item; split compound answers, and turn a vague one ("fast", "secure") into a checkable statement with the user. |
+-| `out-of-scope` | "What's explicitly *not* in this spec?" |
+-| `dependencies` | "Does this need anything from another spec that the roadmap doesn't already record?" |
+-| `owner-split` | "Any task here that you want to do yourself rather than have an agent do?" |
+-
+-## Phase F — Closing sweep
+-
+-Run at the end of every phase above. Not optional, and not a formality.
+-
+-1. Re-read what was just written. For every noun the user named but never specified
+-   ("the dashboard", "the integration", "the brand guidelines"), ask about it.
+-2. List the dimensions still `open` for this phase and ask about each one.
+-3. Ask: **"What haven't we covered that matters here?"**
+-4. If steps 1–3 produced anything new, write it down and run the sweep again.
+-5. The phase ends as soon as a full sweep produces nothing new. One clean pass is
+-   enough; don't repeat the question once the user has said there's nothing more.
+-
+-## Help-me-decide protocol
+-
+-Runs whenever the user answers a dimension with genuine uncertainty ("no sé", "not
+-sure", "I don't know" — any phase). Judge which kind of dimension it is first:
+-
+-**Researchable** — a technical or stylistic choice with real current options:
+-`runtime`, `framework`, `toolchain`, `datastore`, `hosting`, `palette`, `typography`,
+-`brand-refs`, and their equivalents in other branches. Search for current, fitting
+-options (a web-search tool if the session has one) and present 3–5 ranked options with
+-a one-line reason each, tailored to what's already been answered. No web-search tool?
+-Say so and offer options from your own knowledge — never pass a guess off as researched.
+-
+-**Not researchable** — a fact about the user's own project or business: `audience`,
+-`stakeholders`, `mvp`, `goal`, and their equivalents. Say a generic search wouldn't
+-help, and ask a narrower question instead of manufacturing a list.
+-
+-Either way the user picks, asks for more, or leaves it `open` — never infer a choice.
+-Record the answer `covered` with a note that it was resolved via researched options.
+diff --git a/skills/start/references/templates.md b/skills/start/references/templates.md
+deleted file mode 100644
+index 4121f2d..0000000
+--- a/skills/start/references/templates.md
++++ /dev/null
+@@ -1,143 +0,0 @@
+-# File templates
+-
+-The shapes of the files `start` writes. Item, task and roadmap grammar is defined in
+-`.spectrace/format.md` — not here. Write content only from the ledger; anything not
+-yet answered stays `TBD`.
+-
+-## `AGENTS.md`
+-
+-```markdown
+-# <project>
+-
+-<one-line goal> For: <audience>. Type: <project-type>.
+-
+-## Doc map
+-
+-- `planning/product.md` — what this is, who it's for, out of scope.
+-- `planning/architecture.md` — project-wide decisions (A items).
+-- `planning/styles.md` — style detail (if present).
+-- `planning/roadmap.md` — specs, order, status.
+-- `planning/specs/NNN-name/` — requirements (R), design (D), tasks, changes.
+-- `.spectrace/format.md` — how all of the above is written.
+-
+-## Stack & conventions
+-
+-<short operative form of each A item: "Node 22 (A1)">
+-
+-## Style
+-
+-<operative summary from Phase D; hard rules marked as such; points to planning/styles.md>
+-
+-## Rules for agents
+-
+-<agent-rules answers>
+-
+-<protocol block from assets/agents-protocol.md>
+-```
+-
+-`AGENTS.md` is the only instructions file. Never create `CLAUDE.md`. If the repo
+-already has an `AGENTS.md`, add the sections that are missing and the protocol block;
+-change nothing else without asking.
+-
+-## `planning/product.md`
+-
+-```markdown
+-# Product
+-
+-## What this is
+-
+-## Who uses it
+-
+-## Out of scope
+-```
+-
+-## `planning/architecture.md`
+-
+-```markdown
+-# Architecture
+-
+-Project-wide decisions. Grammar: `.spectrace/format.md`.
+-
+-## <type-keyed headers>
+-
+-## Still to define
+-```
+-
+-Headers by `project-type` (only the category picks the set):
+-
+-| Type | Headers |
+-|---|---|
+-| software | `Container`, `Stack`, `Conventions` |
+-| marketing/content | `Channels`, `Tools`, `Data sources` |
+-| operations/process | `Systems`, `Cadence`, `Handoffs` |
+-| research | `Sources`, `Method`, `Output` |
+-| other / skipped | `Tools`, `Inputs/Outputs` |
+-
+-Each decision is an A item under the header it belongs to:
+-`- A3@1: PostgreSQL 16 — why: relational data, team knows it.`
+-An undecided dimension is a bullet under `Still to define`, never an invented A item.
+-
+-## `planning/roadmap.md`
+-
+-```markdown
+-# Roadmap
+-
+-Index of every spec. `Status` and `Stage` are written only by `trace`. Grammar:
+-`.spectrace/format.md`.
+-
+-| ID  | Spec | Status | Depends on | Stage | Priority |
+-|-----|------|--------|------------|-------|----------|
+-```
+-
+-Nothing else goes in this file — no history, no prose ordering.
+-
+-## `planning/specs/NNN-name/requirements.md`
+-
+-```markdown
+-# NNN — name — Requirements
+-
+-## What's being built
+-
+-## Who it serves
+-
+-## Requirements
+-
+-- R1@1: <one checkable statement>
+-
+-## Out of scope
+-
+-## Dependencies
+-
+-## Owner split
+-```
+-
+-Every R item is observably checkable: someone could tell, by looking or running
+-something, whether it holds. A hard constraint is an R item too. `## Dependencies` is
+-written even when the answer is "None."
+-
+-## `planning/specs/NNN-name/design.md` and `tasks.md` (stubs)
+-
+-```markdown
+-# NNN — name — Design
+-
+-TBD — closed by the `plan` skill.
+-```
+-
+-```markdown
+-# NNN — name — Tasks
+-
+-TBD — written by the `plan` skill.
+-```
+-
+-## `.spectrace/interview.md`
+-
+-```markdown
+-# Interview ledger
+-
+-| dimension | status | answer |
+-|-----------|--------|--------|
+-| idea-detail | open | |
+-```
+-
+-One row per question-bank dimension, in phase order; per-spec rows prefixed with the
+-spec ID (`002.requirements`). Write the user's own words in `answer`, not a paraphrase.
+diff --git a/tests/test_trace.py b/tests/test_trace.py
+index 96f604f..d565019 100644
+--- a/tests/test_trace.py
++++ b/tests/test_trace.py
+@@ -1,4 +1,4 @@
+-"""Tests for skills/start/assets/trace.py. Run: python -m unittest discover -s tests"""
++"""Tests for skills/spectrace-start/assets/trace.py. Run: python -m unittest discover -s tests"""
+ import contextlib
+ import importlib.util
+ import io
+@@ -10,7 +10,7 @@ import tempfile
+ import unittest
+ 
+ HERE = os.path.dirname(os.path.abspath(__file__))
+-ASSETS = os.environ.get("SPECTRACE_ASSETS") or os.path.join(HERE, "..", "skills", "start", "assets")
++ASSETS = os.environ.get("SPECTRACE_ASSETS") or os.path.join(HERE, "..", "skills", "spectrace-start", "assets")
+ spec = importlib.util.spec_from_file_location("spectrace_trace", os.path.join(ASSETS, "trace.py"))
+ trace = importlib.util.module_from_spec(spec)
+ spec.loader.exec_module(trace)

@@ -1,0 +1,40 @@
+diff --git a/tests/test_skills.py b/tests/test_skills.py
+index 3961fb9..ca9c43c 100644
+--- a/tests/test_skills.py
++++ b/tests/test_skills.py
+@@ -1,9 +1,10 @@
+-"""Structural checks for every skills/*/SKILL.md.
++"""Structural checks for every skills/*/SKILL.md, and the size budget.
+ 
+-Protects A7 (open Agent Skills format: agentskills.io/specification) and A5 (body at
+-most 200 lines). Breaks if a skill gains a non-spec frontmatter key, a name that
+-differs from its folder, an over-long description or body, or a reference to a file
+-that doesn't exist.
++Protects A7 (open Agent Skills format: agentskills.io/specification) and A5 (each
++SKILL.md body at most 200 lines, trace.py at most 900). Breaks if a skill gains a
++non-spec frontmatter key, a name that differs from its folder, an over-long
++description or body, a reference to a file that doesn't exist, or trace.py outgrows
++its budget.
+ """
+ import os
+ import re
+@@ -15,6 +16,8 @@ ALLOWED_KEYS = {"name", "description", "license", "compatibility", "metadata", "
+ NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+ REF_RE = re.compile(r"`((?:references|assets|scripts)/[\w./-]+)`")
+ BODY_LIMIT = 200
++TRACE_LIMIT = 900
++TRACE = os.path.join(SKILLS, "spectrace-start", "assets", "trace.py")
+ 
+ 
+ def parse(path):
+@@ -58,6 +61,10 @@ class SkillStructureTest(unittest.TestCase):
+             with self.subTest(skill=name):
+                 self.assertLessEqual(len(body.splitlines()), BODY_LIMIT)
+ 
++    def test_trace_within_budget(self):
++        with open(TRACE, encoding="utf-8") as f:
++            self.assertLessEqual(len(f.read().splitlines()), TRACE_LIMIT)
++
+     def test_referenced_files_exist(self):
+         for name in self.skills():
+             _, body = parse(os.path.join(SKILLS, name, "SKILL.md"))

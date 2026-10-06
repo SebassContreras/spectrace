@@ -1,0 +1,42 @@
+diff --git a/.claude-plugin/marketplace.json b/.claude-plugin/marketplace.json
+deleted file mode 100644
+index fa4fcc1..0000000
+--- a/.claude-plugin/marketplace.json
++++ /dev/null
+@@ -1,18 +0,0 @@
+-{
+-  "name": "spectrace",
+-  "owner": {
+-    "name": "SebassContreras",
+-    "url": "https://github.com/SebassContreras"
+-  },
+-  "metadata": {
+-    "description": "Traceable specs: interview, requirements, design, tasks, and change of direction without leftovers."
+-  },
+-  "plugins": [
+-    {
+-      "name": "spectrace",
+-      "source": "./",
+-      "description": "Traceable specs from a natural-language interview; changes of direction list exactly what to remove or redo.",
+-      "version": "0.1.0"
+-    }
+-  ]
+-}
+diff --git a/.claude-plugin/plugin.json b/.claude-plugin/plugin.json
+deleted file mode 100644
+index e107a5c..0000000
+--- a/.claude-plugin/plugin.json
++++ /dev/null
+@@ -1,12 +0,0 @@
+-{
+-  "name": "spectrace",
+-  "displayName": "spectrace",
+-  "version": "0.1.0",
+-  "description": "Turns a natural-language interview into traceable specs: requirements, design and tasks where every decision has an ID and a revision, and every task records exactly what it changed. When a decision changes, it lists the tasks, files, lines and tests that implemented the old one and turns them into cleanup tasks. Any agent executes the tasks.",
+-  "author": {
+-    "name": "SebassContreras"
+-  },
+-  "license": "MIT",
+-  "repository": "https://github.com/SebassContreras/spectrace",
+-  "skills": "./skills/"
+-}

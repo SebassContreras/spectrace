@@ -1,0 +1,38 @@
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index 94b1922..62aea64 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -286,6 +286,33 @@ class Repo:
+                 if t.status == "done" and t.owner == "agent" and t.changes is None:
+                     self.issue("warning", t.ref, "done without changes: (finished outside trace)", spec.id)
+             self.uncovered(spec)
++        self.deleted_mentions()
++
++    def deleted_mentions(self):
++        """A file a task deleted must not still be named anywhere outside history."""
++        patches, renames = load_patches(self.root)
++        deleted = {b["old"]: ref for ref, blocks in patches.items() for b in blocks
++                   if b["status"] == "deleted" and b["old"] not in renames
++                   and not os.path.exists(self.path(b["old"]))}
++        if not deleted:
++            return
++        listed = git(self.root, "ls-files", "-z", "-co", "--exclude-standard").split("\0")
++        for rel in filter(None, listed):
++            history = rel.startswith(".spectrace/") or (
++                rel.startswith("planning/") and rel.rsplit("/", 1)[-1] in ("tasks.md", "changes.md"))
++            full = self.path(rel)
++            if history or not os.path.isfile(full) or os.path.getsize(full) > 1_000_000:
++                continue
++            with open(full, "rb") as f:
++                data = f.read()
++            if b"\0" in data[:1024]:
++                continue
++            for n, line in enumerate(data.decode("utf-8", errors="replace").splitlines(), 1):
++                if RETIRED_RE.match(line):
++                    continue
++                for path, ref in deleted.items():
++                    if path in line:
++                        self.issue("pending", f"{rel}:{n}", f"mentions {path}, deleted by {ref}", ref[:3])
+ 
+     def covered_now(self, item):
+         for spec in self.specs.values():

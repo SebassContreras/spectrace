@@ -1,0 +1,128 @@
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index 24f8cf2..15d53d1 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -609,8 +609,8 @@ def cmd_start(repo, args):
+     state = load_state(root)
+     if state.get("open"):
+         raise TraceError(f"{state['open']} is still open — finish it (done/block/abort) first")
+-    if task.status == "done":
+-        raise TraceError(f"{task.ref} is already done")
++    if task.status == "done" or (args.adopt and args.ignore):
++        raise TraceError(f"{task.ref} is already done" if task.status == "done" else "use --adopt or --ignore, not both")
+     current = snapshot(root)
+     reference = reference_tree(root)
+     stray = numstat(root, reference, current)
+@@ -711,14 +711,10 @@ def cmd_check(repo, args):
+             names = ", ".join(s.split(" (")[0] for s in stray[:5]) + (" …" if len(stray) > 5 else "")
+             repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}")
+     issues = sorted(repo.issues, key=lambda x: SEVERITY[x[0]])
+-    if args.json:
+-        print(json.dumps([{"severity": s, "where": w, "message": m, "spec": sid}
+-                          for s, w, m, sid in issues], indent=2))
+-    else:
+-        for sev, where, msg, _ in issues:
+-            print(f"{sev.upper():<8} {where}  {msg}")
+-        counts = {k: sum(1 for i in issues if i[0] == k) for k in SEVERITY}
+-        print(f"\n{counts['error']} error(s), {counts['pending']} pending, {counts['warning']} warning(s)")
++    for sev, where, msg, _ in issues:
++        print(f"{sev.upper():<8} {where}  {msg}")
++    counts = {k: sum(1 for i in issues if i[0] == k) for k in SEVERITY}
++    print(f"\n{counts['error']} error(s), {counts['pending']} pending, {counts['warning']} warning(s)")
+     failed = any(i[0] == "error" for i in issues) or (args.strict and any(i[0] == "pending" for i in issues))
+     return 1 if failed else 0
+ 
+@@ -789,14 +785,12 @@ def file_presence(root, blocks, renames):
+             continue
+         now_path = follow(root, b["new"], renames)
+         label = b["new"] if now_path == b["new"] else f"{b['new']} → {now_path}"
+-        target = os.path.join(root, *now_path.split("/"))
+-        if not os.path.exists(target):
+-            out.append({"path": label, "present": 0, "added": len(b["added"]), "deleted": True})
+-            continue
+-        with open(target, encoding="utf-8", errors="replace") as f:
+-            now = {l.strip() for l in f}
++        target, now = os.path.join(root, *now_path.split("/")), set()
++        if os.path.exists(target):
++            with open(target, encoding="utf-8", errors="replace") as f:
++                now = {l.strip() for l in f}
+         out.append({"path": label, "present": sum(1 for a in b["added"] if a in now),
+-                    "added": len(b["added"]), "deleted": False})
++                    "added": len(b["added"]), "deleted": not os.path.exists(target)})
+     return out
+ 
+ 
+@@ -839,9 +833,6 @@ def cmd_impact(repo, args):
+ 
+     def label(i):
+         return i.ref + (" (retired)" if i.retired else "")
+-    if args.json:
+-        print(json.dumps({"items": [label(i) for i in targets], "tasks": rows}, indent=2))
+-        return 0
+     print(f"# Impact of {label(item)}\n")
+     if len(targets) > 1:
+         print("Design items implementing it: " + ", ".join(label(i) for i in targets[1:]) + "\n")
+@@ -861,9 +852,18 @@ def cmd_impact(repo, args):
+     return 0
+ 
+ 
+-COMMANDS = {"status": cmd_status, "start": cmd_start, "done": cmd_done, "abort": cmd_abort,
+-            "block": cmd_block, "check": cmd_check, "impact": cmd_impact, "review": cmd_review,
+-            "restore": cmd_restore}
++# name: (handler, help, arguments) — "--x" is a switch, anything else positional.
++COMMANDS = {
++    "status": (cmd_status, "spec status, stage and next task (--write: into roadmap.md)", ("--write", "--json")),
++    "start": (cmd_start, "open a task and snapshot the working tree", ("task", "--adopt", "--ignore")),
++    "done": (cmd_done, "close the open task and record its changes", ("task",)),
++    "abort": (cmd_abort, "close the open task without recording it", ("task",)),
++    "block": (cmd_block, "mark a task blocked with a reason", ("task", "reason")),
++    "check": (cmd_check, "verify the trace; exit 1 on errors (--strict: also on pending)", ("--strict",)),
++    "impact": (cmd_impact, "what implemented an item: tasks, files, lines still present", ("ref",)),
++    "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),
++    "restore": (cmd_restore, "undo a finished task's recorded changes, inside the open task", ("task",)),
++}
+ 
+ 
+ def parser():
+@@ -871,28 +871,10 @@ def parser():
+     p.add_argument("-C", dest="cwd", default=".", help="run as if started in this directory")
+     p.add_argument("--version", action="version", version=f"spectrace trace {VERSION}")
+     sub = p.add_subparsers(dest="cmd", required=True)
+-    s = sub.add_parser("status", help="spec status, stage and next task")
+-    s.add_argument("--write", action="store_true", help="write Status/Stage into roadmap.md")
+-    s.add_argument("--json", action="store_true")
+-    s = sub.add_parser("start", help="open a task and snapshot the working tree")
+-    s.add_argument("task")
+-    g = s.add_mutually_exclusive_group()
+-    g.add_argument("--adopt", action="store_true", help="count changes made outside any task as this task's")
+-    g.add_argument("--ignore", action="store_true", help="leave changes made outside any task out")
+-    for name, text in (("done", "close the open task and record its changes"),
+-                       ("abort", "close the open task without recording it")):
+-        sub.add_parser(name, help=text).add_argument("task")
+-    s = sub.add_parser("block", help="mark a task blocked with a reason")
+-    s.add_argument("task")
+-    s.add_argument("reason")
+-    s = sub.add_parser("check", help="verify the trace; exit 1 on errors")
+-    s.add_argument("--strict", action="store_true", help="also fail on pending (suspect/uncovered)")
+-    s.add_argument("--json", action="store_true")
+-    sub.add_parser("review", help="accept an item's current text as a wording-only edit").add_argument("ref")
+-    sub.add_parser("restore", help="undo a finished task's recorded changes, inside the open task").add_argument("task")
+-    s = sub.add_parser("impact", help="what implemented an item: tasks, files, lines still present")
+-    s.add_argument("ref")
+-    s.add_argument("--json", action="store_true")
++    for name, (_, text, arguments) in COMMANDS.items():
++        s = sub.add_parser(name, help=text)
++        for a in arguments:
++            s.add_argument(a, action="store_true") if a.startswith("--") else s.add_argument(a)
+     return p
+ 
+ 
+@@ -906,7 +888,7 @@ def main(argv=None):
+         root = os.path.normpath(git(os.path.abspath(args.cwd), "rev-parse", "--show-toplevel"))
+         if not os.path.isdir(os.path.join(root, "planning")):
+             raise TraceError(f"no planning/ folder in {root} — run the spectrace-start skill first")
+-        return COMMANDS[args.cmd](Repo(root), args)
++        return COMMANDS[args.cmd][0](Repo(root), args)
+     except TraceError as e:
+         print(f"trace: {e}", file=sys.stderr)
+         return 1

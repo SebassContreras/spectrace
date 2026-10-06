@@ -1,0 +1,201 @@
+diff --git a/install.ps1 b/install.ps1
+new file mode 100644
+index 0000000..02eb5cf
+--- /dev/null
++++ b/install.ps1
+@@ -0,0 +1,86 @@
++[CmdletBinding()]
++param(
++    [switch] $Global,
++    [switch] $Local,
++    [string] $Version = "latest",
++    [switch] $Force
++)
++
++$ErrorActionPreference = "Stop"
++
++function Show-Usage {
++    @"
++Usage: install.ps1 [-Global | -Local] [-Version VERSION] [-Force]
++
++Install spectrace skills from the GitHub release tarball.
++
++Skills go to .agents/skills (read by OpenCode, Codex, Cursor, Copilot, Antigravity)
++and, when a .claude directory exists, to .claude/skills (read by Claude Code).
++An existing install is left alone unless -Force is given.
++"@
++}
++
++if ($Global -and $Local) {
++    throw "-Global and -Local cannot be used together."
++}
++
++$scope = if ($Global) { "global" } else { "local" }
++$repository = "SebassContreras/spectrace"
++$asset = "spectrace-skills.tar.gz"
++$downloadUrl = if ($Version -eq "latest") {
++    "https://github.com/$repository/releases/latest/download/$asset"
++} else {
++    "https://github.com/$repository/releases/download/$Version/$asset"
++}
++
++$temporaryDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("spectrace-install-" + [guid]::NewGuid())
++$archivePath = Join-Path $temporaryDirectory $asset
++$extractedDirectory = Join-Path $temporaryDirectory "extracted"
++
++try {
++    New-Item -ItemType Directory -Path $extractedDirectory -Force | Out-Null
++
++    Write-Host "Downloading $downloadUrl"
++    $requestParameters = @{
++        Uri = $downloadUrl
++        OutFile = $archivePath
++    }
++    if ($PSVersionTable.PSVersion.Major -lt 6) {
++        $requestParameters.UseBasicParsing = $true
++    }
++    Invoke-WebRequest @requestParameters
++
++    $tar = Get-Command tar -ErrorAction SilentlyContinue
++    if (-not $tar) {
++        throw "A tar extractor is required to unpack $asset."
++    }
++    & $tar.Source -xzf $archivePath -C $extractedDirectory
++    if ($LASTEXITCODE -ne 0) {
++        throw "Failed to extract $asset."
++    }
++
++    $skillsSource = Join-Path $extractedDirectory "skills"
++    if (-not (Test-Path (Join-Path $skillsSource "start/SKILL.md") -PathType Leaf)) {
++        throw "The release archive does not contain a skills tree."
++    }
++
++    $base = if ($scope -eq "local") { (Get-Location).Path } else { $HOME }
++    $destinations = @((Join-Path $base ".agents/skills"))
++    if (Test-Path (Join-Path $base ".claude")) {
++        $destinations += (Join-Path $base ".claude/skills")
++    }
++
++    foreach ($destination in $destinations) {
++        if ((Test-Path (Join-Path $destination "start/SKILL.md") -PathType Leaf) -and -not $Force) {
++            Write-Host "Already installed in $destination (use -Force to overwrite)"
++            continue
++        }
++        New-Item -ItemType Directory -Path $destination -Force | Out-Null
++        Copy-Item -Path (Join-Path $skillsSource "*") -Destination $destination -Recurse -Force
++        Write-Host "Installed skills in $destination"
++    }
++} finally {
++    if (Test-Path $temporaryDirectory) {
++        Remove-Item -Path $temporaryDirectory -Recurse -Force
++    }
++}
+diff --git a/install.sh b/install.sh
+new file mode 100644
+index 0000000..450029c
+--- /dev/null
++++ b/install.sh
+@@ -0,0 +1,103 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++usage() {
++  cat <<'EOF'
++Usage: install.sh [--global | --local] [--version VERSION] [--force]
++
++Install spectrace skills from the GitHub release tarball.
++
++Skills go to .agents/skills (read by OpenCode, Codex, Cursor, Copilot, Antigravity)
++and, when a .claude directory exists, to .claude/skills (read by Claude Code).
++An existing install is left alone unless --force is given.
++EOF
++}
++
++scope="local"
++version="latest"
++force=0
++
++while (($#)); do
++  case "$1" in
++    --global)
++      scope="global"
++      ;;
++    --local)
++      scope="local"
++      ;;
++    --version)
++      if (($# < 2)); then
++        echo "--version requires a value" >&2
++        exit 2
++      fi
++      version="$2"
++      shift
++      ;;
++    --force)
++      force=1
++      ;;
++    -h|--help)
++      usage
++      exit 0
++      ;;
++    *)
++      echo "Unknown option: $1" >&2
++      usage >&2
++      exit 2
++      ;;
++  esac
++  shift
++done
++
++repo="SebassContreras/spectrace"
++asset="spectrace-skills.tar.gz"
++if [[ "$version" == "latest" ]]; then
++  url="https://github.com/$repo/releases/latest/download/$asset"
++else
++  url="https://github.com/$repo/releases/download/$version/$asset"
++fi
++
++if ! command -v curl >/dev/null 2>&1; then
++  echo "curl is required" >&2
++  exit 1
++fi
++if ! command -v tar >/dev/null 2>&1; then
++  echo "tar is required" >&2
++  exit 1
++fi
++
++temp_dir="$(mktemp -d)"
++trap 'rm -rf "$temp_dir"' EXIT
++
++archive="$temp_dir/$asset"
++extracted="$temp_dir/extracted"
++mkdir -p "$extracted"
++
++echo "Downloading $url"
++curl -fsSL "$url" -o "$archive"
++tar -xzf "$archive" -C "$extracted"
++source_dir="$extracted/skills"
++
++if [[ ! -f "$source_dir/start/SKILL.md" ]]; then
++  echo "The release archive does not contain a skills tree" >&2
++  exit 1
++fi
++
++if [[ "$scope" == "local" ]]; then
++  base="$PWD"
++else
++  base="${HOME:?}"
++fi
++
++destinations=("$base/.agents/skills")
++[[ -d "$base/.claude" ]] && destinations+=("$base/.claude/skills")
++
++for destination in "${destinations[@]}"; do
++  if [[ -f "$destination/start/SKILL.md" && $force -eq 0 ]]; then
++    echo "Already installed in $destination (use --force to overwrite)"
++    continue
++  fi
++  mkdir -p "$destination"
++  cp -R "$source_dir/." "$destination/"
++  echo "Installed skills in $destination"
++done

@@ -1,0 +1,14 @@
+diff --git a/skills/start/assets/format.md b/skills/start/assets/format.md
+index 23ef121..19c6f04 100644
+--- a/skills/start/assets/format.md
++++ b/skills/start/assets/format.md
+@@ -85,7 +85,9 @@ item line is context and is never traced.
+   - `changes:` — written only by `trace done`. Never by hand.
+   - `└─ <note>` — free text.
+ - Who writes what: `trace` writes `in_progress`, `done`, `blocked`, the checkbox and
+-  `changes:`. Skills write new task lines. Nobody else edits a task line.
++  `changes:`. The `plan` and `change` skills write new task lines; `change` may also
++  re-point a `covers:` to a new revision (adding a `└─ reviewed YYYY-MM-DD: …` note)
++  and delete a task that was never started. Nobody else edits a task line.
+ 
+ ## Roadmap (`planning/roadmap.md`)

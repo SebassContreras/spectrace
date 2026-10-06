@@ -1,0 +1,154 @@
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+new file mode 100644
+index 0000000..e5418ff
+--- /dev/null
++++ b/.github/workflows/release.yml
+@@ -0,0 +1,148 @@
++name: release
++
++# Cuts a release on demand: gh workflow run release.yml
++# Bumps .claude-plugin/{plugin,marketplace}.json from the Conventional Commits that
++# touched skills/ since the last tag, commits the bump through the API so GitHub signs
++# it, tags it, then builds and publishes the skills archive. One workflow: a tag pushed
++# with GITHUB_TOKEN can't trigger another one, so the release job runs here.
++
++on:
++  workflow_dispatch:
++    inputs:
++      bump:
++        description: "Bump level (auto = derived from Conventional Commits)"
++        type: choice
++        options: [auto, patch, minor, major]
++        default: auto
++
++permissions:
++  contents: write
++
++concurrency:
++  group: release
++  cancel-in-progress: false
++
++jobs:
++  version:
++    runs-on: ubuntu-latest
++    outputs:
++      tag: ${{ steps.bump.outputs.tag }}
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v7
++        with:
++          ref: main
++          fetch-depth: 0
++
++      - name: Tests
++        run: python3 -m unittest discover -s tests
++
++      - name: Bump version, commit and tag
++        id: bump
++        env:
++          BUMP: ${{ inputs.bump }}
++          GH_TOKEN: ${{ github.token }}
++        run: |
++          set -euo pipefail
++          current=$(jq -r .version .claude-plugin/plugin.json)
++          listed=$(jq -r '.plugins[] | select(.name == "spectrace") | .version' .claude-plugin/marketplace.json)
++          if [ "$current" != "$listed" ]; then
++            echo "plugin.json ($current) and marketplace.json ($listed) disagree" >&2
++            exit 1
++          fi
++          last_tag=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
++          messages=$(git log --format='%B%x00' "${last_tag:+$last_tag..}HEAD" -- skills/)
++          if [ -z "$messages" ] && [ "$BUMP" = auto ]; then
++            echo "No skills/ change since ${last_tag:-the first commit}; nothing to release."
++            exit 0
++          fi
++          next=$(printf '%s' "$messages" | python3 scripts/next_version.py "$current" "$BUMP")
++          if git rev-parse -q --verify "refs/tags/v$next" >/dev/null; then
++            echo "tag v$next already exists" >&2
++            exit 1
++          fi
++
++          jq --arg v "$next" '.version = $v' .claude-plugin/plugin.json > plugin.json.tmp
++          mv plugin.json.tmp .claude-plugin/plugin.json
++          jq --arg v "$next" '(.plugins[] | select(.name == "spectrace") | .version) = $v' \
++            .claude-plugin/marketplace.json > marketplace.json.tmp
++          mv marketplace.json.tmp .claude-plugin/marketplace.json
++
++          # A plain `git commit` in the runner is unsigned; the API commit is signed.
++          # The tag is lightweight on that commit, which GitHub shows as verified.
++          head=$(git rev-parse HEAD)
++          jq -n \
++            --arg repo "$GITHUB_REPOSITORY" \
++            --arg head "$head" \
++            --arg msg "chore(release): v$next" \
++            --arg plugin "$(base64 -w0 .claude-plugin/plugin.json)" \
++            --arg market "$(base64 -w0 .claude-plugin/marketplace.json)" \
++            '{query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }",
++              variables: {input: {
++                branch: {repositoryNameWithOwner: $repo, branchName: "main"},
++                expectedHeadOid: $head,
++                message: {headline: $msg},
++                fileChanges: {additions: [
++                  {path: ".claude-plugin/plugin.json", contents: $plugin},
++                  {path: ".claude-plugin/marketplace.json", contents: $market}
++                ]}}}}' > commit-input.json
++          oid=$(gh api graphql --input commit-input.json --jq '.data.createCommitOnBranch.commit.oid')
++          rm commit-input.json
++          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$next" -f sha="$oid" >/dev/null
++          echo "tag=v$next" >> "$GITHUB_OUTPUT"
++          echo "Released v$next (from $current, bump: $BUMP)."
++
++  publish:
++    needs: version
++    if: needs.version.outputs.tag != ''
++    runs-on: ubuntu-latest
++    env:
++      TAG: ${{ needs.version.outputs.tag }}
++    steps:
++      - name: Checkout the tag
++        uses: actions/checkout@v7
++        with:
++          ref: ${{ needs.version.outputs.tag }}
++
++      - name: Build deterministic skills archive
++        run: |
++          set -euo pipefail
++          tar \
++            --sort=name \
++            --mtime='UTC 1970-01-01' \
++            --owner=0 \
++            --group=0 \
++            --numeric-owner \
++            --exclude='__pycache__' \
++            -cf - \
++            skills/ \
++            .claude-plugin/plugin.json \
++            .claude-plugin/marketplace.json \
++            | gzip -n > spectrace-skills.tar.gz
++
++      - name: Check archive contents
++        run: |
++          set -euo pipefail
++          tar -tzf spectrace-skills.tar.gz > archive-files.txt
++          for f in skills/start/SKILL.md skills/plan/SKILL.md skills/change/SKILL.md \
++                   skills/start/assets/trace.py skills/start/assets/format.md; do
++            grep -qx "$f" archive-files.txt
++          done
++          if grep -E '(^(planning|scripts|tests|\.github|\.spectrace)/|__pycache__|\.pyc$)' archive-files.txt; then
++            echo "archive contains repo-only paths" >&2
++            exit 1
++          fi
++          rm archive-files.txt
++
++      - name: Generate checksum
++        run: sha256sum spectrace-skills.tar.gz > spectrace-skills.tar.gz.sha256
++
++      - name: Upload release assets
++        env:
++          GH_TOKEN: ${{ github.token }}
++        run: |
++          set -euo pipefail
++          if ! gh release view "$TAG" >/dev/null 2>&1; then
++            gh release create "$TAG" --verify-tag --generate-notes
++          fi
++          gh release upload "$TAG" spectrace-skills.tar.gz spectrace-skills.tar.gz.sha256 --clobber

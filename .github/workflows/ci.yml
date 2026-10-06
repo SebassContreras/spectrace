@@ -1,0 +1,39 @@
+name: ci
+
+# Tests for trace.py and the skills' structure on the oldest supported Python (3.9)
+# and a current one, on Linux and Windows; then the trace check on this repo's own
+# planning/ (errors only: pending items are normal while a change is being worked
+# through).
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 3.9 has no builds for Ubuntu images newer than 24.04.
+          - { os: ubuntu-24.04, python: "3.9" }
+          - { os: ubuntu-latest, python: "3.13" }
+          - { os: windows-latest, python: "3.13" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Python ${{ matrix.python }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Trace check
+        run: python skills/spectrace-start/assets/trace.py check

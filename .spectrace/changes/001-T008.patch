@@ -1,0 +1,56 @@
+diff --git a/tests/test_trace.py b/tests/test_trace.py
+index d565019..ffc2d08 100644
+--- a/tests/test_trace.py
++++ b/tests/test_trace.py
+@@ -238,6 +238,51 @@ class TraceTest(unittest.TestCase):
+         self.assertNotIn("suspect", out)
+         self.assertIn("file deleted", run(self.root, "impact", "001/D1")[1])
+ 
++    def test_impact_follows_a_recorded_rename(self):
++        body = "".join(f"session store line {n}\n" for n in range(10))
++        self.task("001/T001", {"src/store.txt": body})
++        self.assertEqual(run(self.root, "start", "001/T002")[0], 0)
++        os.makedirs(os.path.join(self.root, "lib"))
++        os.replace(os.path.join(self.root, "src", "store.txt"), os.path.join(self.root, "lib", "store.txt"))
++        run(self.root, "done", "001/T002")
++        self.assertIn("src/store.txt → lib/store.txt", self.read("planning/specs/001-auth/tasks.md"))
++        out = run(self.root, "impact", "001/D1")[1]
++        self.assertIn("src/store.txt → lib/store.txt: 10/10 added lines still present", out)
++
++    def test_impact_infers_a_rename_recorded_as_delete_and_add(self):
++        body = "".join(f"session store line {n}\n" for n in range(10))
++        self.task("001/T001", {"src/store.txt": body})
++        removed = "".join(f"-{l}\n" for l in body.splitlines())
++        added = "".join(f"+{l}\n" for l in body.splitlines())
++        self.write(".spectrace/changes/001-T002.patch",
++                   "diff --git a/src/store.txt b/src/store.txt\ndeleted file mode 100644\n--- a/src/store.txt\n+++ /dev/null\n"
++                   f"@@ -1,10 +0,0 @@\n{removed}"
++                   "diff --git a/lib/store.txt b/lib/store.txt\nnew file mode 100644\n--- /dev/null\n+++ b/lib/store.txt\n"
++                   f"@@ -0,0 +1,10 @@\n{added}")
++        os.makedirs(os.path.join(self.root, "lib"))
++        os.replace(os.path.join(self.root, "src", "store.txt"), os.path.join(self.root, "lib", "store.txt"))
++        out = run(self.root, "impact", "001/D1")[1]
++        self.assertIn("src/store.txt → lib/store.txt: 10/10 added lines still present", out)
++        self.assertNotIn("mentions src/store.txt", self.check()[1], "a move is not a deletion")
++
++    def test_mention_of_a_deleted_file_keeps_its_spec_open(self):
++        for ref, f in (("001/T001", "a"), ("001/T002", "b"), ("001/T003", "c")):
++            self.task(ref, {f"src/{f}.txt": f * 4 + "\n"})
++        self.write("docs/guide.md", "Run src/a.txt to start.\n")
++        self.write("planning/specs/001-auth/tasks.md", self.read("planning/specs/001-auth/tasks.md") +
++                   "- [ ] T004 [agent] [status:todo] Remove src/a.txt\n      covers: D1@1\n")
++        run(self.root, "status", "--write")
++        self.assertEqual(run(self.root, "start", "001/T004", "--adopt")[0], 0)
++        os.remove(os.path.join(self.root, "src", "a.txt"))
++        run(self.root, "done", "001/T004")
++        out = self.check("--strict")[1]
++        self.assertIn("docs/guide.md:1  mentions src/a.txt, deleted by 001/T004", out)
++        self.assertNotIn("tasks.md", out, "history files are never flagged")
++        self.assertEqual(self.status()["specs"][0]["status"], "in_progress")
++        self.write("docs/guide.md", "Run the app to start.\n")
++        run(self.root, "status", "--write")
++        self.assertEqual(self.status()["specs"][0]["status"], "done")
++
+     def test_r_impact_includes_design_items_that_implement_it(self):
+         self.task("001/T002", {"src/expiry.txt": "check expiry on request\n"})
+         out = run(self.root, "impact", "001/R2")[1]

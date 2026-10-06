@@ -1,0 +1,31 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+new file mode 100644
+index 0000000..37ace8f
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@ -0,0 +1,25 @@
++name: ci
++
++# Tests for trace.py, the skills' structure and the release helper, then the trace
++# check on this repo's own planning/ (errors only: pending items are normal while a
++# change is being worked through).
++
++on:
++  push:
++  pull_request:
++
++permissions:
++  contents: read
++
++jobs:
++  test:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v7
++
++      - name: Tests
++        run: python3 -m unittest discover -s tests -v
++
++      - name: Trace check
++        run: python3 skills/start/assets/trace.py check

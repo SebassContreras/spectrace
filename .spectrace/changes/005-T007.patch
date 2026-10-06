@@ -1,0 +1,89 @@
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..fa27da9
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,83 @@
++# spectrace
++
++Specs you can change your mind about.
++
++spectrace turns a natural-language interview into specs — requirements, design,
++tasks — where every decision has an ID and a revision, and every task records exactly
++what it changed. When a decision changes, it lists the tasks, files, lines and tests
++that implemented the old one and turns them into cleanup tasks, so nothing from the
++old approach is left behind. Any agent executes the tasks; there is no orchestrator.
++
++> Status: pre-release. Not yet verified end to end (`planning/specs/006-e2e-verification`).
++
++## Install
++
++Claude Code and GitHub Copilot CLI, from the plugin marketplace:
++
++```sh
++claude plugin marketplace add SebassContreras/spectrace --sparse .claude-plugin skills && claude plugin install spectrace@spectrace
++copilot plugin marketplace add SebassContreras/spectrace && copilot plugin install spectrace@spectrace
++```
++
++Any harness that reads `.agents/skills/` (OpenCode, Codex, Cursor, Copilot, Antigravity):
++
++```sh
++curl -fsSL https://raw.githubusercontent.com/SebassContreras/spectrace/main/install.sh | bash
++```
++
++```powershell
++irm https://raw.githubusercontent.com/SebassContreras/spectrace/main/install.ps1 | iex
++```
++
++Needs git and Python 3.9+ in the project. Nothing else.
++
++## Three skills
++
++| Skill | What it does |
++|---|---|
++| `start` | Interviews you one question at a time and writes `planning/` — product, architecture (A items), roadmap, each spec's requirements (R items) — plus `.spectrace/trace.py` and the task protocol in `AGENTS.md`. |
++| `plan` | Closes a spec's design (D items, each naming the R items it implements) and breaks it into tasks, each declaring what it `covers:`. |
++| `change` | Revises or retires decisions, records why, and turns everything that implemented the old one into cleanup tasks — redo by default, refactor only with a written reason. |
++
++## Executing tasks
++
++Tell any agent to execute the specs. The protocol in `AGENTS.md` has it run:
++
++```sh
++python3 .spectrace/trace.py status          # next task
++python3 .spectrace/trace.py start 002/T004  # snapshot before editing
++python3 .spectrace/trace.py done 002/T004   # record exactly what changed
++python3 .spectrace/trace.py check           # must pass before finishing
++```
++
++`start` and `done` snapshot the working tree without committing or touching the
++staging area, so each task's diff is exact even when several tasks share one commit
++or none. The diff is kept in `.spectrace/changes/` and summarized on the task.
++
++## Changing direction
++
++```
++- ~~D1@1 (implements R1): Sessions live in localStorage.~~ retired 2026-10-12 → D3
++- D3@1 (implements R1): Sessions live in an httpOnly cookie.
++```
++
++```
++$ python3 .spectrace/trace.py impact 001/D1
++- 001/T001 [agent] [done] Session store
++    src/store.ts: 14/14 added lines still present
++```
++
++Every finished task that covered `D1@1` is now *suspect*; the spec can't read as done
++until a task retires it. The format is defined once, in
++[`skills/start/assets/format.md`](skills/start/assets/format.md).
++
++## Develop
++
++```sh
++python3 -m unittest discover -s tests
++python3 skills/start/assets/trace.py check
++```
++
++This repo is planned with spectrace itself: see `planning/` and `AGENTS.md`.
++
++MIT License.

@@ -1,0 +1,150 @@
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index efb7db8..94b1922 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -422,13 +422,18 @@ def reference_tree(root):
+ 
+ 
+ def diff(root, a, b, *flags):
+-    return git(root, "diff", "--no-color", "--no-ext-diff", "--no-renames", *flags, a, b, "--", ".", *EXCLUDE)
++    return git(root, "diff", "--no-color", "--no-ext-diff", "-M", *flags, a, b, "--", ".", *EXCLUDE)
+ 
+ 
+ def numstat(root, a, b):
+-    out = []
+-    for line in diff(root, a, b, "--numstat").splitlines():
+-        add, rem, path = line.split("\t", 2)
++    out, parts = [], diff(root, a, b, "--numstat", "-z").split("\0")
++    while parts:
++        head = parts.pop(0)
++        if not head.strip():
++            continue
++        add, rem, path = head.lstrip().split("\t", 2)
++        if not path:  # rename: old and new paths follow
++            path = f"{parts.pop(0)} → {parts.pop(0)}"
+         out.append(f"{path} (binary)" if add == "-" else f"{path} (+{add} -{rem})")
+     return out
+ 
+@@ -616,33 +621,80 @@ def cmd_check(repo, args):
+     return 1 if failed else 0
+ 
+ 
+-def added_lines(patch_text):
+-    files, current = {}, None
+-    for line in patch_text.splitlines():
+-        if line.startswith("+++ "):
+-            current = None if line[4:] == "/dev/null" else (line[6:] if line.startswith("+++ b/") else line[4:])
+-            if current:
+-                files.setdefault(current, [])
+-        elif current and line.startswith("+") and len(line[1:].strip()) >= 4:
+-            files[current].append(line[1:].strip())
+-    return files
+-
+-
+-def file_presence(root, patch_path):
+-    if not os.path.exists(patch_path):
+-        return []
+-    with open(patch_path, encoding="utf-8") as f:
+-        added = added_lines(f.read())
++def parse_patch(text):
++    """Per-file blocks of a git patch: old/new path, status, added and removed lines."""
++    blocks, b = [], None
++    for line in text.splitlines():
++        if line.startswith("diff --git "):
++            b = {"old": None, "new": None, "status": "modified", "added": [], "removed": [], "hunk": False}
++            blocks.append(b)
++        elif b is None:
++            continue
++        elif b["hunk"] and line and line[0] in "+-":
++            if len(line[1:].strip()) >= 4:
++                b["added" if line[0] == "+" else "removed"].append(line[1:].strip())
++        elif line.startswith("@@"):
++            b["hunk"] = True
++        elif line.startswith(("rename from ", "rename to ")):
++            b["status"] = "renamed"
++            b["old" if line.startswith("rename from") else "new"] = line.split(" ", 2)[2]
++        elif line.startswith("new file mode"):
++            b["status"] = "new"
++        elif line.startswith("deleted file mode"):
++            b["status"] = "deleted"
++        elif line.startswith("--- a/"):
++            b["old"] = line[6:]
++        elif line.startswith("+++ b/"):
++            b["new"] = line[6:]
++    return blocks
++
++
++def load_patches(root):
++    """{task ref: blocks} for every recorded patch, and the rename map they imply."""
++    folder = os.path.join(root, ".spectrace", "changes")
++    patches, renames = {}, {}
++    for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
++        m = re.fullmatch(r"(\d{3})-T(\d{3})\.patch", name)
++        if not m:
++            continue
++        with open(os.path.join(folder, name), encoding="utf-8") as f:
++            blocks = parse_patch(f.read())
++        patches[f"{m.group(1)}/T{m.group(2)}"] = blocks
++        for b in blocks:
++            if b["status"] == "renamed":
++                renames[b["old"]] = b["new"]
++        # A move recorded as delete + add: same file name, mostly the same lines.
++        for gone in (b for b in blocks if b["status"] == "deleted" and b["removed"]):
++            for new in (b for b in blocks if b["status"] == "new"):
++                same = len(set(gone["removed"]) & set(new["added"]))
++                if gone["old"].rsplit("/", 1)[-1] == new["new"].rsplit("/", 1)[-1] and same >= 0.8 * len(set(gone["removed"])):
++                    renames[gone["old"]] = new["new"]
++    return patches, renames
++
++
++def follow(root, path, renames):
++    seen = set()
++    while not os.path.exists(os.path.join(root, *path.split("/"))) and path in renames and path not in seen:
++        seen.add(path)
++        path = renames[path]
++    return path
++
++
++def file_presence(root, blocks, renames):
+     out = []
+-    for path, lines in added.items():
+-        target = os.path.join(root, *path.split("/"))
++    for b in blocks:
++        if b["status"] == "deleted" or not b["new"] or not b["added"]:
++            continue
++        now_path = follow(root, b["new"], renames)
++        label = b["new"] if now_path == b["new"] else f"{b['new']} → {now_path}"
++        target = os.path.join(root, *now_path.split("/"))
+         if not os.path.exists(target):
+-            out.append({"path": path, "present": 0, "added": len(lines), "deleted": True})
++            out.append({"path": label, "present": 0, "added": len(b["added"]), "deleted": True})
+             continue
+         with open(target, encoding="utf-8", errors="replace") as f:
+             now = {l.strip() for l in f}
+-        out.append({"path": path, "present": sum(1 for a in lines if a in now),
+-                    "added": len(lines), "deleted": False})
++        out.append({"path": label, "present": sum(1 for a in b["added"] if a in now),
++                    "added": len(b["added"]), "deleted": False})
+     return out
+ 
+ 
+@@ -660,16 +712,16 @@ def cmd_impact(repo, args):
+     if item.kind == "R":
+         targets += [d for d in spec.items.values() if d.kind == "D" and key in d.implements]
+     rows = []
++    patches, renames = load_patches(repo.root)
+     for s in repo.specs.values():
+         for t in s.tasks:
+             if not any(repo.resolve(raw, s.id)[0] in targets for raw in t.covers):
+                 continue
+-            patch = os.path.join(repo.root, ".spectrace", "changes", f"{t.spec}-T{t.num:03d}.patch")
+             retired_by = [o.ref for s2 in repo.specs.values() for o in s2.tasks
+                           if any(repo.find_task(r, s2.id) is t for r in o.retires)]
+             rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
+-                         "covers": t.covers, "text": t.text, "changes": t.changes,
+-                         "files": file_presence(repo.root, patch), "retired_by": retired_by})
++                         "covers": t.covers, "text": t.text, "changes": t.changes, "retired_by": retired_by,
++                         "files": file_presence(repo.root, patches.get(t.ref, []), renames)})
+ 
+     def label(i):
+         prefix = "" if i.kind == "A" else f"{m.group('spec')}/"

@@ -1,0 +1,44 @@
+diff --git a/tests/test_next_version.py b/tests/test_next_version.py
+new file mode 100644
+index 0000000..d82a0f2
+--- /dev/null
++++ b/tests/test_next_version.py
+@@ -0,0 +1,38 @@
++"""Protects 005/R3: the release version follows Conventional Commits.
++
++Breaks if feat stops bumping minor, a breaking change stops bumping major (minor
++below 1.0.0), an explicit level is ignored, or a bad version is accepted.
++"""
++import importlib.util
++import os
++import unittest
++
++spec = importlib.util.spec_from_file_location(
++    "next_version", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts", "next_version.py"))
++nv = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(nv)
++
++
++class NextVersionTest(unittest.TestCase):
++    def test_auto_levels(self):
++        self.assertEqual(nv.next_version("1.2.3", "auto", ["fix: a", "docs: b"]), "1.2.4")
++        self.assertEqual(nv.next_version("1.2.3", "auto", ["fix: a", "feat(plan): b"]), "1.3.0")
++        self.assertEqual(nv.next_version("1.2.3", "auto", ["refactor!: a"]), "2.0.0")
++        self.assertEqual(nv.next_version("1.2.3", "auto", ["fix: a\n\nBREAKING CHANGE: b"]), "2.0.0")
++
++    def test_breaking_below_one_is_minor(self):
++        self.assertEqual(nv.next_version("0.4.1", "auto", ["feat!: a"]), "0.5.0")
++
++    def test_explicit_level_wins(self):
++        self.assertEqual(nv.next_version("1.2.3", "major", ["fix: a"]), "2.0.0")
++        self.assertEqual(nv.next_version("1.2.3", "patch", ["feat: a"]), "1.2.4")
++
++    def test_rejects_bad_input(self):
++        with self.assertRaises(ValueError):
++            nv.next_version("v1.2", "auto", [])
++        with self.assertRaises(ValueError):
++            nv.next_version("1.2.3", "huge", [])
++
++
++if __name__ == "__main__":
++    unittest.main()

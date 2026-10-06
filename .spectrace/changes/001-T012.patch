@@ -1,0 +1,43 @@
+diff --git a/skills/spectrace-start/assets/format.md b/skills/spectrace-start/assets/format.md
+index 2850648..764a814 100644
+--- a/skills/spectrace-start/assets/format.md
++++ b/skills/spectrace-start/assets/format.md
+@@ -22,6 +22,7 @@ planning/specs/NNN-name/
+   trace.py  format.md             copied in by `spectrace-start`
+   interview.md                    interview ledger
+   changes/NNN-TNNN.patch          exact diff of each finished task (committed)
++  fingerprints.json               hash of each item's text, written by trace (committed)
+   state.json                      open task (git-ignored)
+ ```
+ 
+@@ -120,6 +121,12 @@ item line is context and is never traced.
+ - **orphan** — a reference to an item or task that doesn't exist.
+ - **uncovered** — an active R that no active D implements and no task covers (checked
+   once the spec has D items); an active D no task covers (checked once it has tasks).
++- **changed** — the text of an item a done task covers differs from when that work was
++  built, and the revision wasn't bumped. Resolved by bumping the revision (a meaning
++  change: the `spectrace-change` skill), or by `trace review <ref>` (wording only).
++- **mentions a deleted file** — a file a task deleted is still named somewhere outside
++  history (`tasks.md`, `changes.md`, `.spectrace/`, retired item lines). Pending on the
++  spec of the task that deleted it.
+ 
+ ## History (`changes.md`)
+ 
+@@ -146,6 +153,14 @@ python3 .spectrace/trace.py check             # must exit 0 before you finish
+ ```
+ 
+ `start` snapshots the working tree without committing or touching the staging area;
+-`done` diffs against that snapshot, so each task's changes are exact even if several
+-tasks share one commit or none. One task is open at a time. Changes under `planning/`
+-and `.spectrace/` are never counted as task changes.
++`done` diffs against that snapshot (detecting renames), so each task's changes are exact
++even if several tasks share one commit or none. One task is open at a time. Changes
++under `planning/` and `.spectrace/` are never counted as task changes.
++
++Used by the `spectrace-change` skill:
++
++```
++python3 .spectrace/trace.py impact 001/D3      # what implemented it, and what's still in the code
++python3 .spectrace/trace.py review 001/D3      # accept a wording-only edit of its text
++python3 .spectrace/trace.py restore 001/T009   # undo that task's changes, inside the open task
++```

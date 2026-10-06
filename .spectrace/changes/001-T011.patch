@@ -1,0 +1,50 @@
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index 452e724..24f8cf2 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -635,6 +635,27 @@ def close_open(repo, raw):
+     return task
+ 
+ 
++def cmd_restore(repo, args):
++    """Undo a finished task's recorded changes; the open task records the result."""
++    task = need_task(repo, args.task)
++    current = load_state(repo.root).get("open")
++    if not current:
++        raise TraceError("open a task first (trace start NNN/TNNN) so the restored code is recorded")
++    patch = os.path.join(repo.root, ".spectrace", "changes", f"{task.spec}-T{task.num:03d}.patch")
++    if not os.path.exists(patch):
++        raise TraceError(f"{task.ref} has no recorded patch")
++    with open(patch, encoding="utf-8") as f:
++        if f.readline().startswith("# patch over size limit"):
++            raise TraceError(f"{task.ref}'s patch was too large to record in full; redo it by hand")
++    try:
++        git(repo.root, "apply", "-R", "--check", patch)
++    except TraceError as e:
++        raise TraceError(f"{task.ref}'s changes no longer apply cleanly; redo them instead.\n{e}")
++    git(repo.root, "apply", "-R", patch)
++    print(f"restored: undid {task.ref}'s changes inside {current}")
++    return 0
++
++
+ def cmd_done(repo, args):
+     root = repo.root
+     task = close_open(repo, args.task)
+@@ -841,7 +862,8 @@ def cmd_impact(repo, args):
+ 
+ 
+ COMMANDS = {"status": cmd_status, "start": cmd_start, "done": cmd_done, "abort": cmd_abort,
+-            "block": cmd_block, "check": cmd_check, "impact": cmd_impact, "review": cmd_review}
++            "block": cmd_block, "check": cmd_check, "impact": cmd_impact, "review": cmd_review,
++            "restore": cmd_restore}
+ 
+ 
+ def parser():
+@@ -867,6 +889,7 @@ def parser():
+     s.add_argument("--strict", action="store_true", help="also fail on pending (suspect/uncovered)")
+     s.add_argument("--json", action="store_true")
+     sub.add_parser("review", help="accept an item's current text as a wording-only edit").add_argument("ref")
++    sub.add_parser("restore", help="undo a finished task's recorded changes, inside the open task").add_argument("task")
+     s = sub.add_parser("impact", help="what implemented an item: tasks, files, lines still present")
+     s.add_argument("ref")
+     s.add_argument("--json", action="store_true")

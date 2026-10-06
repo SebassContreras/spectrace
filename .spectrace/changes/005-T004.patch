@@ -1,0 +1,62 @@
+diff --git a/scripts/next_version.py b/scripts/next_version.py
+new file mode 100644
+index 0000000..54438ca
+--- /dev/null
++++ b/scripts/next_version.py
+@@ -0,0 +1,56 @@
++#!/usr/bin/env python3
++"""Print the next plugin version, for .github/workflows/release.yml.
++
++Usage: python3 scripts/next_version.py <current> [auto|patch|minor|major] < messages
++
++stdin: the full messages of every commit since the last tag that touched skills/,
++NUL-separated (git log --format='%B%x00'). With auto, the level comes from
++Conventional Commits: a breaking change (type!: or a BREAKING CHANGE footer) is
++major, feat is minor, anything else is patch. Below 1.0.0 a breaking change only
++bumps minor, like a feat: 0.x has no stable API to break.
++"""
++import re
++import sys
++
++LEVELS = ("auto", "patch", "minor", "major")
++
++
++def level_from(messages, major):
++    if any(re.match(r"^\w+(\([^)]*\))?!:", m) or re.search(r"^BREAKING[ -]CHANGE:", m, re.M)
++           for m in messages):
++        return "minor" if major == 0 else "major"
++    if any(re.match(r"^feat(\([^)]*\))?:", m) for m in messages):
++        return "minor"
++    return "patch"
++
++
++def next_version(current, level, messages):
++    m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", current or "")
++    if not m:
++        raise ValueError(f"not a plain semver version: {current}")
++    if level not in LEVELS:
++        raise ValueError(f"unknown bump level: {level}")
++    major, minor, patch = map(int, m.groups())
++    bump = level_from(messages, major) if level == "auto" else level
++    if bump == "major":
++        return f"{major + 1}.0.0"
++    if bump == "minor":
++        return f"{major}.{minor + 1}.0"
++    return f"{major}.{minor}.{patch + 1}"
++
++
++def main(argv):
++    if len(argv) < 2:
++        print(__doc__.strip().splitlines()[2], file=sys.stderr)
++        return 1
++    messages = [m.strip() for m in sys.stdin.read().split("\0") if m.strip()]
++    try:
++        print(next_version(argv[1], argv[2] if len(argv) > 2 else "auto", messages))
++    except ValueError as e:
++        print(e, file=sys.stderr)
++        return 1
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main(sys.argv))
