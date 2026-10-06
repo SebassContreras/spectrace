@@ -23,8 +23,9 @@
       covers: D4@2
       changes: README.md (+83 -0)
       └─ reviewed 2026-10-06: still valid under D4@2; T016 adds badges and limits
-- [ ] T008 [human] [status:todo] Create the GitHub repository `SebassContreras/spectrace` and push
+- [x] T008 [human] [status:done] Create the GitHub repository `SebassContreras/spectrace` and push
       covers: R1@2, R6@1
+      changes: none
       └─ reviewed 2026-10-06: still needed — the skills CLI installs from the GitHub repo
 - [x] T009 [agent] [status:done] Rename the skills to `spectrace-start`, `spectrace-plan`, `spectrace-change` (folders, `name:`, every reference in skills, docs, tests and CI)
       covers: A1@2
@@ -53,5 +54,6 @@
 - [x] T016 [agent] [status:done] README: badges, limits, changing-direction and develop sections
       covers: D4@2
       changes: README.md (+70 -24)
-- [ ] T017 [agent] [status:todo] Set the GitHub description and topics
+- [x] T017 [agent] [status:done] Set the GitHub description and topics
       covers: D7@1
+      changes: none
