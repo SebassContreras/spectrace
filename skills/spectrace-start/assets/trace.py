@@ -536,10 +536,11 @@ def load_state(root):
 
 def save_state(root, state):
     os.makedirs(os.path.dirname(state_path(root)), exist_ok=True)
-    ignore = os.path.join(root, ".spectrace", ".gitignore")
-    if not os.path.exists(ignore):
-        with open(ignore, "w", encoding="utf-8") as f:
-            f.write("state.json\n")
+    # Patches must stay byte-exact across clones, or `restore` breaks on CRLF checkouts.
+    for name, text in ((".gitignore", "state.json\n"), (".gitattributes", "changes/*.patch -text\n")):
+        if not os.path.exists(os.path.join(root, ".spectrace", name)):
+            with open(os.path.join(root, ".spectrace", name), "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
     if state:
         with open(state_path(root), "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2)

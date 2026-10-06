@@ -135,6 +135,8 @@ class TraceTest(unittest.TestCase):
 
     def test_one_open_task_at_a_time(self):
         self.assertEqual(run(self.root, "start", "001/T001")[0], 0)
+        self.assertEqual(self.read(".spectrace/.gitattributes"), "changes/*.patch -text\n",
+                         "patches must survive CRLF checkouts for restore")
         self.assertEqual(run(self.root, "start", "001/T002")[0], 1)
 
     def test_changes_outside_a_task_are_refused_then_adopted(self):
