@@ -1,0 +1,86 @@
+diff --git a/e2e/report.md b/e2e/report.md
+index 3d7e7e4..e010d65 100644
+--- a/e2e/report.md
++++ b/e2e/report.md
+@@ -14,7 +14,9 @@ Claude Code 2.1.292, default model, print mode (`claude -p --output-format json`
+ also loads the driver machine's user-level instructions (`~/.claude/CLAUDE.md`);
+ nothing in them touches spectrace.
+ 
+-### R1 — interview, plan, three tasks, exact changes: **pass**
++### Run 1 (published `c7b0d26`)
++
++#### R1 — interview, plan, three tasks, exact changes: **pass**
+ 
+ - `spectrace-start`: 38 turns, one conversation. Wrote `AGENTS.md` (protocol block
+   included), `planning/{product,architecture,styles,roadmap}.md`, specs
+@@ -60,7 +62,7 @@ Findings:
+   than 80 characters raises an error and stores nothing; a title of exactly 80
+   characters is accepted."); step 6 rewords that text.
+ 
+-### R2 — retire a design item: **pass, with a gap in the strict gate**
++#### R2 — retire a design item: **fail** — patch recording defects (fixed in 006/T012) and a gap in the strict gate
+ 
+ - Change conversation (4 turns): the skill first proposed *revising* D1/D2 to `@2`
+   and *adding* an R8 the user never stated (offered for confirmation, not written).
+@@ -91,3 +93,48 @@ Findings:
+   reverse-applied.
+ - **Scenario fix:** `git grep` skips untracked files; with no commits during the run
+   every check needs `--untracked` (and `:(exclude)*.pyc`).
++
++### Run 2 (published `22c9af8`, with the 006/T012 fix)
++
++Same install, fresh throwaway repo. The installed `trace.py` carries the fix.
++
++#### R1: **pass**
++
++- `spectrace-start`: 40 turns. This time it asked `data-model`, `verification` and
++  the platform question directly; it still recorded `project-type` and `audience`
++  from the first answer without asking. Specs `001-storage` (R1–R8; the title limit
++  is R8) and `002-cli` (R1–R5). `trace check` → exit 0, one warning (uncommitted
++  `AGENTS.md`), cleared by the driver's commit.
++- `spectrace-plan` on 001: 10 turns. D1 (`tdo.json`), D2 (`json`, rewritten whole),
++  D3 (`tdo/store.py`), D4–D6 (one per function); 4 open questions; T001–T009.
++- Three task conversations → 001/T001, T002, T003:
++
++| Task | Driver diff (`--binary`) vs. recorded patch | `changes:` |
++|---|---|---|
++| 001/T001 | EXACT | `tdo/__init__.py (+1 -0)`, `tdo/__pycache__/__init__.cpython-314.pyc (binary)` |
++| 001/T002 | EXACT | `tdo/store.py (+28 -0)` |
++| 001/T003 | EXACT | `tdo/store.py (+17 -0)` |
++
++  Only the two driver commits; `trace check` → exit 0. Every agent again flagged the
++  missing `.gitignore` and left `changes:` alone.
++
++#### R2: **fail on one criterion** — the strict gate
++
++- The change skill again proposed *revising* D1/D2 and *adding* a requirement (R9)
++  the user never stated; asked to retire, it retired D1@1 → D7, D2@1 → D8, edited the
++  stale open question, wrote `changes.md`, deleted not-started T009 (named
++  `tdo.json`) and added T010 (`retires: T002`), T011 (SQLite helpers), T012 (rewrite
++  `add`, `retires: T003`), T013 (persistence test).
++- Manifest: `impact` on D1 and D2 → 001/T002, `tdo/store.py: 20/20 added lines still
++  present`; T002's patch adds 21 non-blank lines, 20 of at least four characters (the
++  threshold `impact` counts). The sweep found `add`'s calls to the JSON helpers and
++  the docstring.
++- Cleanup tasks: all EXACT. `check --strict`: exit 1 before cleanup (T002 suspect on
++  D1@1, D2@1) → **exit 0 after T010**, while T012 (`retires: T003`) was still `todo`
++  and `add` still called the deleted helpers → exit 0 after T011, T012.
++- After T012: `git grep --untracked` for `json`, `_load`, `_save` → nothing; `sqlite3`
++  and `tdo.db` → 5 lines in `tdo/store.py`.
++
++**Strict gate.** A retiring task only holds the spec open while the task it retires
++is suspect; T003 covers D4, which didn't change, so T012 pending was invisible to
++`--strict`. R2 needs `check --strict` to fail until every cleanup task is done.
+diff --git a/e2e/scenario.md b/e2e/scenario.md
+index 2775f5f..a4cbb78 100644
+--- a/e2e/scenario.md
++++ b/e2e/scenario.md
+@@ -227,7 +227,7 @@ For each task conversation, with `$B`/`$A` its before/after snapshots and `NNN-T
+ the task the harness reports having run:
+ 
+ ```bash
+-diff <(git diff --no-color --no-ext-diff -M "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace') \
++diff <(git diff --no-color --no-ext-diff -M --binary "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace') \
+      .spectrace/changes/NNN-TNNN.patch && echo EXACT
+ git diff --numstat -M "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace'
+ ```

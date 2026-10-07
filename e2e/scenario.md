@@ -227,7 +227,7 @@ For each task conversation, with `$B`/`$A` its before/after snapshots and `NNN-T
 the task the harness reports having run:
 
 ```bash
-diff <(git diff --no-color --no-ext-diff -M "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace') \
+diff <(git diff --no-color --no-ext-diff -M --binary "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace') \
      .spectrace/changes/NNN-TNNN.patch && echo EXACT
 git diff --numstat -M "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace'
 ```

@@ -45,8 +45,28 @@
 - [x] T014 [agent] [status:done] `e2e/scenario.md`: every `git grep` uses `--untracked` and excludes `*.pyc`
       covers: D6@1
       changes: e2e/scenario.md (+5 -2)
-- [ ] T015 [agent] [status:in_progress] Push `main` to origin, so the rerun installs the fix from the published repo
+- [x] T015 [agent] [status:done] Push `main` to origin, so the rerun installs the fix from the published repo
       covers: D1@1
-- [ ] T016 [agent] [status:todo] Claude Code: rerun steps 0–4 on a fresh throwaway repo with the fix; update R1 and R2 in `e2e/report.md` (T005 and T006 continue on that run)
+      changes: none
+- [x] T016 [agent] [status:done] Claude Code: rerun steps 0–4 on a fresh throwaway repo with the fix; update R1 and R2 in `e2e/report.md` (T005 and T006 continue on that run)
       covers: R1@1, R2@1, D5@1, D6@1
       kind: test
+      changes: e2e/report.md (+49 -2), e2e/scenario.md (+1 -1)
+- [x] T017 [agent] [status:done] `trace.py`: a not-done task that `retires:` a finished task is pending
+      covers: 001/D9@1
+      changes: skills/spectrace-start/assets/trace.py (+4 -4)
+- [x] T018 [agent] [status:done] `format.md`: add the cleanup-pending state to "Trace states"
+      covers: 001/D9@1
+      changes: skills/spectrace-start/assets/format.md (+2 -0)
+- [x] T019 [agent] [status:done] `tests/test_trace.py`: `check --strict` fails until a retiring task is done, even when the task it retires isn't suspect
+      covers: 001/R3@2
+      kind: test
+      changes: tests/test_trace.py (+12 -0)
+- [ ] T020 [agent] [status:in_progress] Push `main` to origin with the strict-gate change
+      covers: D1@1
+- [ ] T021 [agent] [status:todo] Claude Code run 2: reset the throwaway repo to its pre-change snapshot, update its `.spectrace/trace.py`, rerun step 4; update R2 in `e2e/report.md`
+      covers: R2@1, D6@1
+      kind: test
+- [x] T022 [agent] [status:done] `spectrace-change` Phase 5: accept "cleanup pending" for the cleanup tasks it just wrote
+      covers: 001/D9@1
+      changes: skills/spectrace-change/SKILL.md (+3 -2)
