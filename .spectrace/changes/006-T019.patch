@@ -1,0 +1,23 @@
+diff --git a/tests/test_trace.py b/tests/test_trace.py
+index 064d4ce..66063da 100644
+--- a/tests/test_trace.py
++++ b/tests/test_trace.py
+@@ -240,6 +240,18 @@ class TraceTest(unittest.TestCase):
+         self.assertNotIn("suspect", out)
+         self.assertIn("file deleted", run(self.root, "impact", "001/D1")[1])
+ 
++    def test_a_retiring_task_holds_the_strict_gate_until_done(self):
++        self.task("001/T002", {"src/expiry.txt": "checkExpiry(session)\n"})  # covers D2, which won't change
++        self.write("planning/specs/001-auth/tasks.md", self.read("planning/specs/001-auth/tasks.md") +
++                   "- [ ] T004 [agent] [status:todo] Rewrite the expiry check\n"
++                   "      covers: D2@1\n      retires: T002\n")
++        run(self.root, "status", "--write")
++        code, out = self.check("--strict")
++        self.assertEqual(code, 1)
++        self.assertIn("cleanup of 001/T002 not done yet", out)
++        self.task("001/T004", {"src/expiry.txt": "checkExpiry(session, now)\n"})
++        self.assertNotIn("cleanup of", self.check("--strict")[1])
++
+     def test_impact_follows_a_recorded_rename(self):
+         body = "".join(f"session store line {n}\n" for n in range(10))
+         self.task("001/T001", {"src/store.txt": body})

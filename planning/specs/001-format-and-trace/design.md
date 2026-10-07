@@ -10,6 +10,7 @@
 - D6@1 (implements R6): `trace check` collects the files task patches deleted (not renamed) that no longer exist, and scans the repo's text files — except history (`tasks.md`, `changes.md`, `.spectrace/`) and retired item lines — for their paths; each mention is pending on the deleting task's spec.
 - D7@1 (implements R7): `.spectrace/fingerprints.json` maps each `item@revision` to a hash of its whitespace-normalized text. `status --write` records items it hasn't seen and re-baselines items no finished task covers; `check` reports a covered item whose text no longer matches (pending, on its spec); `trace review <ref>` accepts the current text as a wording-only edit.
 - D8@1 (implements R8): `trace restore NNN/TNNN` reverse-applies that task's recorded patch to the working tree (`git apply -R`, checked first, nothing applied on conflict). It needs an open task, so the restored code is recorded as that task's change.
+- D9@1 (implements R3): A task that `retires:` a finished task is pending until it is done, so `trace check --strict` fails while any cleanup is left.
 
 ## Deliverables
 

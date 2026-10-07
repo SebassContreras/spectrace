@@ -121,8 +121,9 @@ for confirmation, then write it, and complete the entry's `Tasks:` line.
 ## Phase 5 — Gate, report, stop
 
 1. Run `trace status --write`, then `trace check`. There must be no `error`. The only
-   `pending` items left must be suspect tasks whose cleanup tasks are now `todo` — any
-   other pending item means the change is incomplete: fix it with the user.
+   `pending` items left must be suspect tasks whose cleanup tasks are now `todo`, and
+   those cleanup tasks themselves ("cleanup … not done yet") — any other pending item
+   means the change is incomplete: fix it with the user.
 2. Report: what changed, the manifest in short, the new tasks, and that the spec
    stays open until they are done (`trace check --strict` passes then). Any agent
    executes them through the protocol in `AGENTS.md`.

@@ -1,0 +1,33 @@
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index 786f426..495609d 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -212,8 +212,7 @@ class Repo:
+         task = None
+         for i, line in unfenced(read_lines(self.path(rel))):
+             where = f"{rel}:{i + 1}"
+-            m = TASK_RE.match(line)
+-            if m:
++            if m := TASK_RE.match(line):
+                 task = Task(spec.id, int(m.group("num")), m.group("owner"), m.group("status"),
+                             m.group("box"), m.group("text"), i)
+                 if any(t.num == task.num for t in spec.tasks):
+@@ -278,6 +277,8 @@ class Repo:
+                         self.issue("error", t.ref, f"retires unknown task {raw}", spec.id)
+                     elif t.status == "done":
+                         retired_by_done.add(target.ref)
++                    elif target.status == "done":
++                        self.issue("pending", t.ref, f"cleanup of {target.ref} not done yet", spec.id)
+         for spec in self.specs.values():
+             for item in spec.items.values():
+                 for r in item.implements:
+@@ -494,8 +495,7 @@ def drop(root, name):
+ 
+ def reference_tree(root):
+     """The tree when the last task closed; else HEAD; else empty."""
+-    last = kept(root, "last")
+-    if last:
++    if last := kept(root, "last"):
+         return last
+     try:
+         return git(root, "rev-parse", "--verify", "--quiet", "HEAD^{tree}")

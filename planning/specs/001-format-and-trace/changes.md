@@ -16,3 +16,8 @@ Why: two gaps left after the trace review — an item's text could change withou
 - ADDED R7@1, R8@1, D7@1, D8@1
 - Tasks: T010–T013 added
 - Tasks (later the same day): T014 brought `trace.py` back within A5@3 (one command table, unused `--json` on `check`/`impact` dropped); T013's tests found that `review` never saved, fixed inside T013.
+
+## 2026-10-07 — cleanup tasks hold the strict gate
+Why: in the end-to-end run (006) `check --strict` passed while a task that `retires:` a finished one was still to do, because the retired task covered an item that hadn't changed; nothing else made it pending.
+- ADDED D9@1
+- Tasks: 006/T017 implements it in `trace.py`; 006/T018 adds it to `format.md`; 006/T019 tests it

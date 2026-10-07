@@ -118,6 +118,8 @@ item line is context and is never traced.
 - **suspect** — a done task covers an older revision of an item, or a retired item, and
   no done task retires it. Resolved by the `spectrace-change` skill: re-point `covers:` to the
   new revision (the task is still right) or add a task that `retires:` it.
+- **cleanup pending** — a task that `retires:` a finished task isn't done yet. Holds the
+  spec open, so `trace check --strict` fails until every cleanup task is done.
 - **orphan** — a reference to an item or task that doesn't exist.
 - **uncovered** — an active R that no active D implements and no task covers (checked
   once the spec has D items); an active D no task covers (checked once it has tasks).
