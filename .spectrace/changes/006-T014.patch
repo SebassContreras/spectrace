@@ -1,0 +1,23 @@
+diff --git a/e2e/scenario.md b/e2e/scenario.md
+index b6c530e..2775f5f 100644
+--- a/e2e/scenario.md
++++ b/e2e/scenario.md
+@@ -244,13 +244,16 @@ line, and exactly one task went from `todo` to `done` in that conversation. Also
+ 2. Manifest check: for each task `impact` lists, its files and line counts must match
+    that task's recorded patch and what is still in the tree; no file in the tree that
+    uses an identifier of the JSON decision may be missing from it:
+-   `git grep -n -e 'tdo\.json' -e 'import json' -e 'json\.load' -e 'json\.dump' -- . ':(exclude)planning' ':(exclude).spectrace'`
++   `git grep --untracked -n -e 'tdo\.json' -e 'import json' -e 'json\.load' -e 'json\.dump' -- . ':(exclude)planning' ':(exclude).spectrace' ':(exclude)*.pyc' ':(exclude).claude' ':(exclude).agents'`
++   (`--untracked`: nothing is committed during the run, so the code is untracked;
++   the installed skills are excluded — `trace.py` itself imports `json`.)
+ 3. After the change conversation, before any cleanup task: `trace check --strict` →
+    exit 1, with a pending `suspect` for every finished task that covered the JSON item.
+ 4. After each cleanup task: `trace check --strict` and record the exit code. Pass: 1
+    until the last cleanup task is done, then 0.
+ 5. Then the `git grep` of step 2 finds nothing outside history, and
+-   `git grep -n -e sqlite3 -e 'tdo\.db'` finds the new code.
++   `git grep --untracked -n -e sqlite3 -e 'tdo\.db' -- . ':(exclude)planning' ':(exclude).spectrace' ':(exclude)*.pyc' ':(exclude).claude' ':(exclude).agents'`
++   finds the new code.
+ 
+ ### Restore (R4)
+ 

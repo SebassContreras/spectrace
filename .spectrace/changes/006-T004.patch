@@ -1,0 +1,40 @@
+diff --git a/e2e/report.md b/e2e/report.md
+index ae0925b..3d7e7e4 100644
+--- a/e2e/report.md
++++ b/e2e/report.md
+@@ -59,3 +59,35 @@ Findings:
+ - The title-length item is `001/R7` in this run ("Adding a task whose title is longer
+   than 80 characters raises an error and stores nothing; a title of exactly 80
+   characters is accepted."); step 6 rewords that text.
++
++### R2 — retire a design item: **pass, with a gap in the strict gate**
++
++- Change conversation (4 turns): the skill first proposed *revising* D1/D2 to `@2`
++  and *adding* an R8 the user never stated (offered for confirmation, not written).
++  Asked to retire instead, it retired D1@1 → D4 and D2@1 → D5, added D4/D5 (SQLite),
++  edited the open questions, wrote `changes.md`, and proposed T011 (`retires: T002`),
++  T012 (SQLite helper), T013 (rewrite `add`'s body, which the sweep found calling the
++  JSON helpers), and deleted not-started T010 (named `tdo.json`) for T014.
++- Manifest: `impact 001/D1` and `001/D2` both list only 001/T002, `tdo/store.py: 19/19
++  added lines still present` — T002's patch adds 27 lines, 19 non-blank; the JSON
++  identifiers (`import json`, `tdo.json`, `json.load`, `json.dump`) all sit on those
++  lines. The sweep also found `add`'s `_load()`/`_save()` calls (T003) — correct.
++- `check --strict` before cleanup → exit 1 (`suspect: covers D1@1, retired`, same
++  for D2@1). After T011 → exit 0. After T012, T013 → exit 0.
++- After T013: `git grep --untracked` for `json`, `tdo.json`, `_load`, `_save` → nothing
++  outside history; `sqlite3`/`tdo.db` in `tdo/store.py`.
++
++Findings:
++
++- **Strict gate covers only `retires:` tasks.** `check --strict` passed after T011
++  while `add` still called the deleted `_load`/`_save` — stale code the change's own
++  sweep found and gave to T013, which has no `retires:` and so isn't gated.
++- **`trace.py` corrupts a patch whose last hunk ends in blank context lines.** `git()`
++  returns `stdout.strip()`, so T011's recorded patch lost its last two context lines
++  (`" "`): driver diff ≠ patch, and `git apply --check -R 001-T011.patch` → `corrupt
++  patch at line 40`. `trace restore` of a retiring task is exactly what R4 needs.
++- **Binary changes are recorded without data.** Patches come from `git diff` without
++  `--binary`; a task that touched a `.pyc` (T001, T003, T011, T012 here) cannot be
++  reverse-applied.
++- **Scenario fix:** `git grep` skips untracked files; with no commits during the run
++  every check needs `--untracked` (and `:(exclude)*.pyc`).

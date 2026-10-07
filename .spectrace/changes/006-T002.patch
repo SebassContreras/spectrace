@@ -1,0 +1,87 @@
+diff --git a/e2e/scenario.md b/e2e/scenario.md
+index acaacec..357139e 100644
+--- a/e2e/scenario.md
++++ b/e2e/scenario.md
+@@ -194,3 +194,82 @@ every R item in it is built on before step 6.
+ 4. Each a new conversation, until `trace check --strict` exits 0:
+ 
+    > Execute the next spectrace task. Don't commit.
++
++## Verification
++
++Run by the driver, in Git Bash, from the throwaway repo's root. `trace` is
++`python .spectrace/trace.py`. Every command, its exit code and the relevant output go
++into `e2e/report.md`.
++
++### Snapshots (D5)
++
++A snapshot is the tree of the whole working tree, `.gitignore` honored, taken without
++touching the real index. The driver takes one right before and right after every
++harness conversation, so it sees everything the harness did — including edits made
++outside `trace start`/`done`:
++
++```bash
++snap() {  # prints a tree id; $1 names it in snaps.txt
++  idx="$(git rev-parse --absolute-git-dir)/e2e-index"
++  rm -f "$idx"
++  GIT_INDEX_FILE="$idx" git add -A && t=$(GIT_INDEX_FILE="$idx" git write-tree)
++  rm -f "$idx"
++  echo "$1 $t" >> "$TMPDIR/snaps-<harness>.txt"; echo "$t"
++}
++```
++
++The index starts empty, so the tree holds every file, tracked or not. `snaps.txt`
++lives outside the throwaway repo.
++
++### Exact changes (R1)
++
++For each task conversation, with `$B`/`$A` its before/after snapshots and `NNN-TNNN`
++the task the harness reports having run:
++
++```bash
++diff <(git diff --no-color --no-ext-diff -M "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace'; echo) \
++     .spectrace/changes/NNN-TNNN.patch && echo EXACT
++git diff --numstat -M "$B" "$A" -- . ':(exclude)planning' ':(exclude).spectrace'
++```
++
++Pass: `EXACT` for every task (a task with no file changes has no patch and
++`changes: none`, and the diff is empty), the numstat matches the task's `changes:`
++line, and exactly one task went from `todo` to `done` in that conversation. Also check
++`git log` still shows only the step 0 and step 2 commits.
++
++### Retire (R2)
++
++1. Right after step 3: snapshot `pre-change`, and record `trace impact 001/D<n>` for
++   the JSON item.
++2. Manifest check: for each task `impact` lists, its files and line counts must match
++   that task's recorded patch and what is still in the tree; no file in the tree that
++   uses an identifier of the JSON decision may be missing from it:
++   `git grep -n -e 'tdo\.json' -e 'import json' -e 'json\.load' -e 'json\.dump' -- . ':(exclude)planning' ':(exclude).spectrace'`
++3. After the change conversation, before any cleanup task: `trace check --strict` →
++   exit 1, with a pending `suspect` for every finished task that covered the JSON item.
++4. After each cleanup task: `trace check --strict` and record the exit code. Pass: 1
++   until the last cleanup task is done, then 0.
++5. Then the `git grep` of step 2 finds nothing outside history, and
++   `git grep -n -e sqlite3 -e 'tdo\.db'` finds the new code.
++
++### Restore (R4)
++
++1. Before the reinstate conversation: snapshot `pre-reinstate`.
++2. For each restoring task: its conversation transcript shows `trace restore
++   001/TNNN` run after `trace start`, and its `changes:` lists the restored files.
++3. After the last task: snapshot `post-reinstate`, then
++   `git diff --stat pre-change post-reinstate -- . ':(exclude)planning' ':(exclude).spectrace'`.
++   Pass: empty (the code is back exactly as it was), the `git grep` for `sqlite3` and
++   `tdo.db` finds nothing outside history, and `trace check --strict` exits 0.
++
++### Wording vs. meaning (R5)
++
++1. After the hand edit: `trace check` reports the title-length item as `changed`
++   (pending), and the item's `@N` is unchanged.
++2. After the wording conversation: the transcript shows `trace review 001/R<n>`;
++   `trace check --strict` exits 0; the revision is still `@N`; `changes.md` has a
++   wording-fix entry.
++3. After the meaning conversation: the item reads `@N+1`; `trace check --strict` exits
++   1 with a `suspect` for each finished task that covered `@N`; `changes.md` records
++   `MODIFIED R<n>@N → R<n>@N+1`.
++4. After the cleanup tasks: `trace check --strict` exits 0.

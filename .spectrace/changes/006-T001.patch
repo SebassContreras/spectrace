@@ -1,0 +1,202 @@
+diff --git a/e2e/scenario.md b/e2e/scenario.md
+new file mode 100644
+index 0000000..acaacec
+--- /dev/null
++++ b/e2e/scenario.md
+@@ -0,0 +1,196 @@
++# End-to-end scenario
++
++The fixed script for spec 006: every run, on every harness, plays exactly this. The
++driver is the agent running spec 006; it plays the user. The harness under test only
++ever sees the prompts and answers below, the target repo's `AGENTS.md` and the
++installed skills.
++
++## The throwaway project
++
++`tdo`: a to-do list command-line tool in Python, standard library only. Two specs —
++`storage` (a small module that keeps the tasks) and `cli` (the commands). Only
++`storage` is planned and built; `cli` exists so the roadmap has two specs.
++
++The decision the run retires and later reinstates is `storage`'s design item
++**"tasks are stored in a JSON file, `tdo.json`, in the current directory"**. Its
++identifiers, used by the `git grep` checks: `tdo.json`, `import json`, `json.load`,
++`json.dump`.
++
++## Driving a harness
++
++| | Claude Code | agy |
++|---|---|---|
++| First turn | `claude -p "<prompt>" --dangerously-skip-permissions --output-format json` | `agy -p "<prompt>" --dangerously-skip-permissions` |
++| Next turn | same, plus `--resume <session_id>` | same, plus `--conversation <id>` |
++
++- Run from the throwaway repo's root. The conversation ID comes from the first turn's
++  output; how agy exposes it is verified at the start of its run (006/T007), not
++  guessed.
++- One conversation per step below; a new step starts a new conversation.
++- The driver answers each question with the row of the matching table. A question no
++  row answers is answered consistently with the scenario and logged as a **gap** in
++  `e2e/report.md`. A question the scenario has already answered is answered again the
++  same way and logged as a **repeat**.
++- The driver never edits files the harness owns, except where a step says so.
++
++## Step 0 — Set up (driver)
++
++1. Create `%TEMP%/spectrace-e2e/<harness>/` (fresh: delete it first if it exists) and
++   `git init` it.
++2. Install the skills from the published repository, project scope, for the harness
++   under test: `pnpm dlx skills add SebassContreras/spectrace` with the agent and
++   non-interactive flags that `skills add --help` lists (verified at run time).
++3. Commit: `chore: install spectrace skills`.
++
++## Step 1 — Interview
++
++Prompt:
++
++> Use the spectrace-start skill. I want to build a small to-do list command-line tool in Python.
++
++| Dimension | Answer |
++|---|---|
++| git | Already a git repo. |
++| `idea-detail` | A personal to-do list I use from the terminal. I add a task with a title, list my tasks with their ids, and mark one done by id. Tasks are kept in the folder I run it in, so each project has its own list. No accounts, no network. |
++| `project-type` | Software — a CLI. |
++| `goal` | Yes (accept the drafted goal if it says: a terminal to-do list for one person, kept per folder). Otherwise: "A terminal to-do list for one person, kept per folder." |
++| `audience` | Me, a developer working in the terminal. |
++| `mvp` | Add, list and complete tasks. Not in it: editing, deleting, due dates, priorities, colors. |
++| `done-when` | I can add, list and complete tasks from the terminal and the list survives between runs. |
++| `constraints-hard` | Python 3.9+, standard library only. |
++| `stakeholders` | Nobody else. |
++| `automatability` | An agent can do all of it. |
++| `runtime` | Python 3.9+. |
++| `framework` | None — standard library only, `argparse` for the CLI. No third-party packages. |
++| `toolchain` | No package manager. Tests: `python -m unittest discover -s tests`. No formatter or linter. |
++| `datastore` | Decided in the storage spec's design. |
++| `data-model` | One entity, a task: integer id, title, done flag. |
++| `interface` | CLI: `tdo add "<title>"`, `tdo list`, `tdo done <id>`. |
++| `identity` | None, single user. |
++| `hosting` | Runs locally; no distribution. |
++| `ci` | The unit tests pass. |
++| `env-secrets` | None. |
++| `verification` | Unit tests with `unittest`. |
++| `third-party` | None. |
++| `observability` | None — it's a local tool. |
++| `helper-skills` | None. |
++| `agent-rules` | None. |
++| `visual-surface` | No. |
++| `tone` | Plain English. |
++| `code-conventions` | PEP 8, type hints on public functions. |
++| `anti-preferences` | None. |
++| `preference-strength` | Hard rules. |
++| Roadmap | Two specs, in this order: `storage` (the module that keeps the tasks) and `cli` (the three commands). Both in the MVP. `cli` depends on `storage`. Yes, record the order as Priority. |
++| Requirements mode | Here, one question at a time. |
++| Continue to the next spec? | Yes. |
++| `handoff.md` | No. |
++| Any sweep ("anything else?", "what haven't we covered?") | Nothing else. |
++
++Requirements, spec `storage`:
++
++| Dimension | Answer |
++|---|---|
++| `what` | A module that adds, lists and completes tasks and keeps them between runs. |
++| `serves` | The `cli` spec. |
++| `requirements` | (1) Adding a task stores its title and returns a new id, one higher than the highest so far; the first is 1. (2) Listing returns every task in id order with its id, title and whether it's done. (3) Completing a task by id marks it done; an unknown id raises an error. (4) Tasks persist between runs in the current directory. (5) A title longer than 80 characters is rejected. |
++| `out-of-scope` | Editing and deleting tasks. |
++| `dependencies` | None. |
++| `owner-split` | An agent does it all. |
++
++Requirements, spec `cli`:
++
++| Dimension | Answer |
++|---|---|
++| `what` | The `tdo` command with `add`, `list` and `done`. |
++| `serves` | Me, in the terminal. |
++| `requirements` | (1) `tdo add "<title>"` prints the new id. (2) `tdo list` prints one line per task: id, `[x]` or `[ ]`, title. (3) `tdo done <id>` marks it done. (4) Any error prints a message to stderr and exits with status 1. |
++| `out-of-scope` | Shell completion, colors. |
++| `dependencies` | `storage`. |
++| `owner-split` | An agent does it all. |
++
++## Step 2 — Plan `storage`
++
++Prompt:
++
++> Use the spectrace-plan skill on spec 001.
++
++| Question | Answer |
++|---|---|
++| Q&A or draft | Here, one question at a time. |
++| Approach | Tasks are stored in a JSON file, `tdo.json`, in the current directory, read and rewritten whole on every change with the `json` module. The module is `tdo/store.py` with three functions: `add(title) -> int`, `list_tasks() -> list`, `complete(task_id) -> None`. |
++| Deliverables | `tdo/__init__.py`, `tdo/store.py`, `tests/test_store.py`. |
++| Sequencing | None. |
++| Decisions settled | None beyond what's recorded. |
++| Open questions | None. |
++| An R not covered | Covered by the approach: the store module implements it. |
++| "What haven't we covered?" / "Anything no task covers?" | Nothing. |
++| The task list | Approve as proposed. |
++
++Then the driver commits: `chore: scaffold and plan`. **No commit from here to the end
++of the run.**
++
++## Step 3 — Execute three tasks
++
++Three times, each a new conversation:
++
++> Execute the next spectrace task. Don't commit.
++
++## Step 4 — Retire the JSON decision
++
++Prompt:
++
++> Use the spectrace-change skill. We're moving storage from the JSON file to SQLite: the standard library's `sqlite3`, file `tdo.db` in the current directory. Why: two terminals writing at once corrupt the JSON file.
++
++| Question | Answer |
++|---|---|
++| The proposed edits | Yes, if the JSON design item is retired → a new item for SQLite, and nothing else changes meaning. Otherwise explain that and ask for that edit. |
++| Do the R items still hold? | Yes, all of them. |
++| Each finished task in the manifest | The default (redo) for code; delete-and-rewrite for tests of the storage code that read the JSON file directly; still valid for anything the change doesn't touch. |
++| Stale mentions found by the sweep | Fix them as proposed. |
++| The task list | Approve as proposed. |
++
++Then, each a new conversation, until `trace check --strict` exits 0:
++
++> Execute the next spectrace task. Don't commit.
++
++## Step 5 — Reinstate the JSON decision
++
++Prompt:
++
++> Use the spectrace-change skill. Go back to the JSON file storage we had before SQLite. Why: I want to read and hand-edit my list, and that matters more than two terminals writing at once.
++
++| Question | Answer |
++|---|---|
++| The proposed edits | Yes, if the SQLite item is retired and the JSON statement comes back as a new item. |
++| Do the R items still hold? | Yes, all of them. |
++| Tasks | Restore through `trace restore` where it applies; redo (remove) the SQLite code. Approve as proposed. |
++
++Then, each a new conversation, until `trace check --strict` exits 0:
++
++> Execute the next spectrace task. Don't commit.
++
++If spec 001 still has tasks left, keep going until `trace status` shows it `done`, so
++every R item in it is built on before step 6.
++
++## Step 6 — Wording edit, then meaning edit
++
++1. The driver rewords `storage`'s title-length item by hand, keeping its ID and
++   revision: "A title longer than 80 characters is rejected." → "Titles over 80
++   characters are rejected."
++2. Prompt, new conversation:
++
++   > Use the spectrace-change skill. I reworded the title-length requirement of spec 001 by hand; the meaning is the same.
++
++   Answer "yes" to confirming the meaning is unchanged.
++3. Prompt, new conversation:
++
++   > Use the spectrace-change skill. Titles may now be up to 120 characters, not 80 (spec 001). Why: 80 cuts off real task titles.
++
++   | Question | Answer |
++   |---|---|
++   | The proposed edits | Yes, if the item's revision goes up. |
++   | Each finished task | Redo the length check; the tests that check it are rewritten. Approve as proposed. |
++
++4. Each a new conversation, until `trace check --strict` exits 0:
++
++   > Execute the next spectrace task. Don't commit.
