@@ -450,12 +450,12 @@ class Repo:
 
 # ---------- git ----------
 
-def git(root, *args, env=None):
+def git(root, *args, env=None, raw=False):
     p = subprocess.run(["git", "-c", "core.quotepath=false", *args], cwd=root,
                        capture_output=True, env=dict(os.environ, **(env or {})))
     if p.returncode != 0:
         raise TraceError(f"git {' '.join(args)}: {p.stderr.decode(errors='replace').strip()}")
-    return p.stdout.decode("utf-8", errors="replace").strip()
+    return p.stdout.decode("utf-8", errors="replace").strip("" if raw else None)
 
 
 def snapshot(root):
@@ -504,7 +504,7 @@ def reference_tree(root):
 
 
 def diff(root, a, b, *flags):
-    return git(root, "diff", "--no-color", "--no-ext-diff", "-M", *flags, a, b, "--", ".", *EXCLUDE)
+    return git(root, "diff", "--no-color", "--no-ext-diff", "-M", *flags, a, b, "--", ".", *EXCLUDE, raw=True)
 
 
 def numstat(root, a, b):
@@ -665,7 +665,7 @@ def cmd_done(repo, args):
     files = numstat(root, base, current)
     patch_abs = os.path.join(root, ".spectrace", "changes", f"{task.spec}-T{task.num:03d}.patch")
     if files:
-        patch = diff(root, base, current) + "\n"
+        patch = diff(root, base, current, "--binary")
         if len(patch.encode()) > PATCH_LIMIT:
             patch = "# patch over size limit — file summary only\n" + "\n".join(files) + "\n"
         os.makedirs(os.path.dirname(patch_abs), exist_ok=True)

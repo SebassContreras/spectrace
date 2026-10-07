@@ -352,6 +352,29 @@ class TraceTest(unittest.TestCase):
         self.assertEqual(run(self.root, "start", "001/T002")[0], 0)
         self.assertEqual(run(self.root, "restore", "001/T004")[0], 1, "no longer applies: the file is back")
 
+    def test_restore_reverses_trailing_blank_context_and_binary_files(self):
+        store, logo = "keep = 1\nstore = 'local'\n\n\n", bytes(range(256))
+        self.assertEqual(run(self.root, "start", "001/T001")[0], 0)
+        self.write("src/store.py", store)
+        with open(os.path.join(self.root, "src", "logo.bin"), "wb") as f:
+            f.write(logo)
+        run(self.root, "done", "001/T001")
+        self.write("planning/specs/001-auth/tasks.md", self.read("planning/specs/001-auth/tasks.md") +
+                   "- [ ] T004 [agent] [status:todo] Remove the store\n      covers: D1@1\n      retires: T001\n"
+                   "- [ ] T005 [agent] [status:todo] Bring the store back\n      covers: D1@1\n")
+        run(self.root, "status", "--write")
+        self.assertEqual(run(self.root, "start", "001/T004")[0], 0)
+        self.write("src/store.py", "keep = 1\n\n\n")  # the hunk ends in blank context lines
+        with open(os.path.join(self.root, "src", "logo.bin"), "wb") as f:
+            f.write(logo[::-1])
+        run(self.root, "done", "001/T004")
+        self.assertTrue(self.read(".spectrace/changes/001-T004.patch").endswith("-store = 'local'\n \n \n"))
+        self.assertEqual(run(self.root, "start", "001/T005")[0], 0)
+        self.assertEqual(run(self.root, "restore", "001/T004")[0], 0)
+        self.assertEqual(self.read("src/store.py"), store)
+        with open(os.path.join(self.root, "src", "logo.bin"), "rb") as f:
+            self.assertEqual(f.read(), logo)
+
     def test_examples_in_fences_are_ignored(self):
         self.write("planning/specs/001-auth/requirements.md",
                    REQUIREMENTS + "\n```\n- R9@1: an example, not a requirement\n```\n")
