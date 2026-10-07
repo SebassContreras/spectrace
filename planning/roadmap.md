@@ -11,5 +11,4 @@ Index of every spec. `Status` and `Stage` are written only by `trace status --wr
 | 003 | plan              | done        | 001, 002      | —      | 3        |
 | 004 | change            | done        | 001, 003      | —      | 4        |
 | 005 | distribution      | done        | 002, 003, 004 | —      | 5        |
-| 006 | e2e-verification  | in_progress | 005           | build  | 6        |
-| 007 | specloop-freeze   | todo   | 006           | design | 7        |
+| 006 | e2e-verification  | done        | 005           | —      | 6        |

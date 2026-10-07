@@ -1,0 +1,24 @@
+diff --git a/e2e/report.md b/e2e/report.md
+index e010d65..67eed53 100644
+--- a/e2e/report.md
++++ b/e2e/report.md
+@@ -138,3 +138,5 @@ Same install, fresh throwaway repo. The installed `trace.py` carries the fix.
+ **Strict gate.** A retiring task only holds the spec open while the task it retires
+ is suspect; T003 covers D4, which didn't change, so T012 pending was invisible to
+ `--strict`. R2 needs `check --strict` to fail until every cleanup task is done.
++
++*Repetition after fix:* The strict gate was fixed (001/D9 in \3b97ffc\) so that pending cleanup tasks fail the gate directly. Step 4 was repeated. The gate functioned correctly: \--strict\ exited 1 before and during cleanup, and remained 1 while T012 was pending. During the repetition, a gap was found where \spectrace-change\ did not always add \etires:\ to tasks addressing stale code from the sweep; the skill was updated to require it.
+diff --git a/skills/spectrace-change/SKILL.md b/skills/spectrace-change/SKILL.md
+index d39b18b..f05cb39 100644
+--- a/skills/spectrace-change/SKILL.md
++++ b/skills/spectrace-change/SKILL.md
+@@ -80,8 +80,7 @@ introduced (commands, flags, files, env vars, functions), and its key nouns ("pl
+ with the manifest:
+ 
+ - **History** — `tasks.md`, `changes.md`, `.spectrace/`, a retired item line: keep.
+-- **Stale, outside `planning/`** — becomes a task in Phase 4 (covering the item that
+-  replaces it, or the spec's own item for that file).
++- **Stale, outside `planning/`** — find which task originally wrote that code (e.g., via `git blame` or `git log -S`) and add a task in Phase 4 that `retires:` it (covering the item that replaces it, or the spec's own item for that file). Without `retires:`, the strict gate won't track this cleanup.
+ - **Stale, inside `planning/`** (a spec's context, deliverables, a non-item line) —
+   edit it directly as part of this change, after the user confirms.
+ 

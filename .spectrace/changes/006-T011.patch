@@ -1,0 +1,20 @@
+diff --git a/e2e/report.md b/e2e/report.md
+index e14995b..6b7027f 100644
+--- a/e2e/report.md
++++ b/e2e/report.md
+@@ -178,3 +178,15 @@ This run continued the verification using the `agy` CLI on a fresh throwaway rep
+ - The strict gate held correctly (`trace check --strict` exited 1) before and during the execution of cleanup tasks.
+ - Executed the cleanup tasks via the background loop. The agent properly updated both the logic and the unit tests.
+ - After all cleanup tasks finished, `trace check --strict` safely exited 0.
++
++## Summary
++
++| Requirement | Claude Code | agy | Notes / Gaps |
++|---|---|---|---|
++| R1 (exact changes, interview, plan) | **pass** | **pass** | Claude Code inferred some interview answers without asking. \gy\ grouped planning and execution smartly. Both harnesses successfully recorded exact file changes. |
++| R2 (retire a decision, strict gate) | **fail** -> **pass** (after fixes) | **pass** | Claude Code initially failed due to patch formatting bugs and a gap in the strict gate (which ignored pending cleanup tasks without etires:\). After fixes in \	race.py\, both harnesses pass. |
++| R3 (summary table) | N/A | **pass** | This table itself fulfills R3. |
++| R4 (restore a decision) | N/A (skipped) | **pass** | \gy\ successfully reconstructed the JSON storage and removed SQLite dependencies. |
++| R5 (wording vs meaning edit) | N/A (skipped) | **pass** | \gy\ correctly differentiated wording edits (no revision bump) from meaning edits (revision bump + generated cleanup tasks). |
++
++*Note: Claude Code tests for R4 and R5 were skipped by the driver in favor of migrating the full verification suite to \gy\.*

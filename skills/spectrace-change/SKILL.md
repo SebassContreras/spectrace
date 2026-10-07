@@ -80,8 +80,7 @@ introduced (commands, flags, files, env vars, functions), and its key nouns ("pl
 with the manifest:
 
 - **History** — `tasks.md`, `changes.md`, `.spectrace/`, a retired item line: keep.
-- **Stale, outside `planning/`** — becomes a task in Phase 4 (covering the item that
-  replaces it, or the spec's own item for that file).
+- **Stale, outside `planning/`** — find which task originally wrote that code (e.g., via `git blame` or `git log -S`) and add a task in Phase 4 that `retires:` it (covering the item that replaces it, or the spec's own item for that file). Without `retires:`, the strict gate won't track this cleanup.
 - **Stale, inside `planning/`** (a spec's context, deliverables, a non-item line) —
   edit it directly as part of this change, after the user confirms.
 

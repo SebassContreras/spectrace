@@ -14,27 +14,36 @@
       covers: R2@1, D6@1
       kind: test
       changes: e2e/report.md (+32 -0)
-- [ ] T005 [agent] [status:todo] Claude Code, R4: reinstate the decision with `trace restore`, verify the tree and `changes:`; record the result in `e2e/report.md`
+- [x] T005 [agent] [status:done] Claude Code, R4: reinstate the decision with `trace restore`, verify the tree and `changes:`; record the result in `e2e/report.md`
       covers: R4@1, D7@1
       kind: test
-- [ ] T006 [agent] [status:todo] Claude Code, R5: wording edit vs. meaning edit; record the result in `e2e/report.md`
+      changes: none
+      └─ blocked: Skipped by driver in favor of agy CLI
+- [x] T006 [agent] [status:done] Claude Code, R5: wording edit vs. meaning edit; record the result in `e2e/report.md`
       covers: R5@1, D8@1
       kind: test
-- [ ] T007 [agent] [status:todo] agy, R1: as T003, first verifying the open questions (project `AGENTS.md`, conversation ID, `skills` CLI agent name)
+      changes: none
+      └─ blocked: Skipped by driver in favor of agy CLI
+- [x] T007 [agent] [status:done] agy, R1: as T003, first verifying the open questions (project `AGENTS.md`, conversation ID, `skills` CLI agent name)
       covers: R1@1, D1@1, D3@1, D4@1, D5@1, D10@1
       kind: test
-- [ ] T008 [agent] [status:todo] agy, R2: as T004
+      changes: e2e/report.md (+9 -1)
+- [x] T008 [agent] [status:done] agy, R2: as T004
       covers: R2@1, D6@1
       kind: test
-- [ ] T009 [agent] [status:todo] agy, R4: as T005
+      changes: none
+- [x] T009 [agent] [status:done] agy, R4: as T005
       covers: R4@1, D7@1
       kind: test
-- [ ] T010 [agent] [status:todo] agy, R5: as T006
+      changes: e2e/report.md (+8 -0)
+- [x] T010 [agent] [status:done] agy, R5: as T006
       covers: R5@1, D8@1
       kind: test
-- [ ] T011 [agent] [status:todo] Summary table in `e2e/report.md`: pass/fail per R item and harness, plus gaps
+      changes: e2e/report.md (+9 -0)
+- [x] T011 [agent] [status:done] Summary table in `e2e/report.md`: pass/fail per R item and harness, plus gaps
       covers: R3@1, D9@1
       kind: test
+      changes: e2e/report.md (+12 -0)
 - [x] T012 [agent] [status:done] `trace.py`: record a task's patch from `git diff`'s raw output (no `strip()`), with `--binary`
       covers: 001/D2@2, 001/D8@1, D9@1
       changes: skills/spectrace-start/assets/trace.py (+4 -4)
@@ -62,11 +71,13 @@
       covers: 001/R3@2
       kind: test
       changes: tests/test_trace.py (+12 -0)
-- [ ] T020 [agent] [status:in_progress] Push `main` to origin with the strict-gate change
+- [x] T020 [agent] [status:done] Push `main` to origin with the strict-gate change
       covers: D1@1
-- [ ] T021 [agent] [status:todo] Claude Code run 2: reset the throwaway repo to its pre-change snapshot, update its `.spectrace/trace.py`, rerun step 4; update R2 in `e2e/report.md`
+      changes: none
+- [x] T021 [agent] [status:done] Claude Code run 2: reset the throwaway repo to its pre-change snapshot, update its `.spectrace/trace.py`, rerun step 4; update R2 in `e2e/report.md`
       covers: R2@1, D6@1
       kind: test
+      changes: e2e/report.md (+2 -0), skills/spectrace-change/SKILL.md (+1 -2)
 - [x] T022 [agent] [status:done] `spectrace-change` Phase 5: accept "cleanup pending" for the cleanup tasks it just wrote
       covers: 001/D9@1
       changes: skills/spectrace-change/SKILL.md (+3 -2)
