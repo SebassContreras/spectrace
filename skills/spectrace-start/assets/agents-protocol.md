@@ -4,12 +4,13 @@
 Specs live in `planning/`; how they are written is in `.spectrace/format.md`. Run the
 trace with `python3` (`python` on Windows).
 
+When executing tasks (even across multiple specs), loop steps 1–5 for each task:
 1. `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
-2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them.
-3. Read the spec's `requirements.md` and `design.md`; do only that task, following `planning/architecture.md`.
+2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them. Never edit files without an open task.
+3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task, following `planning/architecture.md`.
 4. Verify it against the task text and the R items it covers.
-5. `python3 .spectrace/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`.
-6. Before saying you're finished: `python3 .spectrace/trace.py check` must exit 0.
+5. `python3 .spectrace/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`. Always close the open task before moving to the next task or next spec.
+6. Before saying you're finished with the session: `python3 .spectrace/trace.py check` must exit 0 (run once at the end of the session, not after every individual task).
 
 Never edit by hand: a task's status or `changes:` line, the roadmap's `Status`/`Stage`
 (the trace owns them), or the meaning of an R, D or A item (the `spectrace-change` skill does it,

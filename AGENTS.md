@@ -25,10 +25,11 @@ lists exactly what to remove or redo. See `planning/product.md`.
 In this repo the script is `skills/spectrace-start/assets/trace.py` (target repos get it at
 `.spectrace/trace.py`). Use `python` on Windows, `python3` elsewhere.
 
+When executing tasks (even across multiple specs), loop steps 1–5 for each task:
 1. `python skills/spectrace-start/assets/trace.py status` — pick the `next` task, or the one you were asked for.
-2. `python skills/spectrace-start/assets/trace.py start NNN/TNNN` — before editing anything.
-3. Read the spec's `requirements.md` and `design.md`; do only that task.
+2. `python skills/spectrace-start/assets/trace.py start NNN/TNNN` — before editing anything. Never edit files without an open task.
+3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task.
 4. Verify it against the task text and the R items it covers.
-5. `python skills/spectrace-start/assets/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`.
-6. Before saying you're finished: `python skills/spectrace-start/assets/trace.py check` must exit 0.
+5. `python skills/spectrace-start/assets/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`. Always close the open task before moving to the next task or next spec.
+6. Before saying you're finished with the session: `python skills/spectrace-start/assets/trace.py check` must exit 0 (run once at the end of the session, not after every individual task).
 <!-- /spectrace:protocol -->

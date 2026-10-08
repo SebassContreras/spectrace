@@ -1,0 +1,82 @@
+diff --git a/.gitignore b/.gitignore
+index 7a60b85..f0eb8f0 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,2 +1,3 @@
+ __pycache__/
+ *.pyc
++.muxel/
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index 495609d..0a9996f 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -3,14 +3,7 @@
+ 
+ Implements .spectrace/format.md. Python 3.9+, standard library only.
+ """
+-import argparse
+-import hashlib
+-import json
+-import os
+-import re
+-import shutil
+-import subprocess
+-import sys
++import argparse, hashlib, json, os, re, shutil, subprocess, sys
+ from datetime import date
+ 
+ VERSION = "1"
+@@ -597,8 +590,7 @@ def cmd_status(repo, args):
+     for sid in repo.rows:
+         s = repo.specs[sid]
+         print(f"{s.id:<5}{s.name:<28}{s.status:<13}{s.stage}")
+-    print(f"\nopen: {state.get('open') or '—'}")
+-    print(f"next: {nxt.ref + '  ' + nxt.text if nxt else '—'}")
++    print(f"\nopen: {state.get('open') or '—'}\nnext: {nxt.ref + '  ' + nxt.text if nxt else '—'}")
+     errors = sum(1 for i in repo.issues if i[0] == "error")
+     if errors:
+         print(f"\n{errors} error(s) — run: check")
+@@ -617,15 +609,17 @@ def cmd_start(repo, args):
+     reference = reference_tree(root)
+     stray = numstat(root, reference, current)
+     if stray and not (args.adopt or args.ignore):
+-        print("Files changed outside any task since the last one closed:")
+-        print("\n".join(f"  {s}" for s in stray))
+-        print(f"\nRe-run with --adopt (count them as part of {task.ref}) or --ignore (leave them out).")
++        print("Files changed outside any task since the last one closed:\n" + "\n".join(f"  {s}" for s in stray) +
++              f"\n\nRe-run with --adopt (count them as part of {task.ref}) or --ignore (leave them out).")
+         return 2
+     keep(root, "base", reference if args.adopt else current)
+     save_state(root, {"open": task.ref, "started": date.today().isoformat()})
+     edit_task(repo, task, status="in_progress")
+     Repo(root).write_roadmap()
+     print(f"started {task.ref}: {task.text}")
++    for raw in task.covers:
++        if item := repo.resolve(raw, task.spec)[0]:
++            print(f"  {raw}: {item.text}")
+     return 0
+ 
+ 
+@@ -638,7 +632,6 @@ def close_open(repo, raw):
+ 
+ 
+ def cmd_restore(repo, args):
+-    """Undo a finished task's recorded changes; the open task records the result."""
+     task = need_task(repo, args.task)
+     current = load_state(repo.root).get("open")
+     if not current:
+@@ -677,10 +670,13 @@ def cmd_done(repo, args):
+     keep(root, "last", current)
+     drop(root, "base")
+     save_state(root, {})
+-    Repo(root).write_roadmap()
++    fresh_repo = Repo(root)
++    fresh_repo.write_roadmap()
+     print(f"done {task.ref}: {len(files)} file(s)")
+     for f in files:
+         print(f"  {f}")
++    if nxt := fresh_repo.next_task():
++        print(f"next: {nxt.ref}  {nxt.text} -> run: trace start {nxt.ref}")
+     return 0
+ 
+ 

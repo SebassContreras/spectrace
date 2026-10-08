@@ -134,10 +134,21 @@ class TraceTest(unittest.TestCase):
         self.assertNotIn("planning/", self.read(".spectrace/changes/001-T001.patch"))
 
     def test_one_open_task_at_a_time(self):
-        self.assertEqual(run(self.root, "start", "001/T001")[0], 0)
+        code, out = run(self.root, "start", "001/T001")
+        self.assertEqual(code, 0)
+        self.assertIn("started 001/T001: Session store", out)
+        self.assertIn("D1@1: - D1@1 (implements R1): Sessions live in localStorage.", out)
         self.assertEqual(self.read(".spectrace/.gitattributes"), "changes/*.patch -text\n",
                          "patches must survive CRLF checkouts for restore")
         self.assertEqual(run(self.root, "start", "001/T002")[0], 1)
+
+    def test_done_prints_next_task(self):
+        run(self.root, "start", "001/T001")
+        self.write("src/store.txt", "store\n")
+        code, out = run(self.root, "done", "001/T001")
+        self.assertEqual(code, 0)
+        self.assertIn("done 001/T001: 1 file(s)", out)
+        self.assertIn("next: 001/T002  Expiry check -> run: trace start 001/T002", out)
 
     def test_changes_outside_a_task_are_refused_then_adopted(self):
         self.write("src/stray.txt", "edited with no task open\n")
