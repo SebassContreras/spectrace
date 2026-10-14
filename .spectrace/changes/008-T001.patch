@@ -1,0 +1,30 @@
+diff --git a/skills/spectrace-start/references/templates.md b/skills/spectrace-start/references/templates.md
+index dcc4e1c..a9ddfa7 100644
+--- a/skills/spectrace-start/references/templates.md
++++ b/skills/spectrace-start/references/templates.md
+@@ -30,7 +30,10 @@ yet answered stays `TBD`.
+ 
+ ## Rules for agents
+ 
+-<agent-rules answers>
++<agent-rules answers; default rules below apply unless overridden>
++- Follow industry standards and best practices; verify details, APIs and examples against official documentation and the web.
++- For architectural or design decisions, analyze trade-offs (pros and cons) and explicitly implement solutions or mitigations to counter the drawbacks.
++- Adhere to the architecture conventions defined in `planning/architecture.md`.
+ 
+ <protocol block from assets/agents-protocol.md>
+ ```
+@@ -77,6 +80,13 @@ Each decision is an A item under the header it belongs to:
+ `- A3@1: PostgreSQL 16 — why: relational data, team knows it.`
+ An undecided dimension is a bullet under `Still to define`, never an invented A item.
+ 
++For `software` projects, the template seeds default architecture conventions under `## Conventions`:
++- `SRP & High Cohesion`: one file/module = one clear responsibility. High cohesion, low coupling. If an entity does two things, split it.
++- `Service Layer & Anti-Corruption`: isolate third-party libraries and external APIs behind wrappers/interfaces. Domain logic depends on interfaces, not vendors (Dependency Inversion).
++- `Composition over inheritance`: extract shared logic into injectable utils/services/helpers; avoid deep inheritance trees.
++- `Testability by default`: lean on small interfaces, pure functions, and injectable dependencies.
++- `Pragmatic KISS/YAGNI`: start simple and direct; abstract only when there are 2+ consumers, 2+ vendors, or test requirements demand it.
++
+ ## `planning/roadmap.md`
+ 
+ ```markdown

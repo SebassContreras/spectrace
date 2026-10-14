@@ -100,7 +100,7 @@ an unanticipated project type is interviewed properly rather than forced into B-
 | Dimension | Questions |
 |---|---|
 | `helper-skills` | Given the Phase B answers, name the skills/plugins available in this session (other than spectrace) that would help agents working here. Ask which, if any, to install. **Never install without explicit confirmation.** If no install mechanism resolves, print manual instructions instead of guessing a command. Anything wanted but not installable now becomes a roadmap spec. |
-| `agent-rules` | "Any rule you want every agent working in this repo to follow, or anything you want them never to do?" |
+| `agent-rules` | "Any rule you want every agent working in this repo to follow, or anything you want them never to do?" · Note: the default rules (industry standards, web research for APIs/examples, trade-off analysis with pros/cons/mitigations, adhering to architecture conventions) are included by default unless customized or rejected. |
 
 ## Phase D — Styles & preferences
 
@@ -115,7 +115,7 @@ Gate on `visual-surface` first; skip the visual rows for a project with no visua
 | `brand-refs` | "Any existing brand assets, or reference sites/products whose look you want?" |
 | `tone` | "What tone should the writing take, and in which language?" |
 | `accessibility` | "Any accessibility target, or devices/browsers that must work?" |
-| `code-conventions` | "Naming, file layout, comment density, commit-message style — anything you want enforced?" |
+| `code-conventions` | "Naming, file layout, comment density, commit-message style — anything you want enforced?" · For software, default architecture conventions (SRP, Service Layer/Anti-Corruption, Composition over inheritance, Testability, KISS/YAGNI) form the baseline unless modified. |
 | `anti-preferences` | "Anything you actively dislike and don't want to see?" |
 | `preference-strength` | For each preference: "is that a hard rule or a default an agent may deviate from with reason?" |
 

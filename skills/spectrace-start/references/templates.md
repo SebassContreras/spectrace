@@ -30,7 +30,11 @@ yet answered stays `TBD`.
 
 ## Rules for agents
 
-<agent-rules answers>
+<agent-rules answers; default rules below apply unless overridden>
+- **Follow industry standards**: Align designs, patterns, and code structure with established industry standards.
+- **Web research for verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
+- **Trade-off analysis (Pros & Cons)**: Detail the pros and cons of technical decisions; explicitly specify and implement solutions or mitigations to counter the identified drawbacks.
+- **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in `planning/architecture.md`.
 
 <protocol block from assets/agents-protocol.md>
 ```
@@ -76,6 +80,18 @@ Headers by `project-type` (only the category picks the set):
 Each decision is an A item under the header it belongs to:
 `- A3@1: PostgreSQL 16 — why: relational data, team knows it.`
 An undecided dimension is a bullet under `Still to define`, never an invented A item.
+
+For `software` projects, the template seeds default architecture conventions under `## Conventions`:
+
+```markdown
+## Conventions
+
+- A1@1: SRP / Separation of Concerns: un archivo/clase = una sola responsabilidad. Alta cohesión, bajo acoplamiento. Si un archivo o clase hace dos cosas, se divide — why: previene dependencias enredadas y facilita el testing y mantenimiento.
+- A2@1: Service Layer + Anti-Corruption: nunca llamar librerías/APIs de terceros directamente desde la lógica de negocio; crear capa services/ / adapters/ con interfaces propias e inyectarlas (Dependency Inversion) — why: el dominio debe ser desacoplado e intercambiable de proveedores externos.
+- A3@1: DRY con composición, no herencia: evitar jerarquías de herencia profundas; extraer lógica compartida en utils/servicios/helpers inyectables. Usar herencia solo para relaciones 'es-un' reales o Template Method — why: favorece flexibilidad, composabilidad y bajo acoplamiento.
+- A4@1: Testability por defecto: ante la duda, diseñar interfaces pequeñas, funciones puras y dependencias inyectables — why: garantiza código predecible, verificable y testeable unitariamente sin mocks frágiles.
+- A5@1: KISS / YAGNI sin sobre-ingeniería: aplicar proporcionalidad. No crear interfaces, adapters o abstracciones para un solo uso o un futuro hipotético; abstraer solo ante 2+ usos, 2+ vendors o necesidad de testing (Simple > Inteligente) — why: evita complejidad accidental y código muerto.
+```
 
 ## `planning/roadmap.md`
 
