@@ -95,10 +95,13 @@ Draft a numbered list from `requirements.md` and `design.md`:
 - A task that installs, configures or encodes a project-wide decision (an A item: the
   runtime, a framework, a convention enforced in code) lists that A item in `covers:`
   too — otherwise changing the decision later can't find the task.
-- Every R item that states a checkable outcome gets a `kind: test` task covering it:
-  the executable form of the spec's definition of done. For browser/UI checks, prefer
-  automated headless scripts (owner `agent`, `kind: test`); reserve owner `human` for
-  manual visual review or scenarios requiring user credentials/physical devices.
+- Every R item that states a checkable outcome gets at most one `kind: test` task
+  covering it, at the lowest level that proves it: a unit test with a fake adapter
+  before an integration test. Skip code without logic and a vendor's own behavior.
+- e2e, smoke or browser-driven test tasks only when the `verification` answer asks for
+  them. Then prefer automated headless scripts (owner `agent`, `kind: test`); reserve
+  owner `human` for manual visual review or scenarios requiring user credentials or
+  physical devices.
 - Owner: `human` for anything needing a credential, an approval, a purchase, a physical
   act or a live session; `agent` otherwise. Use the ledger's `owner-split` and
   `automatability` answers; ask when unsure.

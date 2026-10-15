@@ -36,6 +36,20 @@ yet answered stays `TBD`.
 - **Trade-off analysis (Pros & Cons)**: Detail the pros and cons of technical decisions; explicitly specify and implement solutions or mitigations to counter the identified drawbacks.
 - **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in `planning/architecture.md`.
 
+## Testing
+
+<software projects only; omit this section for any other project type. Phase 4 of `spectrace-start` fills the commands from the `toolchain` answer — `TBD` until then; a mode the runner lacks is "none">
+- narrowest (one file or module): `<cmd>`
+- affected only: `<cmd>`
+- full suite: `<cmd>`
+- verification: <the `verification` answer — unit only, or which e2e/smoke tests>
+
+Hard rules:
+- **Run**: a task runs only the narrowest command covering the files it touched. The full suite runs only at session end or when a shared module (config, core, public interfaces) changed.
+- **Create**: tests are minimal and proportional to the requirements, at the lowest level that proves each R (unit before integration). e2e and smoke tests only if the `verification` answer asks for them.
+- **Skip**: do not test code without logic (wrappers, config, getters) nor a vendor's own behavior.
+- **Tripwire**: if a spec's tests exceed three times its R items, stop and justify it in the task's report. It is a tripwire, not a cap.
+
 <protocol block from assets/agents-protocol.md>
 ```
 

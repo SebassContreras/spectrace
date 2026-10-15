@@ -18,6 +18,22 @@ lists exactly what to remove or redo. See `planning/product.md`.
 - Never edit `Status`/`Stage` in the roadmap, a task's status, or a `changes:` line — `trace.py` owns them (A3).
 - Never guess a CLI flag or file format — verify it before writing it into a skill.
 - No GitHub repository, remote or push until the maintainer asks.
+- **Follow industry standards**: Align designs, patterns, and code structure with established industry standards.
+- **Web research for verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
+- **Trade-off analysis (Pros & Cons)**: Detail the pros and cons of technical decisions; explicitly specify and implement solutions or mitigations to counter the identified drawbacks.
+- **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in `planning/architecture.md`.
+
+## Testing
+
+- narrowest (one file or module): `python -m pytest tests/test_trace.py -q`
+- affected only: none (pytest has no built-in affected mode)
+- full suite: `python -m pytest tests -q`
+
+Hard rules:
+- **Run**: a task runs only the narrowest command covering the files it touched. The full suite runs only at session end or when a shared module (config, core, public interfaces) changed.
+- **Create**: tests are minimal and proportional to the requirements, at the lowest level that proves each R (unit before integration). e2e and smoke tests only if the `verification` answer asks for them.
+- **Skip**: do not test code without logic (wrappers, config, getters) nor a vendor's own behavior.
+- **Tripwire**: if a spec's tests exceed three times its R items, stop and justify it in the task's report. It is a tripwire, not a cap.
 
 <!-- spectrace:protocol -->
 ## Working on tasks
@@ -29,7 +45,7 @@ When executing tasks (even across multiple specs), loop steps 1–5 for each tas
 1. `python skills/spectrace-start/assets/trace.py status` — pick the `next` task, or the one you were asked for.
 2. `python skills/spectrace-start/assets/trace.py start NNN/TNNN` — before editing anything. Never edit files without an open task.
 3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task.
-4. Verify it against the task text and the R items it covers.
+4. Verify it against the task text and the R items it covers. Run the narrowest test command from "Testing" above for the files the task changed; run the full suite only if the task touched a shared module (config, core, public interfaces), or at session end.
 5. `python skills/spectrace-start/assets/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`. Always close the open task before moving to the next task or next spec.
 6. Before saying you're finished with the session: `python skills/spectrace-start/assets/trace.py check` must exit 0 (run once at the end of the session, not after every individual task).
 <!-- /spectrace:protocol -->

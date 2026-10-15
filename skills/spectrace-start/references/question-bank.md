@@ -39,7 +39,7 @@ A item in `planning/architecture.md`: `- A<n>@1: <decision> — why: <reason>`.
 |---|---|
 | `runtime` | "What language and runtime version?" |
 | `framework` | "Which framework(s) and key libraries? Anything you specifically *don't* want used?" |
-| `toolchain` | "Package manager, test runner, formatter/linter — and the exact commands to run each?" Record only tools that are actually installed or will be installed by a spec — never a tool by name alone. |
+| `toolchain` | "Package manager, test runner, formatter/linter — and the exact commands to run each?" For tests, ask for three commands: one file or module, affected only, full suite (record "none" for a mode the runner lacks). Record only tools and commands the toolchain actually accepts — never a tool by name alone. |
 | `datastore` | "Where does data live? Which database, and how are schema changes managed?" |
 | `data-model` | "What are the main entities and how do they relate?" |
 | `interface` | "What's the interface — REST, GraphQL, RPC, CLI, library API? Any versioning rule?" |
@@ -47,7 +47,7 @@ A item in `planning/architecture.md`: `- A<n>@1: <decision> — why: <reason>`.
 | `hosting` | "Where does this run in production, and how does it get there?" |
 | `ci` | "What has to pass before a change is acceptable?" |
 | `env-secrets` | "How are configuration and secrets handled? What must never be committed?" |
-| `verification` | "How do you want changes verified — unit tests, integration, manual, a smoke script?" |
+| `verification` | "Unit tests are the default. Do you also want e2e or smoke tests at all, or manual checks? 'No' is a fine answer." |
 | `third-party` | "Any third-party services or accounts this depends on?" |
 | `observability` | "How would you find out this broke in production?" |
 

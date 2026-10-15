@@ -14,3 +14,4 @@ Index of every spec. `Status` and `Stage` are written only by `trace status --wr
 | 006 | e2e-verification  | done        | 005           | —      | 6        |
 | 007 | agent-loop-and-workflow-optimization | done        | 001, 002, 003, 005 | —     | 7 |
 | 008 | architecture-defaults | done        | 002, 003 | —      | 8 |
+| 009 | testing-policy | done        | 002, 003, 008 | —      | 9 |

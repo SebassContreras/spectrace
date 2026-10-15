@@ -1,0 +1,35 @@
+diff --git a/skills/spectrace-plan/SKILL.md b/skills/spectrace-plan/SKILL.md
+index d6a9768..034223c 100644
+--- a/skills/spectrace-plan/SKILL.md
++++ b/skills/spectrace-plan/SKILL.md
+@@ -95,10 +95,13 @@ Draft a numbered list from `requirements.md` and `design.md`:
+ - A task that installs, configures or encodes a project-wide decision (an A item: the
+   runtime, a framework, a convention enforced in code) lists that A item in `covers:`
+   too — otherwise changing the decision later can't find the task.
+-- Every R item that states a checkable outcome gets a `kind: test` task covering it:
+-  the executable form of the spec's definition of done. For browser/UI checks, prefer
+-  automated headless scripts (owner `agent`, `kind: test`); reserve owner `human` for
+-  manual visual review or scenarios requiring user credentials/physical devices.
++- Every R item that states a checkable outcome gets at most one `kind: test` task
++  covering it, at the lowest level that proves it: a unit test with a fake adapter
++  before an integration test. Skip code without logic and a vendor's own behavior.
++- e2e, smoke or browser-driven test tasks only when the `verification` answer asks for
++  them. Then prefer automated headless scripts (owner `agent`, `kind: test`); reserve
++  owner `human` for manual visual review or scenarios requiring user credentials or
++  physical devices.
+ - Owner: `human` for anything needing a credential, an approval, a purchase, a physical
+   act or a live session; `agent` otherwise. Use the ledger's `owner-split` and
+   `automatability` answers; ask when unsure.
+diff --git a/skills/spectrace-start/assets/agents-protocol.md b/skills/spectrace-start/assets/agents-protocol.md
+index a7ffd17..ef1b20a 100644
+--- a/skills/spectrace-start/assets/agents-protocol.md
++++ b/skills/spectrace-start/assets/agents-protocol.md
+@@ -8,7 +8,7 @@ When executing tasks (even across multiple specs), loop steps 1–5 for each tas
+ 1. `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
+ 2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them. Never edit files without an open task.
+ 3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task, following `planning/architecture.md`.
+-4. Verify it against the task text and the R items it covers.
++4. Verify it against the task text and the R items it covers. Run the narrowest test command from `AGENTS.md` "Testing" for the files the task changed; run the full suite only if the task touched a shared module (config, core, public interfaces).
+ 5. `python3 .spectrace/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`. Always close the open task before moving to the next task or next spec.
+ 6. Before saying you're finished with the session: `python3 .spectrace/trace.py check` must exit 0 (run once at the end of the session, not after every individual task).
+ 
