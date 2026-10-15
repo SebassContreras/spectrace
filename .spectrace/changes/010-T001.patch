@@ -1,0 +1,31 @@
+diff --git a/skills/spectrace-start/references/upgrade.md b/skills/spectrace-start/references/upgrade.md
+new file mode 100644
+index 0000000..4d5a323
+--- /dev/null
++++ b/skills/spectrace-start/references/upgrade.md
+@@ -0,0 +1,25 @@
++# Upgrading an existing install
++
++Read this from Phase 0 when the project already has `.spectrace/`. It brings what
++spectrace copied into the repo up to the skill's bundled files. Paths under `assets/`
++and `references/` are relative to this skill's folder; the bundled files are always the
++reference, never the repo's own `.spectrace/trace.py`. Use `python3` (`python` on Windows).
++
++## Check
++
++Run the four probes. Each is one command with an exact result — never compare by eye.
++
++| Probe | Command | Outdated when |
++|---|---|---|
++| (a) trace | `python3 .spectrace/trace.py --version` and `python3 assets/trace.py --version` | the repo's number is lower |
++| (b) format | `git diff --no-index --stat .spectrace/format.md assets/format.md` | the output is not empty |
++| (c) protocol | `python3 -c "import re,sys;t=open('AGENTS.md',encoding='utf-8').read();m=re.search(r'<!-- spectrace:protocol -->.*?<!-- /spectrace:protocol -->\n?',t,re.S);open(sys.argv[1],'w',encoding='utf-8').write(m.group(0) if m else '')" .spectrace/protocol.tmp`, then `git diff --no-index --stat .spectrace/protocol.tmp assets/agents-protocol.md`; delete `.spectrace/protocol.tmp` after | the output is not empty, or the markers are missing (empty file) |
++| (d) sections | list the `## ` headings inside the `AGENTS.md` block of `references/templates.md` and the `## ` headings of the repo's `AGENTS.md` | a template heading is absent from the repo |
++
++For (d), skip "Testing" unless `project-type` is `software` (from
++`.spectrace/interview.md`, else the `Type:` line at the top of `AGENTS.md`). The
++protocol block is probe (c)'s job, not a section.
++
++A missing `.spectrace/trace.py` or `.spectrace/format.md` counts as outdated.
++
++No probe outdated → say nothing and return to the caller.

@@ -1,0 +1,16 @@
+diff --git a/skills/spectrace-start/references/upgrade.md b/skills/spectrace-start/references/upgrade.md
+index 43fc5c2..c5e3cb1 100644
+--- a/skills/spectrace-start/references/upgrade.md
++++ b/skills/spectrace-start/references/upgrade.md
+@@ -44,3 +44,11 @@ skipped in the report.
+   between `<!-- spectrace:protocol -->` and `<!-- /spectrace:protocol -->` (markers
+   included) if present, appending it at the end otherwise. Then run `git diff AGENTS.md`:
+   no line outside the block may change; if one did, restore it.
++- **Missing section.** Insert it with its template text, after the last template
++  heading that precedes it and is present in the file, else right before the protocol
++  block. Never touch an existing section. When its template has placeholders, ask only
++  the question-bank dimensions that feed it and follow the phase that normally fills
++  it — for "Testing", Phase 4: `toolchain` (each of the three test commands run once
++  to confirm the toolchain accepts it, `none` for a mode the runner lacks) and
++  `verification`; an unanswered command is `TBD`, never a `<cmd>` placeholder. Record
++  each answer in `.spectrace/interview.md`.
