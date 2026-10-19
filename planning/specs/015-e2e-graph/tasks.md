@@ -10,6 +10,7 @@
       covers: R1@1, R2@1, R3@1, R4@1, D1@1, D2@1
       kind: test
       └─ blocked: needs real harness runs: step 0 installs the skills from the published repo, which lacks 011-016 until the maintainer pushes; then 20+ fresh claude/agy conversations
+      └─ blocked: conflicts 012/D6: restored or rebuilt code identical to a retired task's is reported as leftover (e2e step 5, tdo/store.py _read/_write/add/complete)
 - [ ] T004 [agent] [status:blocked] agy: the same run, recorded in `e2e/report.md`
       covers: R1@1, R2@1, R3@1, R4@1, D1@1, D2@1
       kind: test
