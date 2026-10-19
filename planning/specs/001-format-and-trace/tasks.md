@@ -48,8 +48,9 @@
       kind: test
       changes: skills/spectrace-start/assets/trace.py (+2 -1), tests/test_trace.py (+44 -0)
 - [x] T014 [agent] [status:done] Bring `trace.py` back within A5: one command table for dispatch and parsing, drop the unused `--json` from `check` and `impact`, simplify `file_presence`
-      covers: A5@3
+      covers: A5@4
       changes: skills/spectrace-start/assets/trace.py (+28 -46)
+      └─ reviewed 2026-10-19: still valid under A5@4; the command table and the simplifications hold, and the code moves into `spectrace/` unchanged in spec 011
 - [x] T015 [agent] [status:done] Keep recorded patches byte-exact across clones (`.spectrace/.gitattributes`: `changes/*.patch -text`) so `restore` works on any OS
       covers: D8@1
       changes: skills/spectrace-start/assets/trace.py (+5 -4), tests/test_trace.py (+2 -0)

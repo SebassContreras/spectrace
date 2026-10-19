@@ -16,7 +16,8 @@
       covers: D1@1, D2@1, D3@1, D4@1, D5@1, D6@1, D7@1
       changes: skills/start/SKILL.md (+158 -0)
 - [x] T006 [agent] [status:done] Write `tests/test_skills.py`: frontmatter per the Agent Skills spec, name equals folder, body within budget, every referenced file exists
-      covers: A5@3, A7@1
+      covers: A5@4, A7@1
       kind: test
       changes: tests/test_skills.py (+70 -0)
       └─ reviewed 2026-10-06: still valid under A5@3; 001/T009 added the trace.py limit to the same test
+      └─ reviewed 2026-10-19: still valid under A5@4; 011/T006 replaces the trace.py cap with a per-module budget in the same test

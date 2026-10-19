@@ -28,8 +28,9 @@
       changes: none
       └─ reviewed 2026-10-06: still needed — the skills CLI installs from the GitHub repo
 - [x] T009 [agent] [status:done] Rename the skills to `spectrace-start`, `spectrace-plan`, `spectrace-change` (folders, `name:`, every reference in skills, docs, tests and CI)
-      covers: A1@2
+      covers: A1@3
       changes: .github/workflows/ci.yml (+1 -1), AGENTS.md (+8 -8), README.md (+5 -5), skills/change/SKILL.md (+0 -106), skills/plan/SKILL.md (+0 -121), skills/spectrace-change/SKILL.md (+106 -0), skills/spectrace-plan/SKILL.md (+121 -0), skills/spectrace-start/SKILL.md (+158 -0), skills/spectrace-start/assets/agents-protocol.md (+18 -0), skills/spectrace-start/assets/format.md (+151 -0), skills/spectrace-start/assets/trace.py (+748 -0), skills/spectrace-start/references/handoff.md (+67 -0), skills/spectrace-start/references/question-bank.md (+165 -0), skills/spectrace-start/references/templates.md (+143 -0), skills/start/SKILL.md (+0 -158), skills/start/assets/agents-protocol.md (+0 -18), skills/start/assets/format.md (+0 -150), skills/start/assets/trace.py (+0 -748), skills/start/references/handoff.md (+0 -67), skills/start/references/question-bank.md (+0 -165), skills/start/references/templates.md (+0 -143), tests/test_trace.py (+2 -2)
+      └─ reviewed 2026-10-19: still valid under A1@3 — the rename holds; the fourth skill, spectrace-fix, arrives with spec 014
 - [x] T010 [agent] [status:done] Delete `.claude-plugin/`
       covers: D5@1
       retires: T001
