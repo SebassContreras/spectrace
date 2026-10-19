@@ -1,0 +1,44 @@
+{
+ "files": {
+  "tests/test_trace.py": {
+   "lang": "python",
+   "lines": [
+    8,
+    0
+   ],
+   "other": {
+    "imports": [
+     1,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "9dc44302ea6821fa",
+     "change": "modified",
+     "kind": "class",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "FormatDocTest",
+     "sig": "(unittest.TestCase)"
+    },
+    {
+     "body": "376b2f61d05332cd",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      6,
+      0
+     ],
+     "name": "FormatDocTest.test_the_record_example_is_valid_and_adds_up",
+     "sig": "(self)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

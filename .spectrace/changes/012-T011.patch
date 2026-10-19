@@ -1,0 +1,112 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 8a42a13..47a2048 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -7,6 +7,7 @@ from .gitio import git, snapshot, keep, kept, drop, reference_tree, diff, numsta
+ from .model import REF_RE, SEVERITY, Repo
+ from .patches import load_patches, file_presence
+ from .state import load_state, save_state, edit_task
++from .views.why import cmd_why
+ 
+ PATCH_LIMIT = 200_000
+ 
+@@ -242,4 +243,5 @@ COMMANDS = {
+     "impact": (cmd_impact, "what implemented an item: tasks, files, lines still present", ("ref",)),
+     "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),
+     "restore": (cmd_restore, "undo a finished task's recorded changes, inside the open task", ("task",)),
++    "why": (cmd_why, "the tasks and decisions behind a piece of code: path or path::symbol", ("address",)),
+ }
+diff --git a/skills/spectrace-start/assets/spectrace/model.py b/skills/spectrace-start/assets/spectrace/model.py
+index 41b7add..f563237 100644
+--- a/skills/spectrace-start/assets/spectrace/model.py
++++ b/skills/spectrace-start/assets/spectrace/model.py
+@@ -243,6 +243,20 @@ class Repo:
+         spec = self.specs.get(m.group("spec") or spec_id)
+         return (spec.items.get(key) if spec else None), int(m.group("rev"))
+ 
++    def retired_by(self, task):
++        """Refs of the tasks whose `retires:` names `task`."""
++        return [o.ref for s in self.specs.values() for o in s.tasks
++                if any(self.find_task(r, s.id) is task for r in o.retires)]
++
++    def covers_label(self, task):
++        """A task's covers, each with its spec and a `retired` or `now @N` flag."""
++        out = []
++        for raw in task.covers:
++            item, rev = self.resolve(raw, task.spec)
++            flag = "" if item is None else " (retired)" if item.retired else "" if rev == item.rev else f" (now @{item.rev})"
++            out.append((raw if raw.startswith("A") or "/" in raw else f"{task.spec}/{raw}") + flag)
++        return out
++
+     def find_task(self, raw, spec_id=None):
+         m = TASKREF_RE.match(raw.strip())
+         spec = self.specs.get(m.group("spec") or spec_id) if m else None
+diff --git a/skills/spectrace-start/assets/spectrace/views/__init__.py b/skills/spectrace-start/assets/spectrace/views/__init__.py
+new file mode 100644
+index 0000000..56ecd6a
+--- /dev/null
++++ b/skills/spectrace-start/assets/spectrace/views/__init__.py
+@@ -0,0 +1,17 @@
++"""Read-only views over the records: one module per command."""
++from .. import TraceError
++
++
++def address(raw):
++    """(path, symbol or None) from `path` or `path::Qualified.name`."""
++    path, _, symbol = raw.partition("::")
++    path = path.replace("\\", "/").strip()
++    path = path[2:] if path.startswith("./") else path
++    if not path:
++        raise TraceError("use a code address: path or path::Qualified.name")
++    return path, symbol.strip() or None
++
++
++def matches(name, symbol):
++    """A symbol answers for itself and for what it contains (`Store` for `Store.save`)."""
++    return name == symbol or name.startswith(symbol + ".") or name.startswith(symbol + " > ")
+diff --git a/skills/spectrace-start/assets/spectrace/views/why.py b/skills/spectrace-start/assets/spectrace/views/why.py
+new file mode 100644
+index 0000000..18fa28a
+--- /dev/null
++++ b/skills/spectrace-start/assets/spectrace/views/why.py
+@@ -0,0 +1,40 @@
++"""`trace why <path[::symbol]>`: from code to the tasks and decisions behind it."""
++from .. import records
++from . import address, matches
++
++
++def exact_hits(recs, path, symbol):
++    """[(task ref, what it did)] from the records, newest task first, following renames back."""
++    hits = []
++    for ref in sorted(recs, reverse=True):
++        f = recs[ref]["files"].get(path)
++        if f is None:
++            continue
++        if symbol is None:
++            hits.append((ref, f["status"]))
++        else:
++            found = [s for s in f["symbols"] if matches(s["name"], symbol)]
++            hits += [(ref, s["name"] + " " + s["change"] + (f" from {s['from']}" if s.get("from") else ""))
++                     for s in found]
++            symbol = next((s["from"] for s in found if s["name"] == symbol and s.get("from")), symbol)
++        path = f.get("from", path)
++    return hits
++
++
++def cmd_why(repo, args):
++    path, symbol = address(args.address)
++    hits = exact_hits(records.load(repo.root), path, symbol)
++    print(f"# Why {args.address}\n")
++    if not hits:
++        print(f"outside the trace: no task recorded {args.address}")
++        return 0
++    for ref, what in hits:
++        task = repo.find_task(ref)
++        if task is None:
++            print(f"- {ref} [unknown task] {what}")
++            continue
++        print(f"- {task.ref} [{task.status}] {task.text}\n    {what}")
++        print(f"    covers: {', '.join(repo.covers_label(task))}")
++        if retired := repo.retired_by(task):
++            print(f"    retired by: {', '.join(retired)}")
++    return 0

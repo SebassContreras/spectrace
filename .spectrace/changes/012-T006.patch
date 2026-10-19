@@ -1,0 +1,82 @@
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+index 801824e..e38fd69 100644
+--- a/skills/spectrace-start/assets/spectrace/records.py
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -10,6 +10,9 @@ from . import symbols as adapters
+ from .gitio import diff, git
+ from .patches import parse_patch
+ 
++FILE_LIMIT = 1_000_000  # bytes: a larger file is recorded at file level, and the record is partial
++TASK_LIMIT = 400  # changed files: a larger task is recorded at file level, and the record is partial
++
+ 
+ def body_hash(lines):
+     return hashlib.sha256("\n".join(l.rstrip("\r") for l in lines).encode("utf-8")).hexdigest()[:16]
+@@ -44,7 +47,7 @@ class Side:
+         return body_hash(self.lines[span.start:span.end])
+ 
+ 
+-def file_record(root, a, b, block, file_level):
++def file_record(root, a, b, block, file_level, skipped):
+     old_path, new_path = block["old"], block["new"]
+     path = new_path or old_path
+     lang = "file" if file_level else adapters.language(path)
+@@ -52,8 +55,12 @@ def file_record(root, a, b, block, file_level):
+            "lines": [len(block["added_at"]), len(block["removed_at"])], "symbols": [], "other": {}}
+     if block["status"] == "renamed":
+         rec["from"] = old_path
+-    pre = Side(old_path, None if block["status"] == "new" else show(root, a, old_path), lang == "file")
+-    post = Side(new_path, None if block["status"] == "deleted" else show(root, b, new_path), lang == "file")
++    try:
++        pre = Side(old_path, None if block["status"] == "new" else show(root, a, old_path), lang == "file")
++        post = Side(new_path, None if block["status"] == "deleted" else show(root, b, new_path), lang == "file")
++    except (SyntaxError, ValueError) as e:  # ValueError: a null byte in Python source
++        skipped.append({"path": path, "reason": f"{type(e).__name__}: {e}".splitlines()[0][:200]})
++        pre, post, rec["lang"] = Side(old_path, None, True), Side(new_path, None, True), "file"
+     counts, other = {}, {}
+ 
+     def attribute(side, numbers, column):
+@@ -104,24 +111,36 @@ def file_record(root, a, b, block, file_level):
+             entry["from"] = renamed[name]
+         rec["symbols"].append(entry)
+     rec["other"] = {k: v for k, v in sorted(other.items())}
+-    return path, rec
++    return rec
+ 
+ 
+ def record(root, a, b):
+-    """The change record between trees `a` and `b`."""
+-    blocks = [x for x in parse_patch(diff(root, a, b, "-U0"), min_len=0) if x["old"] or x["new"]]
+-    out = {"files": {}}
++    """The change record between trees `a` and `b`. Never raises: what fails is said in the record."""
++    try:
++        blocks = [x for x in parse_patch(diff(root, a, b, "-U0"), min_len=0) if x["old"] or x["new"]]
++    except Exception as e:  # noqa: BLE001 — `done` must close the task whatever the recorder hits
++        return {"files": {}, "partial": True, "skipped": [{"path": "*", "reason": str(e)[:200]}]}
++    out = {"files": {}, "partial": len(blocks) > TASK_LIMIT, "skipped": []}
+     for block in blocks:
++        path = block["new"] or block["old"]
+         if block["binary"]:
+-            path = block["new"] or block["old"]
+             out["files"][path] = {"status": block["status"], "lang": "file", "lines": None,
+                                   "symbols": [], "other": {}}
+             continue
+-        path, rec = file_record(root, a, b, block, False)
+-        out["files"][path] = rec
++        try:
++            big = any(size(root, t, p) > FILE_LIMIT for t, p in ((a, block["old"]), (b, block["new"])) if p)
++            out["partial"] = out["partial"] or big
++            out["files"][path] = file_record(root, a, b, block, out["partial"], out["skipped"])
++        except Exception as e:  # noqa: BLE001
++            out["partial"] = True
++            out["skipped"].append({"path": path, "reason": f"{type(e).__name__}: {e}".splitlines()[0][:200]})
+     return out
+ 
+ 
++def size(root, tree, path):
++    return int(git(root, "cat-file", "-s", f"{tree}:{path}"))
++
++
+ def unaccounted(rec):
+     """Lines of the record whose symbols and buckets do not add up to the file totals."""
+     missing = 0

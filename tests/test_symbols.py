@@ -1,0 +1,116 @@
+"""Tests for the language adapters in spectrace/symbols/. Run: python -m unittest discover -s tests"""
+import os
+import sys
+import unittest
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.environ.get("SPECTRACE_ASSETS") or os.path.join(HERE, "..", "skills", "spectrace-start", "assets"))
+from spectrace.symbols import language, symbols  # noqa: E402
+
+PYTHON = '''import os
+LIMIT = 3
+
+
+@cache
+@other
+def load(path, limit=LIMIT) -> str:
+    def inner():
+        return 1
+    return inner()
+
+
+class Store(Base):
+    kind = "json"
+
+    @property
+    def size(self):
+        return 1
+
+    @size.setter
+    def size(self, value):
+        pass
+
+    class Meta:
+        table = "t"
+'''
+
+MARKDOWN = '''---
+name: demo
+---
+Intro line.
+
+# Usage
+
+```sh
+# a comment, not a heading
+```
+
+## Install
+
+Run it.
+
+# Limits
+'''
+
+
+def spans(path, text):
+    return {s.name: (s.kind, s.start, s.end) for s in symbols(path, text)}
+
+
+class PythonAdapterTest(unittest.TestCase):
+    def test_a_function_span_starts_at_its_first_decorator(self):
+        found = spans("m.py", PYTHON)
+        self.assertEqual(found["load"], ("function", 5, 10))
+
+    def test_a_nested_function_is_part_of_its_parent(self):
+        found = spans("m.py", PYTHON)
+        self.assertNotIn("inner", found)
+        self.assertNotIn("load.inner", found)
+
+    def test_classes_methods_attributes_and_module_variables_are_named(self):
+        found = spans("m.py", PYTHON)
+        self.assertEqual(found["LIMIT"], ("variable", 2, 2))
+        self.assertEqual(found["Store"], ("class", 13, 25))
+        self.assertEqual(found["Store.kind"], ("attribute", 14, 14))
+        self.assertEqual(found["Store.Meta.table"], ("attribute", 25, 25))
+
+    def test_a_property_and_its_setter_are_one_symbol(self):
+        found = spans("m.py", PYTHON)
+        self.assertEqual(found["Store.size"], ("method", 16, 22))
+
+    def test_imports_are_a_bucket_not_a_symbol(self):
+        found = spans("m.py", PYTHON)
+        self.assertEqual(found["(imports)"], ("import", 1, 1))
+
+    def test_the_signature_is_recorded(self):
+        load = next(s for s in symbols("m.py", PYTHON) if s.name == "load")
+        self.assertEqual(load.sig, "(path, limit=LIMIT) -> str")
+
+    def test_a_syntax_error_is_raised_for_the_recorder_to_skip(self):
+        with self.assertRaises(SyntaxError):
+            symbols("m.py", "def broken(:\n")
+
+
+class MarkdownAdapterTest(unittest.TestCase):
+    def test_front_matter_and_preamble_are_spans(self):
+        found = spans("doc.md", MARKDOWN)
+        self.assertEqual(found["(frontmatter)"], ("frontmatter", 1, 3))
+        self.assertEqual(found["(preamble)"], ("preamble", 4, 5))
+
+    def test_a_heading_inside_a_fence_is_not_a_section(self):
+        found = spans("doc.md", MARKDOWN)
+        self.assertEqual(sorted(n for n in found if found[n][0] == "section"), ["Limits", "Usage", "Usage > Install"])
+
+    def test_a_section_ends_before_the_next_heading_of_its_level(self):
+        found = spans("doc.md", MARKDOWN)
+        self.assertEqual(found["Usage"], ("section", 6, 15))
+        self.assertEqual(found["Usage > Install"], ("section", 12, 15))
+
+
+class FileLevelTest(unittest.TestCase):
+    def test_a_file_without_an_adapter_has_no_spans(self):
+        self.assertEqual((language("data.csv"), symbols("data.csv", "a,b\n")), ("file", []))
+
+
+if __name__ == "__main__":
+    unittest.main()

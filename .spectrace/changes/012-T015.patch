@@ -1,0 +1,33 @@
+diff --git a/skills/spectrace-start/assets/spectrace/model.py b/skills/spectrace-start/assets/spectrace/model.py
+index 7d3a3c1..c04c682 100644
+--- a/skills/spectrace-start/assets/spectrace/model.py
++++ b/skills/spectrace-start/assets/spectrace/model.py
+@@ -308,7 +308,9 @@ class Repo:
+                     self.issue("warning", t.ref, "done without changes: (finished outside trace)", spec.id)
+             self.uncovered(spec)
+         self.deleted_mentions()
++        self.records = records.load(self.root)
+         self.leftover()
++        self.record_totals()
+         self.changed_text()
+         self.record_guard()
+ 
+@@ -436,10 +438,17 @@ class Repo:
+ 
+     def leftover(self):
+         """Code a retired task added must be gone once its cleanup is done, or kept with a reason."""
+-        for cleanup, ref, where in leftovers(self, records.load(self.root)):
++        for cleanup, ref, where in leftovers(self, self.records):
+             self.issue("pending", cleanup.ref, f"leftover: {where}, added by {ref}, is still there unchanged: "
+                        f'remove it, or `keep {where} "<reason>"`', cleanup.spec)
+ 
++    def record_totals(self):
++        """A record's symbols and buckets must add up to its file totals (the recorder's fault if not)."""
++        for ref, rec in self.records.items():
++            if missing := records.unaccounted(rec):
++                self.issue("warning", f".spectrace/changes/{ref.replace('/', '-')}.touch.json",
++                           f"unaccounted: {missing} line(s) of {ref}'s record are in no symbol or bucket", ref[:3])
++
+     def covered_now(self, item):
+         for spec in self.specs.values():
+             for t in spec.tasks:

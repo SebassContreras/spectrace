@@ -81,9 +81,10 @@ Why: <the user's reason>
 Run `trace impact NNN/<item>` (or `A<n>`) for every revised or retired item, and show
 the combined result as the **retirement manifest**: each task that covered the old
 item, its status, whether it is a test, and per file how many of the lines it added
-are still in the code (`file deleted` when gone). A finished task with no patch
-recorded is listed as "search by hand" — grep for what its text describes and show
-what you find before relying on it.
+are still in the code (`file deleted` when gone), and the symbols it introduced with
+`unchanged`, `changed` or `gone` (`anchored` when the task predates records). A
+finished task with no patch recorded is listed as "search by hand" — grep for what its
+text describes and show what you find before relying on it.
 
 **Sweep — what the trace can't see.** The trace only knows lines added by tasks that
 covered the old item. A README sentence, a comment in a file another task wrote, a
@@ -94,7 +95,12 @@ introduced (commands, flags, files, env vars, functions), and its key nouns ("pl
 with the manifest:
 
 - **History** — `tasks.md`, `changes.md`, `.spectrace/`, a retired item line: keep.
-- **Stale, outside `planning/`** — find which task originally wrote that code (e.g., via `git blame` or `git log -S`) and add a task in Phase 4 that `retires:` it (covering the item that replaces it, or the spec's own item for that file). Without `retires:`, the strict gate won't track this cleanup.
+- **Stale, outside `planning/`** — find which task wrote that code with
+  `trace why <path[::symbol]>` (`git log -S` only when it answers "outside the trace")
+  and add a task in Phase 4 that `retires:` it (covering the item that replaces it, or
+  the spec's own item for that file). Without `retires:`, the strict gate won't track
+  this cleanup; once that task is done, `check` reports any symbol it left unchanged as
+  `leftover` until it is removed or kept with `trace keep`.
 - **Stale, inside `planning/`** (a spec's context, deliverables, a non-item line) —
   edit it directly as part of this change, after the user confirms.
 

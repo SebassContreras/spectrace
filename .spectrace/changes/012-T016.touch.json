@@ -1,0 +1,66 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/commands.py": {
+   "lang": "python",
+   "lines": [
+    7,
+    2
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "ae4680b76afe67a2",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      5,
+      2
+     ],
+     "name": "cmd_check",
+     "sig": "(repo, args)"
+    },
+    {
+     "body": "778d26f46e605f64",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "cmd_start",
+     "sig": "(repo, args)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/records.py": {
+   "lang": "python",
+   "lines": [
+    6,
+    0
+   ],
+   "other": {
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "f0fb88d719d252dc",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "changed_symbols",
+     "sig": "(rec, limit=8)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

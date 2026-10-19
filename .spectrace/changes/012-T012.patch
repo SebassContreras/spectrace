@@ -1,0 +1,235 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 47a2048..568cbfe 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -4,9 +4,9 @@ from datetime import date
+ 
+ from . import TraceError, records
+ from .gitio import git, snapshot, keep, kept, drop, reference_tree, diff, numstat
+-from .model import REF_RE, SEVERITY, Repo
+-from .patches import load_patches, file_presence
++from .model import SEVERITY, Repo, find_item
+ from .state import load_state, save_state, edit_task
++from .views.impact import cmd_impact
+ from .views.why import cmd_why
+ 
+ PATCH_LIMIT = 200_000
+@@ -174,18 +174,6 @@ def cmd_check(repo, args):
+ 
+ 
+ 
+-def find_item(repo, raw):
+-    m = REF_RE.match(raw)
+-    if not m or (m.group("kind") != "A" and not m.group("spec")):
+-        raise TraceError("use NNN/R2, NNN/D3 or A4 (revision optional)")
+-    spec = repo.specs.get(m.group("spec"))
+-    home = repo.global_items if m.group("kind") == "A" else (spec.items if spec else {})
+-    item = home.get(f"{m.group('kind')}{int(m.group('num'))}")
+-    if not item:
+-        raise TraceError(f"no item {raw}")
+-    return item
+-
+-
+ def cmd_review(repo, args):
+     item = find_item(repo, args.ref)
+     repo.fingerprints[item.ref] = item.fingerprint
+@@ -194,44 +182,6 @@ def cmd_review(repo, args):
+     return 0
+ 
+ 
+-def cmd_impact(repo, args):
+-    item = find_item(repo, args.ref)
+-    targets = [item]
+-    if item.kind == "R":
+-        targets += [d for d in repo.specs[item.spec].items.values() if d.kind == "D" and item.key in d.implements]
+-    rows = []
+-    patches, renames = load_patches(repo.root)
+-    for s in repo.specs.values():
+-        for t in s.tasks:
+-            if not any(repo.resolve(raw, s.id)[0] in targets for raw in t.covers):
+-                continue
+-            retired_by = [o.ref for s2 in repo.specs.values() for o in s2.tasks
+-                          if any(repo.find_task(r, s2.id) is t for r in o.retires)]
+-            rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
+-                         "covers": t.covers, "text": t.text, "changes": t.changes, "retired_by": retired_by,
+-                         "files": file_presence(repo.root, patches.get(t.ref, []), renames)})
+-
+-    def label(i):
+-        return i.ref + (" (retired)" if i.retired else "")
+-    print(f"# Impact of {label(item)}\n")
+-    if len(targets) > 1:
+-        print("Design items implementing it: " + ", ".join(label(i) for i in targets[1:]) + "\n")
+-    if not rows:
+-        print("No task covers it.")
+-    for r in rows:
+-        tag = f" [{r['kind']}]" if r["kind"] else ""
+-        print(f"- {r['task']} [{r['owner']}] [{r['status']}]{tag} {r['text']}")
+-        print(f"    covers: {', '.join(r['covers'])}")
+-        if r["retired_by"]:
+-            print(f"    retired by: {', '.join(r['retired_by'])}")
+-        for f in r["files"]:
+-            where = "file deleted" if f["deleted"] else f"{f['present']}/{f['added']} added lines still present"
+-            print(f"    {f['path']}: {where}")
+-        if not r["files"] and r["status"] == "done":
+-            print(f"    no patch recorded ({r['changes'] or 'finished outside trace'}) — search the code by hand")
+-    return 0
+-
+-
+ # name: (handler, help, arguments) — "--x" is a switch, anything else positional.
+ COMMANDS = {
+     "status": (cmd_status, "spec status, stage and next task (--write: into roadmap.md)", ("--write", "--json")),
+diff --git a/skills/spectrace-start/assets/spectrace/model.py b/skills/spectrace-start/assets/spectrace/model.py
+index f563237..3458ff5 100644
+--- a/skills/spectrace-start/assets/spectrace/model.py
++++ b/skills/spectrace-start/assets/spectrace/model.py
+@@ -1,6 +1,7 @@
+ """The planning files as objects: items, tasks, specs and the Repo that traces them."""
+ import hashlib, json, os, re
+ 
++from . import TraceError
+ from .gitio import git
+ from .patches import load_patches
+ 
+@@ -509,3 +510,15 @@ class Repo:
+             lines[spec.row] = lead + "|".join(parts) + eol(line)
+         write_lines(rel, lines)
+         self.record_fingerprints()
++
++
++def find_item(repo, raw):
++    m = REF_RE.match(raw)
++    if not m or (m.group("kind") != "A" and not m.group("spec")):
++        raise TraceError("use NNN/R2, NNN/D3 or A4 (revision optional)")
++    spec = repo.specs.get(m.group("spec"))
++    home = repo.global_items if m.group("kind") == "A" else (spec.items if spec else {})
++    item = home.get(f"{m.group('kind')}{int(m.group('num'))}")
++    if not item:
++        raise TraceError(f"no item {raw}")
++    return item
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+index 6be87f2..34871ce 100644
+--- a/skills/spectrace-start/assets/spectrace/records.py
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -178,6 +178,36 @@ def write(root, ref, rec):
+         f.write("\n")
+ 
+ 
++def current(root, path):
++    """(lines, {name: span}) of a file in the working tree; None when it is missing or does not parse."""
++    full = os.path.join(root, *path.split("/"))
++    if not os.path.isfile(full):
++        return None
++    with open(full, encoding="utf-8", errors="replace", newline="") as f:
++        text = f.read()
++    try:
++        spans = adapters.symbols(path, text)
++    except (SyntaxError, ValueError):
++        return None
++    return text.splitlines(), {s.name: s for s in spans if s.kind != "import"}
++
++
++def live(root, recs, ref, path, name):
++    """Where a symbol a task recorded is now: ((path, name) today, its current lines or None).
++
++    Later records' file and symbol renames are followed, so a renamed symbol reports its new name."""
++    for later in sorted(r for r in recs if r > ref):
++        files = recs[later]["files"]
++        moved = next((p for p, f in files.items() if f.get("from") == path), None)
++        path = moved or path
++        name = next((s["name"] for s in files.get(path, {}).get("symbols", []) if s.get("from") == name), name)
++    now = current(root, path)
++    if now is None or name not in now[1]:
++        return (path, name), None
++    span = now[1][name]
++    return (path, name), now[0][span.start - 1:span.end]
++
++
+ def load(root):
+     """{task ref: record} for every record in .spectrace/changes/."""
+     folder, out = os.path.join(root, ".spectrace", "changes"), {}
+diff --git a/skills/spectrace-start/assets/spectrace/views/impact.py b/skills/spectrace-start/assets/spectrace/views/impact.py
+new file mode 100644
+index 0000000..84322a9
+--- /dev/null
++++ b/skills/spectrace-start/assets/spectrace/views/impact.py
+@@ -0,0 +1,80 @@
++"""`trace impact <item>`: what implemented a decision — tasks, files, symbols, and what is still there."""
++import os
++from collections import Counter
++
++from .. import records
++from ..model import find_item
++from ..patches import file_presence, load_patches, parse_patch
++
++
++def task_added_lines(root, ref):
++    """{path: Counter of the whole lines the task's patch added}, every length counted."""
++    patch = os.path.join(root, ".spectrace", "changes", ref.replace("/", "-") + ".patch")
++    if not os.path.exists(patch):
++        return {}
++    with open(patch, encoding="utf-8") as f:
++        blocks = parse_patch(f.read(), min_len=0)
++    return {b["new"]: Counter(b["added"]) for b in blocks if b["new"]}
++
++
++def symbol_lines(root, recs, ref):
++    """One line per symbol the task's record names: its change, and where it is now."""
++    out, added = [], None
++    for path, f in sorted(recs[ref]["files"].items()):
++        for s in f["symbols"]:
++            where = f"{path}::{s['name']} [{s['change']}]"
++            if s["change"] == "removed":
++                out.append(where)
++                continue
++            (now_path, now_name), body = records.live(root, recs, ref, path, s["name"])
++            moved = "" if (now_path, now_name) == (path, s["name"]) else f" → {now_path}::{now_name}"
++            if body is None:
++                out.append(f"{where}{moved} gone")
++            elif records.body_hash(body) == s["body"]:
++                out.append(f"{where}{moved} unchanged")
++            else:
++                added = task_added_lines(root, ref) if added is None else added
++                mine = added.get(path, Counter()) & Counter(l.strip() for l in body)
++                kept = min(sum(mine.values()), s["lines"][0])
++                out.append(f"{where}{moved} changed: {kept}/{s['lines'][0]} added lines still inside")
++    return out
++
++
++def cmd_impact(repo, args):
++    item = find_item(repo, args.ref)
++    targets = [item]
++    if item.kind == "R":
++        targets += [d for d in repo.specs[item.spec].items.values() if d.kind == "D" and item.key in d.implements]
++    rows = []
++    patches, renames = load_patches(repo.root)
++    recs = records.load(repo.root)
++    for s in repo.specs.values():
++        for t in s.tasks:
++            if not any(repo.resolve(raw, s.id)[0] in targets for raw in t.covers):
++                continue
++            rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
++                         "covers": t.covers, "text": t.text, "changes": t.changes, "retired_by": repo.retired_by(t),
++                         "files": file_presence(repo.root, patches.get(t.ref, []), renames),
++                         "symbols": symbol_lines(repo.root, recs, t.ref) if t.ref in recs else []})
++
++    def label(i):
++        return i.ref + (" (retired)" if i.retired else "")
++    print(f"# Impact of {label(item)}\n")
++    if len(targets) > 1:
++        print("Design items implementing it: " + ", ".join(label(i) for i in targets[1:]) + "\n")
++    if not rows:
++        print("No task covers it.")
++    for r in rows:
++        tag = f" [{r['kind']}]" if r["kind"] else ""
++        print(f"- {r['task']} [{r['owner']}] [{r['status']}]{tag} {r['text']}")
++        print(f"    covers: {', '.join(r['covers'])}")
++        if r["retired_by"]:
++            print(f"    retired by: {', '.join(r['retired_by'])}")
++        for f in r["files"]:
++            where = "file deleted" if f["deleted"] else f"{f['present']}/{f['added']} added lines still present"
++            print(f"    {f['path']}: {where}")
++        for line in r["symbols"]:
++            print(f"    {line}")
++        if not r["files"] and r["status"] == "done":
++            print(f"    no patch recorded ({r['changes'] or 'finished outside trace'}) — search the code by hand")
++    return 0

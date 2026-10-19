@@ -1,0 +1,63 @@
+diff --git a/tests/test_records.py b/tests/test_records.py
+index 4ebec23..8a2b577 100644
+--- a/tests/test_records.py
++++ b/tests/test_records.py
+@@ -130,5 +130,58 @@ class RecordTest(unittest.TestCase):
+         self.assertEqual(rec["files"]["store.py"]["other"], {"file": [11, 0]})
+ 
+ 
++class ViewsTest(unittest.TestCase):
++    def setUp(self):
++        self.p = Project()
++        self.addCleanup(shutil.rmtree, self.p.root, True)
++        self.p.task("001/T001", lambda: self.p.write("store.py", STORE))
++
++    def test_why_names_the_task_and_decision_behind_live_code(self):
++        out = self.p.run("why", "store.py::load")[1]
++        self.assertIn("- 001/T001 [done] Step 1\n    load added\n    covers: 001/D1@1", out)
++
++    def test_why_answers_for_code_that_no_longer_exists(self):
++        self.p.task("001/T002", lambda: self.p.write("store.py", STORE.split("\n\ndef save")[0] + "\n"))
++        out = self.p.run("why", "store.py::save")[1]
++        self.assertIn("001/T002 [done] Step 2\n    save removed", out)
++        self.assertIn("001/T001 [done] Step 1\n    save added", out)
++
++    def test_why_says_when_code_is_outside_the_trace(self):
++        out = self.p.run("why", "README.md")[1]
++        self.assertIn("outside the trace: no task recorded README.md", out)
++
++    def test_impact_reports_each_symbol_and_the_lines_still_inside(self):
++        self.p.task("001/T002", lambda: self.p.write("store.py", STORE.replace("return json.load(f)", "return {}")))
++        out = self.p.run("impact", "001/D1")[1]
++        self.assertIn("store.py::load [added] changed: 2/3 added lines still inside", out)
++        self.assertIn("store.py::save [added] unchanged", out)
++
++    def test_a_retired_tasks_unchanged_symbol_is_a_leftover_until_kept(self):
++        self.p.write("planning/specs/001-store/tasks.md", TASKS +
++                     "- [ ] T006 [agent] [status:todo] Drop the store\n      covers: D1@1\n      retires: T001\n")
++        self.p.task("001/T006", lambda: self.p.write("store.py", STORE.replace("return json.load(f)", "return {}")))
++        code, out = self.p.run("check", "--strict")
++        self.assertEqual(code, 1)
++        self.assertIn("leftover: store.py::save, added by 001/T001, is still there unchanged", out)
++        self.assertNotIn("leftover: store.py::load", out, "rewritten code is not a leftover")
++        self.assertEqual(self.p.run("keep", "store.py::save", "the CLI still saves")[0], 0)
++        self.assertNotIn("leftover", self.p.run("check")[1])
++
++    def test_keep_needs_a_reason(self):
++        self.assertEqual(self.p.run("keep", "store.py::save", " ")[0], 1)
++
++    def test_a_task_without_a_record_is_answered_by_anchoring_its_patch(self):
++        os.remove(os.path.join(self.p.root, ".spectrace", "changes", "001-T001.touch.json"))
++        out = self.p.run("why", "store.py::load")[1]
++        self.assertIn("001/T001 [done] Step 1\n    anchored: load", out)
++
++    def test_changes_outside_a_task_are_named_by_symbol(self):
++        self.p.write("store.py", STORE + "\n\ndef drop(path):\n    pass\n")
++        self.assertIn("symbols: store.py::drop (added)", self.p.run("check")[1])
++        code, out = self.p.run("start", "001/T002")
++        self.assertEqual(code, 2)
++        self.assertIn("Symbols: store.py::drop (added)", out)
++
++
+ if __name__ == "__main__":
+     unittest.main()

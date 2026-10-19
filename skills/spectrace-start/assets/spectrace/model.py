@@ -1,6 +1,8 @@
 """The planning files as objects: items, tasks, specs and the Repo that traces them."""
 import hashlib, json, os, re
 
+from . import TraceError, records
+from .leftover import leftovers
 from .gitio import git
 from .patches import load_patches
 
@@ -243,6 +245,20 @@ class Repo:
         spec = self.specs.get(m.group("spec") or spec_id)
         return (spec.items.get(key) if spec else None), int(m.group("rev"))
 
+    def retired_by(self, task):
+        """Refs of the tasks whose `retires:` names `task`."""
+        return [o.ref for s in self.specs.values() for o in s.tasks
+                if any(self.find_task(r, s.id) is task for r in o.retires)]
+
+    def covers_label(self, task):
+        """A task's covers, each with its spec and a `retired` or `now @N` flag."""
+        out = []
+        for raw in task.covers:
+            item, rev = self.resolve(raw, task.spec)
+            flag = "" if item is None else " (retired)" if item.retired else "" if rev == item.rev else f" (now @{item.rev})"
+            out.append((raw if raw.startswith("A") or "/" in raw else f"{task.spec}/{raw}") + flag)
+        return out
+
     def find_task(self, raw, spec_id=None):
         m = TASKREF_RE.match(raw.strip())
         spec = self.specs.get(m.group("spec") or spec_id) if m else None
@@ -292,6 +308,9 @@ class Repo:
                     self.issue("warning", t.ref, "done without changes: (finished outside trace)", spec.id)
             self.uncovered(spec)
         self.deleted_mentions()
+        self.records = records.load(self.root)
+        self.leftover()
+        self.record_totals()
         self.changed_text()
         self.record_guard()
 
@@ -417,6 +436,19 @@ class Repo:
                     if path in line:
                         self.issue("pending", f"{rel}:{n}", f"mentions {path}, deleted by {ref}", ref[:3])
 
+    def leftover(self):
+        """Code a retired task added must be gone once its cleanup is done, or kept with a reason."""
+        for cleanup, ref, where in leftovers(self, self.records):
+            self.issue("pending", cleanup.ref, f"leftover: {where}, added by {ref}, is still there unchanged: "
+                       f'remove it, or `keep {where} "<reason>"`', cleanup.spec)
+
+    def record_totals(self):
+        """A record's symbols and buckets must add up to its file totals (the recorder's fault if not)."""
+        for ref, rec in self.records.items():
+            if missing := records.unaccounted(rec):
+                self.issue("warning", f".spectrace/changes/{ref.replace('/', '-')}.touch.json",
+                           f"unaccounted: {missing} line(s) of {ref}'s record are in no symbol or bucket", ref[:3])
+
     def covered_now(self, item):
         for spec in self.specs.values():
             for t in spec.tasks:
@@ -495,3 +527,15 @@ class Repo:
             lines[spec.row] = lead + "|".join(parts) + eol(line)
         write_lines(rel, lines)
         self.record_fingerprints()
+
+
+def find_item(repo, raw):
+    m = REF_RE.match(raw)
+    if not m or (m.group("kind") != "A" and not m.group("spec")):
+        raise TraceError("use NNN/R2, NNN/D3 or A4 (revision optional)")
+    spec = repo.specs.get(m.group("spec"))
+    home = repo.global_items if m.group("kind") == "A" else (spec.items if spec else {})
+    item = home.get(f"{m.group('kind')}{int(m.group('num'))}")
+    if not item:
+        raise TraceError(f"no item {raw}")
+    return item

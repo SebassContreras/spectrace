@@ -1,0 +1,132 @@
+{
+ "files": {
+  "tests/test_records.py": {
+   "lang": "python",
+   "lines": [
+    53,
+    0
+   ],
+   "other": {
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "2b95c0f9812da3e9",
+     "change": "added",
+     "kind": "class",
+     "lines": [
+      9,
+      0
+     ],
+     "name": "ViewsTest",
+     "sig": "(unittest.TestCase)"
+    },
+    {
+     "body": "114708135e47ad9e",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "ViewsTest.setUp",
+     "sig": "(self)"
+    },
+    {
+     "body": "088687085bd62748",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      10,
+      0
+     ],
+     "name": "ViewsTest.test_a_retired_tasks_unchanged_symbol_is_a_leftover_until_kept",
+     "sig": "(self)"
+    },
+    {
+     "body": "726730400b994253",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "ViewsTest.test_a_task_without_a_record_is_answered_by_anchoring_its_patch",
+     "sig": "(self)"
+    },
+    {
+     "body": "c7b9520abe985a3c",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      6,
+      0
+     ],
+     "name": "ViewsTest.test_changes_outside_a_task_are_named_by_symbol",
+     "sig": "(self)"
+    },
+    {
+     "body": "7298142846ab6781",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "ViewsTest.test_impact_reports_each_symbol_and_the_lines_still_inside",
+     "sig": "(self)"
+    },
+    {
+     "body": "f362b38eca93f25c",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "ViewsTest.test_keep_needs_a_reason",
+     "sig": "(self)"
+    },
+    {
+     "body": "11c153cecc7baf12",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "ViewsTest.test_why_answers_for_code_that_no_longer_exists",
+     "sig": "(self)"
+    },
+    {
+     "body": "df5a16a0632e585a",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "ViewsTest.test_why_names_the_task_and_decision_behind_live_code",
+     "sig": "(self)"
+    },
+    {
+     "body": "df439ff9ac5803b8",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "ViewsTest.test_why_says_when_code_is_outside_the_trace",
+     "sig": "(self)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

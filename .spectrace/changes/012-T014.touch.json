@@ -1,0 +1,117 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/records.py": {
+   "lang": "python",
+   "lines": [
+    27,
+    1
+   ],
+   "other": {
+    "imports": [
+     1,
+     1
+    ],
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "4dd0d2784ac77fcc",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      24,
+      0
+     ],
+     "name": "anchored",
+     "sig": "(root, blocks, renames)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/impact.py": {
+   "lang": "python",
+   "lines": [
+    7,
+    1
+   ],
+   "other": {
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "f3e08603b3ad5d9e",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "anchored_lines",
+     "sig": "(root, blocks, renames)"
+    },
+    {
+     "body": "3366521a93d29c9e",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      2,
+      1
+     ],
+     "name": "cmd_impact",
+     "sig": "(repo, args)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/why.py": {
+   "lang": "python",
+   "lines": [
+    15,
+    1
+   ],
+   "other": {
+    "imports": [
+     1,
+     0
+    ],
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "fbce62e11962e9dc",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      10,
+      0
+     ],
+     "name": "anchored_hits",
+     "sig": "(root, recs, path, symbol)"
+    },
+    {
+     "body": "c79e265962b5242c",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      2,
+      1
+     ],
+     "name": "cmd_why",
+     "sig": "(repo, args)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

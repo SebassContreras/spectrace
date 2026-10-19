@@ -2,27 +2,45 @@
 import os, re
 
 
-def parse_patch(text):
-    """Per-file blocks of a git patch: old/new path, status, added and removed lines."""
-    blocks, b = [], None
-    for line in text.splitlines():
+HUNK_RE = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
+
+def parse_patch(text, min_len=4):
+    """Per-file blocks of a git patch: old/new path, status, added and removed lines.
+
+    `added`/`removed` hold the stripped text of lines at least `min_len` characters long;
+    `added_at`/`removed_at` hold the line number of every added (new side) and removed
+    (old side) line, whatever its length."""
+    blocks, b, old_n, new_n = [], None, 0, 0
+    for line in text.split("\n"):
         if line.startswith("diff --git "):
-            b = {"old": None, "new": None, "status": "modified", "added": [], "removed": [], "hunk": False}
+            # Paths from the header first: a binary or mode-only change has no ---/+++ lines.
+            old, _, new = line[len("diff --git a/"):].rpartition(" b/")
+            b = {"old": old or None, "new": new or None, "status": "modified", "added": [], "removed": [],
+                 "hunk": False, "added_at": [], "removed_at": [], "binary": False}
             blocks.append(b)
         elif b is None:
             continue
-        elif b["hunk"] and line and line[0] in "+-":
-            if len(line[1:].strip()) >= 4:
-                b["added" if line[0] == "+" else "removed"].append(line[1:].strip())
-        elif line.startswith("@@"):
-            b["hunk"] = True
+        elif b["hunk"] and line and line[0] in "+- ":
+            if line[0] == " ":
+                old_n, new_n = old_n + 1, new_n + 1
+                continue
+            side = "added" if line[0] == "+" else "removed"
+            b[side + "_at"].append(new_n if side == "added" else old_n)
+            new_n, old_n = (new_n + 1, old_n) if side == "added" else (new_n, old_n + 1)
+            if len(line[1:].strip()) >= min_len:
+                b[side].append(line[1:].strip())
+        elif m := HUNK_RE.match(line):
+            b["hunk"], old_n, new_n = True, int(m.group(1)), int(m.group(2))
         elif line.startswith(("rename from ", "rename to ")):
             b["status"] = "renamed"
             b["old" if line.startswith("rename from") else "new"] = line.split(" ", 2)[2]
         elif line.startswith("new file mode"):
-            b["status"] = "new"
+            b["status"], b["old"] = "new", None
         elif line.startswith("deleted file mode"):
-            b["status"] = "deleted"
+            b["status"], b["new"] = "deleted", None
+        elif line.startswith(("Binary files ", "GIT binary patch")):
+            b["binary"] = True
         elif line.startswith("--- a/"):
             b["old"] = line[6:]
         elif line.startswith("+++ b/"):

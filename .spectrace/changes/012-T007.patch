@@ -1,0 +1,75 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 2e3bf14..8a42a13 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -2,7 +2,7 @@
+ import json, os
+ from datetime import date
+ 
+-from . import TraceError
++from . import TraceError, records
+ from .gitio import git, snapshot, keep, kept, drop, reference_tree, diff, numstat
+ from .model import REF_RE, SEVERITY, Repo
+ from .patches import load_patches, file_presence
+@@ -110,6 +110,8 @@ def cmd_done(repo, args):
+             f.write(patch)
+     elif os.path.exists(patch_abs):
+         os.remove(patch_abs)
++    touch = records.record(root, base, current) if files else None
++    records.write(root, task.ref, touch)
+     edit_task(repo, task, status="done", changes=", ".join(files) or "none")
+     keep(root, "last", current)
+     drop(root, "base")
+@@ -119,6 +121,10 @@ def cmd_done(repo, args):
+     print(f"done {task.ref}: {len(files)} file(s)")
+     for f in files:
+         print(f"  {f}")
++    if touch:
++        (added, total_added), (removed, total_removed) = records.accounted(touch)
++        print(f"accounted {added}/{total_added} added, {removed}/{total_removed} removed lines"
++              + (" (partial record)" if touch["partial"] else ""))
+     if nxt := fresh_repo.next_task():
+         print(f"next: {nxt.ref}  {nxt.text} -> run: trace start {nxt.ref}")
+     return 0
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+index e38fd69..6be87f2 100644
+--- a/skills/spectrace-start/assets/spectrace/records.py
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -141,6 +141,18 @@ def size(root, tree, path):
+     return int(git(root, "cat-file", "-s", f"{tree}:{path}"))
+ 
+ 
++def accounted(rec):
++    """((attributed, total) added, (attributed, total) removed) over the text files of a record."""
++    out = [[0, 0], [0, 0]]
++    for f in rec.get("files", {}).values():
++        if f.get("lines") is None:
++            continue
++        for column in (0, 1):
++            out[column][0] += sum(s["lines"][column] for s in f["symbols"]) + sum(v[column] for v in f["other"].values())
++            out[column][1] += f["lines"][column]
++    return tuple(map(tuple, out))
++
++
+ def unaccounted(rec):
+     """Lines of the record whose symbols and buckets do not add up to the file totals."""
+     missing = 0
+@@ -153,13 +165,13 @@ def unaccounted(rec):
+     return missing
+ 
+ 
+-def totals(rec):
+-    files = [f for f in rec["files"].values() if f.get("lines") is not None]
+-    return sum(f["lines"][0] for f in files), sum(f["lines"][1] for f in files)
+-
+-
+ def write(root, ref, rec):
++    """Write the record of task `ref`, or remove it when `rec` is None."""
+     path = os.path.join(root, ".spectrace", "changes", ref.replace("/", "-") + ".touch.json")
++    if rec is None:
++        if os.path.exists(path):
++            os.remove(path)
++        return
+     os.makedirs(os.path.dirname(path), exist_ok=True)
+     with open(path, "w", encoding="utf-8", newline="\n") as f:
+         json.dump(rec, f, indent=1, sort_keys=True, ensure_ascii=False)

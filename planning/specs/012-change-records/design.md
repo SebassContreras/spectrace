@@ -53,3 +53,6 @@ Costs of decisions the table above does not cover.
 |---|---|---|---|
 | D9 runs the recorder in `start` and `check` | symbols named outside any task | cost on every call | time it in T019; the recorder reads only changed files |
 | D10 bumps `VERSION` to 2 | the record is a declared contract | every install is asked to upgrade though v1 still reads | 010's compare-by-version path does it in one step |
+| D3 caps a file at 1 MB and a task at 400 files | `done` stays fast on huge changes | the limits are guesses | T019 times `done`; the caps are named constants, changed in one place |
+| D5 counts surviving lines as a multiset | survives moves inside a symbol | a repeated line can be counted twice | the counts are labelled and never gate (A11) |
+| D8 reports `unaccounted` as a warning | a recorder bug never blocks a spec | a warning can be ignored | T019 runs the recorder over this repo's whole history |

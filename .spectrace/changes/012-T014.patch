@@ -1,0 +1,107 @@
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+index 34871ce..5f26c17 100644
+--- a/skills/spectrace-start/assets/spectrace/records.py
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -8,7 +8,7 @@ import hashlib, json, os, re
+ 
+ from . import symbols as adapters
+ from .gitio import diff, git
+-from .patches import parse_patch
++from .patches import follow, parse_patch
+ 
+ FILE_LIMIT = 1_000_000  # bytes: a larger file is recorded at file level, and the record is partial
+ TASK_LIMIT = 400  # changed files: a larger task is recorded at file level, and the record is partial
+@@ -208,6 +208,32 @@ def live(root, recs, ref, path, name):
+     return (path, name), now[0][span.start - 1:span.end]
+ 
+ 
++def anchored(root, blocks, renames):
++    """{current path: symbol names} for a task without a record, from its patch (labelled `anchored`).
++
++    Each added line is matched by text to the current file; a line found exactly once
++    gives the symbol holding it there. Ambiguous or missing lines stay unmapped."""
++    out = {}
++    for b in blocks:
++        if b["status"] == "deleted" or not b["new"] or not b["added"]:
++            continue
++        path = follow(root, b["new"], renames)
++        now = current(root, path)
++        if now is None:
++            continue
++        lines, spans = now
++        owner = innermost(list(spans.values()), len(lines))
++        names = list(spans)
++        where = {}
++        for n, line in enumerate(lines, 1):
++            where.setdefault(line.strip(), []).append(n)
++        found = {names[owner[where[a][0]]] for a in b["added"]
++                 if len(where.get(a, [])) == 1 and owner[where[a][0]] is not None}
++        if found:
++            out.setdefault(path, set()).update(found)
++    return out
++
++
+ def load(root):
+     """{task ref: record} for every record in .spectrace/changes/."""
+     folder, out = os.path.join(root, ".spectrace", "changes"), {}
+diff --git a/skills/spectrace-start/assets/spectrace/views/impact.py b/skills/spectrace-start/assets/spectrace/views/impact.py
+index 84322a9..8de904c 100644
+--- a/skills/spectrace-start/assets/spectrace/views/impact.py
++++ b/skills/spectrace-start/assets/spectrace/views/impact.py
+@@ -40,6 +40,11 @@ def symbol_lines(root, recs, ref):
+     return out
+ 
+ 
++def anchored_lines(root, blocks, renames):
++    return [f"anchored: {path}::{name}" for path, names in sorted(records.anchored(root, blocks, renames).items())
++            for name in sorted(names)]
++
++
+ def cmd_impact(repo, args):
+     item = find_item(repo, args.ref)
+     targets = [item]
+@@ -55,7 +60,8 @@ def cmd_impact(repo, args):
+             rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
+                          "covers": t.covers, "text": t.text, "changes": t.changes, "retired_by": repo.retired_by(t),
+                          "files": file_presence(repo.root, patches.get(t.ref, []), renames),
+-                         "symbols": symbol_lines(repo.root, recs, t.ref) if t.ref in recs else []})
++                         "symbols": symbol_lines(repo.root, recs, t.ref) if t.ref in recs
++                         else anchored_lines(repo.root, patches.get(t.ref, []), renames)})
+ 
+     def label(i):
+         return i.ref + (" (retired)" if i.retired else "")
+diff --git a/skills/spectrace-start/assets/spectrace/views/why.py b/skills/spectrace-start/assets/spectrace/views/why.py
+index 18fa28a..2288181 100644
+--- a/skills/spectrace-start/assets/spectrace/views/why.py
++++ b/skills/spectrace-start/assets/spectrace/views/why.py
+@@ -1,5 +1,6 @@
+ """`trace why <path[::symbol]>`: from code to the tasks and decisions behind it."""
+ from .. import records
++from ..patches import load_patches
+ from . import address, matches
+ 
+ 
+@@ -21,9 +22,22 @@ def exact_hits(recs, path, symbol):
+     return hits
+ 
+ 
++def anchored_hits(root, recs, path, symbol):
++    """[(task ref, "anchored")] for tasks without a record whose patch lines land in that code now."""
++    patches, renames = load_patches(root)
++    hits = []
++    for ref in sorted((r for r in patches if r not in recs), reverse=True):
++        names = sorted(n for n in records.anchored(root, patches[ref], renames).get(path, ())
++                       if symbol is None or matches(n, symbol))
++        if names:
++            hits.append((ref, "anchored: " + ", ".join(names)))
++    return hits
++
++
+ def cmd_why(repo, args):
+     path, symbol = address(args.address)
+-    hits = exact_hits(records.load(repo.root), path, symbol)
++    recs = records.load(repo.root)
++    hits = exact_hits(recs, path, symbol) + anchored_hits(repo.root, recs, path, symbol)
+     print(f"# Why {args.address}\n")
+     if not hits:
+         print(f"outside the trace: no task recorded {args.address}")

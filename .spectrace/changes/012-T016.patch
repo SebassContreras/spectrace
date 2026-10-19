@@ -1,0 +1,47 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 68c5fa4..a731926 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -55,7 +55,9 @@ def cmd_start(repo, args):
+     reference = reference_tree(root)
+     stray = numstat(root, reference, current)
+     if stray and not (args.adopt or args.ignore):
++        touched = records.changed_symbols(records.record(root, reference, current))
+         print("Files changed outside any task since the last one closed:\n" + "\n".join(f"  {s}" for s in stray) +
++              ("\nSymbols: " + ", ".join(touched) if touched else "") +
+               f"\n\nRe-run with --adopt (count them as part of {task.ref}) or --ignore (leave them out).")
+         return 2
+     keep(root, "base", reference if args.adopt else current)
+@@ -161,10 +163,13 @@ def cmd_block(repo, args):
+ def cmd_check(repo, args):
+     root = repo.root
+     if not load_state(root).get("open"):
+-        stray = numstat(root, reference_tree(root), snapshot(root))
++        reference, current = reference_tree(root), snapshot(root)
++        stray = numstat(root, reference, current)
+         if stray:
+             names = ", ".join(s.split(" (")[0] for s in stray[:5]) + (" …" if len(stray) > 5 else "")
+-            repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}")
++            touched = records.changed_symbols(records.record(root, reference, current), limit=5)
++            repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}"
++                       + (f"; symbols: {', '.join(touched)}" if touched else ""))
+     issues = sorted(repo.issues, key=lambda x: SEVERITY[x[0]])
+     for sev, where, msg, _ in issues:
+         print(f"{sev.upper():<8} {where}  {msg}")
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+index 5f26c17..c53ea94 100644
+--- a/skills/spectrace-start/assets/spectrace/records.py
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -178,6 +178,12 @@ def write(root, ref, rec):
+         f.write("\n")
+ 
+ 
++def changed_symbols(rec, limit=8):
++    """`path::name (change)` for the symbols a record names, at most `limit`, then `+N more`."""
++    names = [f"{p}::{s['name']} ({s['change']})" for p, f in sorted(rec["files"].items()) for s in f["symbols"]]
++    return names[:limit] + ([f"+{len(names) - limit} more"] if len(names) > limit else [])
++
++
+ def current(root, path):
+     """(lines, {name: span}) of a file in the working tree; None when it is missing or does not parse."""
+     full = os.path.join(root, *path.split("/"))

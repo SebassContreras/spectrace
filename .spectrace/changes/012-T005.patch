@@ -1,0 +1,224 @@
+diff --git a/skills/spectrace-start/assets/spectrace/patches.py b/skills/spectrace-start/assets/spectrace/patches.py
+index 561b467..c9e2fbc 100644
+--- a/skills/spectrace-start/assets/spectrace/patches.py
++++ b/skills/spectrace-start/assets/spectrace/patches.py
+@@ -2,20 +2,34 @@
+ import os, re
+ 
+ 
+-def parse_patch(text):
+-    """Per-file blocks of a git patch: old/new path, status, added and removed lines."""
+-    blocks, b = [], None
+-    for line in text.splitlines():
++HUNK_RE = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
++
++
++def parse_patch(text, min_len=4):
++    """Per-file blocks of a git patch: old/new path, status, added and removed lines.
++
++    `added`/`removed` hold the stripped text of lines at least `min_len` characters long;
++    `added_at`/`removed_at` hold the line number of every added (new side) and removed
++    (old side) line, whatever its length."""
++    blocks, b, old_n, new_n = [], None, 0, 0
++    for line in text.split("\n"):
+         if line.startswith("diff --git "):
+-            b = {"old": None, "new": None, "status": "modified", "added": [], "removed": [], "hunk": False}
++            b = {"old": None, "new": None, "status": "modified", "added": [], "removed": [], "hunk": False,
++                 "added_at": [], "removed_at": [], "binary": False}
+             blocks.append(b)
+         elif b is None:
+             continue
+-        elif b["hunk"] and line and line[0] in "+-":
+-            if len(line[1:].strip()) >= 4:
+-                b["added" if line[0] == "+" else "removed"].append(line[1:].strip())
+-        elif line.startswith("@@"):
+-            b["hunk"] = True
++        elif b["hunk"] and line and line[0] in "+- ":
++            if line[0] == " ":
++                old_n, new_n = old_n + 1, new_n + 1
++                continue
++            side = "added" if line[0] == "+" else "removed"
++            b[side + "_at"].append(new_n if side == "added" else old_n)
++            new_n, old_n = (new_n + 1, old_n) if side == "added" else (new_n, old_n + 1)
++            if len(line[1:].strip()) >= min_len:
++                b[side].append(line[1:].strip())
++        elif m := HUNK_RE.match(line):
++            b["hunk"], old_n, new_n = True, int(m.group(1)), int(m.group(2))
+         elif line.startswith(("rename from ", "rename to ")):
+             b["status"] = "renamed"
+             b["old" if line.startswith("rename from") else "new"] = line.split(" ", 2)[2]
+@@ -23,6 +37,8 @@ def parse_patch(text):
+             b["status"] = "new"
+         elif line.startswith("deleted file mode"):
+             b["status"] = "deleted"
++        elif line.startswith(("Binary files ", "GIT binary patch")):
++            b["binary"] = True
+         elif line.startswith("--- a/"):
+             b["old"] = line[6:]
+         elif line.startswith("+++ b/"):
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+new file mode 100644
+index 0000000..801824e
+--- /dev/null
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -0,0 +1,160 @@
++"""Change records: which symbols a task added, changed or removed, and where every line went.
++
++The record is computed between two trees (the task's base and the working tree when it
++closes), from `git diff -U0 -M` and the symbols of each file's pre- and post-image, so it
++needs neither the task's patch nor its size limit.
++"""
++import hashlib, json, os, re
++
++from . import symbols as adapters
++from .gitio import diff, git
++from .patches import parse_patch
++
++
++def body_hash(lines):
++    return hashlib.sha256("\n".join(l.rstrip("\r") for l in lines).encode("utf-8")).hexdigest()[:16]
++
++
++def innermost(spans, count):
++    """For each line 1..count, the index of the smallest span holding it, or None."""
++    owner = [None] * (count + 2)
++    for i in sorted(range(len(spans)), key=lambda i: spans[i].end - spans[i].start, reverse=True):
++        for n in range(max(1, spans[i].start), min(count, spans[i].end) + 1):
++            owner[n] = i
++    return owner
++
++
++def show(root, tree, path):
++    return git(root, "show", f"{tree}:{path}", raw=True)
++
++
++class Side:
++    """One image of a file: its lines, spans, and which span owns each line."""
++
++    def __init__(self, path, text, file_level):
++        self.lines = text.splitlines() if text is not None else []
++        self.spans = [] if file_level or text is None else adapters.symbols(path, text)
++        self.owner = innermost(self.spans, len(self.lines))
++        self.by_name = {s.name: s for s in self.spans if s.kind != "import"}
++
++    def hash(self, span):
++        return body_hash(self.lines[span.start - 1:span.end])
++
++    def tail_hash(self, span):
++        return body_hash(self.lines[span.start:span.end])
++
++
++def file_record(root, a, b, block, file_level):
++    old_path, new_path = block["old"], block["new"]
++    path = new_path or old_path
++    lang = "file" if file_level else adapters.language(path)
++    rec = {"status": block["status"], "lang": lang,
++           "lines": [len(block["added_at"]), len(block["removed_at"])], "symbols": [], "other": {}}
++    if block["status"] == "renamed":
++        rec["from"] = old_path
++    pre = Side(old_path, None if block["status"] == "new" else show(root, a, old_path), lang == "file")
++    post = Side(new_path, None if block["status"] == "deleted" else show(root, b, new_path), lang == "file")
++    counts, other = {}, {}
++
++    def attribute(side, numbers, column):
++        for n in numbers:
++            i = side.owner[n] if n < len(side.owner) else None
++            span = side.spans[i] if i is not None else None
++            if span is None or span.kind == "import":
++                bucket = "imports" if span else ("file" if rec["lang"] == "file" else "module")
++                other.setdefault(bucket, [0, 0])[column] += 1
++            else:
++                counts.setdefault(span.name, [0, 0])[column] += 1
++    attribute(post, block["added_at"], 0)
++    attribute(pre, block["removed_at"], 1)
++    added = [n for n in post.by_name if n not in pre.by_name]
++    removed = [n for n in pre.by_name if n not in post.by_name]
++    renamed = {}
++    for new in added:
++        s = post.by_name[new]
++        match = next((old for old in removed if s.end > s.start and old not in renamed.values()
++                      and pre.by_name[old].kind == s.kind
++                      and pre.tail_hash(pre.by_name[old]) == post.tail_hash(s)), None)
++        if match:
++            renamed[new] = match
++    for name in sorted(set(post.by_name) | set(pre.by_name)):
++        if name in renamed.values():
++            continue
++        live = name in post.by_name
++        span = post.by_name[name] if live else pre.by_name[name]
++        if name in renamed:
++            change = "renamed"
++        elif name in added:
++            change = "added"
++        elif name in removed:
++            change = "removed"
++        elif name in counts:
++            change = "modified"
++        else:
++            continue
++        lines = counts.get(name, [0, 0])
++        if name in renamed:
++            gone = counts.get(renamed[name], [0, 0])
++            lines = [lines[0] + gone[0], lines[1] + gone[1]]
++        entry = {"name": name, "kind": span.kind, "change": change, "lines": lines,
++                 "body": (post if live else pre).hash(span)}
++        if span.sig is not None:
++            entry["sig"] = span.sig
++        if name in renamed:
++            entry["from"] = renamed[name]
++        rec["symbols"].append(entry)
++    rec["other"] = {k: v for k, v in sorted(other.items())}
++    return path, rec
++
++
++def record(root, a, b):
++    """The change record between trees `a` and `b`."""
++    blocks = [x for x in parse_patch(diff(root, a, b, "-U0"), min_len=0) if x["old"] or x["new"]]
++    out = {"files": {}}
++    for block in blocks:
++        if block["binary"]:
++            path = block["new"] or block["old"]
++            out["files"][path] = {"status": block["status"], "lang": "file", "lines": None,
++                                  "symbols": [], "other": {}}
++            continue
++        path, rec = file_record(root, a, b, block, False)
++        out["files"][path] = rec
++    return out
++
++
++def unaccounted(rec):
++    """Lines of the record whose symbols and buckets do not add up to the file totals."""
++    missing = 0
++    for f in rec.get("files", {}).values():
++        if f.get("lines") is None:
++            continue
++        for column in (0, 1):
++            total = sum(s["lines"][column] for s in f["symbols"]) + sum(v[column] for v in f["other"].values())
++            missing += abs(f["lines"][column] - total)
++    return missing
++
++
++def totals(rec):
++    files = [f for f in rec["files"].values() if f.get("lines") is not None]
++    return sum(f["lines"][0] for f in files), sum(f["lines"][1] for f in files)
++
++
++def write(root, ref, rec):
++    path = os.path.join(root, ".spectrace", "changes", ref.replace("/", "-") + ".touch.json")
++    os.makedirs(os.path.dirname(path), exist_ok=True)
++    with open(path, "w", encoding="utf-8", newline="\n") as f:
++        json.dump(rec, f, indent=1, sort_keys=True, ensure_ascii=False)
++        f.write("\n")
++
++
++def load(root):
++    """{task ref: record} for every record in .spectrace/changes/."""
++    folder, out = os.path.join(root, ".spectrace", "changes"), {}
++    for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
++        if m := re.fullmatch(r"(\d{3})-T(\d{3})\.touch\.json", name):
++            try:
++                with open(os.path.join(folder, name), encoding="utf-8") as f:
++                    out[f"{m.group(1)}/T{m.group(2)}"] = json.load(f)
++            except (OSError, ValueError):
++                continue
++    return out

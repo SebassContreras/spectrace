@@ -2,11 +2,13 @@
 import json, os
 from datetime import date
 
-from . import TraceError
+from . import TraceError, records
 from .gitio import git, snapshot, keep, kept, drop, reference_tree, diff, numstat
-from .model import REF_RE, SEVERITY, Repo
-from .patches import load_patches, file_presence
+from .model import SEVERITY, Repo, find_item
 from .state import load_state, save_state, edit_task
+from .leftover import cmd_keep
+from .views.impact import cmd_impact
+from .views.why import cmd_why
 
 PATCH_LIMIT = 200_000
 
@@ -53,7 +55,9 @@ def cmd_start(repo, args):
     reference = reference_tree(root)
     stray = numstat(root, reference, current)
     if stray and not (args.adopt or args.ignore):
+        touched = records.changed_symbols(records.record(root, reference, current))
         print("Files changed outside any task since the last one closed:\n" + "\n".join(f"  {s}" for s in stray) +
+              ("\nSymbols: " + ", ".join(touched) if touched else "") +
               f"\n\nRe-run with --adopt (count them as part of {task.ref}) or --ignore (leave them out).")
         return 2
     keep(root, "base", reference if args.adopt else current)
@@ -110,6 +114,8 @@ def cmd_done(repo, args):
             f.write(patch)
     elif os.path.exists(patch_abs):
         os.remove(patch_abs)
+    touch = records.record(root, base, current) if files else None
+    records.write(root, task.ref, touch)
     edit_task(repo, task, status="done", changes=", ".join(files) or "none")
     keep(root, "last", current)
     drop(root, "base")
@@ -119,6 +125,10 @@ def cmd_done(repo, args):
     print(f"done {task.ref}: {len(files)} file(s)")
     for f in files:
         print(f"  {f}")
+    if touch:
+        (added, total_added), (removed, total_removed) = records.accounted(touch)
+        print(f"accounted {added}/{total_added} added, {removed}/{total_removed} removed lines"
+              + (" (partial record)" if touch["partial"] else ""))
     if nxt := fresh_repo.next_task():
         print(f"next: {nxt.ref}  {nxt.text} -> run: trace start {nxt.ref}")
     return 0
@@ -153,10 +163,13 @@ def cmd_block(repo, args):
 def cmd_check(repo, args):
     root = repo.root
     if not load_state(root).get("open"):
-        stray = numstat(root, reference_tree(root), snapshot(root))
+        reference, current = reference_tree(root), snapshot(root)
+        stray = numstat(root, reference, current)
         if stray:
             names = ", ".join(s.split(" (")[0] for s in stray[:5]) + (" …" if len(stray) > 5 else "")
-            repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}")
+            touched = records.changed_symbols(records.record(root, reference, current), limit=5)
+            repo.issue("warning", "working tree", f"{len(stray)} file(s) changed outside any task: {names}"
+                       + (f"; symbols: {', '.join(touched)}" if touched else ""))
     issues = sorted(repo.issues, key=lambda x: SEVERITY[x[0]])
     for sev, where, msg, _ in issues:
         print(f"{sev.upper():<8} {where}  {msg}")
@@ -167,61 +180,11 @@ def cmd_check(repo, args):
 
 
 
-def find_item(repo, raw):
-    m = REF_RE.match(raw)
-    if not m or (m.group("kind") != "A" and not m.group("spec")):
-        raise TraceError("use NNN/R2, NNN/D3 or A4 (revision optional)")
-    spec = repo.specs.get(m.group("spec"))
-    home = repo.global_items if m.group("kind") == "A" else (spec.items if spec else {})
-    item = home.get(f"{m.group('kind')}{int(m.group('num'))}")
-    if not item:
-        raise TraceError(f"no item {raw}")
-    return item
-
-
 def cmd_review(repo, args):
     item = find_item(repo, args.ref)
     repo.fingerprints[item.ref] = item.fingerprint
     repo.record_fingerprints()
     print(f"reviewed {item.ref}: current text accepted as a wording-only edit")
-    return 0
-
-
-def cmd_impact(repo, args):
-    item = find_item(repo, args.ref)
-    targets = [item]
-    if item.kind == "R":
-        targets += [d for d in repo.specs[item.spec].items.values() if d.kind == "D" and item.key in d.implements]
-    rows = []
-    patches, renames = load_patches(repo.root)
-    for s in repo.specs.values():
-        for t in s.tasks:
-            if not any(repo.resolve(raw, s.id)[0] in targets for raw in t.covers):
-                continue
-            retired_by = [o.ref for s2 in repo.specs.values() for o in s2.tasks
-                          if any(repo.find_task(r, s2.id) is t for r in o.retires)]
-            rows.append({"task": t.ref, "owner": t.owner, "status": t.status, "kind": t.kind or "",
-                         "covers": t.covers, "text": t.text, "changes": t.changes, "retired_by": retired_by,
-                         "files": file_presence(repo.root, patches.get(t.ref, []), renames)})
-
-    def label(i):
-        return i.ref + (" (retired)" if i.retired else "")
-    print(f"# Impact of {label(item)}\n")
-    if len(targets) > 1:
-        print("Design items implementing it: " + ", ".join(label(i) for i in targets[1:]) + "\n")
-    if not rows:
-        print("No task covers it.")
-    for r in rows:
-        tag = f" [{r['kind']}]" if r["kind"] else ""
-        print(f"- {r['task']} [{r['owner']}] [{r['status']}]{tag} {r['text']}")
-        print(f"    covers: {', '.join(r['covers'])}")
-        if r["retired_by"]:
-            print(f"    retired by: {', '.join(r['retired_by'])}")
-        for f in r["files"]:
-            where = "file deleted" if f["deleted"] else f"{f['present']}/{f['added']} added lines still present"
-            print(f"    {f['path']}: {where}")
-        if not r["files"] and r["status"] == "done":
-            print(f"    no patch recorded ({r['changes'] or 'finished outside trace'}) — search the code by hand")
     return 0
 
 
@@ -236,4 +199,6 @@ COMMANDS = {
     "impact": (cmd_impact, "what implemented an item: tasks, files, lines still present", ("ref",)),
     "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),
     "restore": (cmd_restore, "undo a finished task's recorded changes, inside the open task", ("task",)),
+    "keep": (cmd_keep, "accept a retired task's symbol that stays, with a written reason", ("address", "reason")),
+    "why": (cmd_why, "the tasks and decisions behind a piece of code: path or path::symbol", ("address",)),
 }
