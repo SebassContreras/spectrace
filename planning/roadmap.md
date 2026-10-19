@@ -6,7 +6,7 @@ Index of every spec. `Status` and `Stage` are written only by `trace status --wr
 
 | ID  | Spec              | Status | Depends on    | Stage | Priority |
 |-----|-------------------|--------|---------------|-------|----------|
-| 001 | format-and-trace  | in_progress | —             | build | 1        |
+| 001 | format-and-trace  | done        | —             | —     | 1        |
 | 002 | start             | done        | 001           | —      | 2        |
 | 003 | plan              | done        | 001, 002      | —      | 3        |
 | 004 | change            | done        | 001, 003      | —      | 4        |
@@ -16,9 +16,9 @@ Index of every spec. `Status` and `Stage` are written only by `trace status --wr
 | 008 | architecture-defaults | done        | 002, 003 | —      | 8 |
 | 009 | testing-policy | done        | 002, 003, 008 | —      | 9 |
 | 010 | upgrade | done        | 002, 005, 009 | —           | 10 |
-| 011 | modular-core | todo | 005, 010 | build | 11 |
-| 012 | change-records | todo | 011, 016 | build | 12 |
-| 013 | code-index | todo | 012 | build | 13 |
-| 014 | locate-packet-fix | todo | 012, 013 | build | 14 |
-| 015 | e2e-graph | todo | 014 | build | 15 |
-| 016 | decision-conflicts | todo | 011 | build | 11 |
+| 011 | modular-core | done        | 005, 010 | —     | 11 |
+| 012 | change-records | done        | 011, 016 | —     | 12 |
+| 013 | code-index | done        | 012 | —     | 13 |
+| 014 | locate-packet-fix | done        | 012, 013 | —     | 14 |
+| 015 | e2e-graph | blocked     | 014 | build | 15 |
+| 016 | decision-conflicts | done        | 011 | —     | 11 |

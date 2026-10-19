@@ -13,8 +13,9 @@
       covers: D5@1
       changes: skills/start/assets/agents-protocol.md (+18 -0)
 - [x] T005 [agent] [status:done] Write `skills/start/SKILL.md`
-      covers: D1@1, D2@1, D3@1, D4@1, D5@1, D6@1, D7@1
+      covers: D1@1, D2@1, D3@1, D4@2, D5@1, D6@1, D7@1
       changes: skills/start/SKILL.md (+158 -0)
+      └─ reviewed 2026-10-19: the package install (011/T008) holds under the new text
 - [x] T006 [agent] [status:done] Write `tests/test_skills.py`: frontmatter per the Agent Skills spec, name equals folder, body within budget, every referenced file exists
       covers: A5@4, A7@1
       kind: test

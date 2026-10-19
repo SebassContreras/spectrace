@@ -25,8 +25,8 @@ protocol, trace and policies without starting over or editing files by hand.
   anything: old and new trace version, the protocol diff and the missing sections.
 - R3@1: The upgrade writes only after explicit confirmation, and the user can accept or
   skip each item separately.
-- R4@1: The upgrade replaces `.spectrace/trace.py` and `.spectrace/format.md` with the
-  bundled files and replaces only the text between `<!-- spectrace:protocol -->` and
+- R4@2: The upgrade replaces `.spectrace/trace.py`, the `.spectrace/spectrace/` package and
+  `.spectrace/format.md` with the bundled files and replaces only the text between `<!-- spectrace:protocol -->` and
   `<!-- /spectrace:protocol -->`; everything else in `AGENTS.md` stays byte-identical.
 - R5@1: A missing template section is added to `AGENTS.md` without touching existing
   sections. When the section needs the user's answers (for example the test commands and

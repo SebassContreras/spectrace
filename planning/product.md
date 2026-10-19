@@ -38,10 +38,4 @@ What must work today:
 
 ## Scope filter
 
-Is it needed for the MVP to work? Yes: it goes in by the simplest route, adjusting earlier
-decisions if they are in the way. No: it is dropped or postponed, without debate.
-
-When an earlier decision (architecture or design) gets in the way of the current spec, do
-not build a workaround. Propose changing it directly: "this decision forces
-over-engineering; I propose X, which is direct. Approved?" The user chooses to keep it,
-edit it or retire it, and the change goes through `spectrace-change`.
+The rule lives in `AGENTS.md` → "Working on tasks" → "When a decision is in the way" (A14, A15).

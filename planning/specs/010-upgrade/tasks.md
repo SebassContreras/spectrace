@@ -4,20 +4,23 @@
       covers: D1@1
       changes: skills/spectrace-start/references/upgrade.md (+25 -0)
 - [x] T002 [agent] [status:done] Add the summary, per-item confirmation and write rules for trace, format and protocol to upgrade.md
-      covers: D4@1, D5@1
+      covers: D4@1, D5@2
       changes: skills/spectrace-start/references/upgrade.md (+21 -0)
+      └─ reviewed 2026-10-19: the package install (011/T008) holds under the new text
 - [x] T003 [agent] [status:done] Add the missing-section insertion and its question-bank follow-up to upgrade.md
       covers: D6@1
       changes: skills/spectrace-start/references/upgrade.md (+8 -0)
 - [x] T004 [agent] [status:done] Add the write scope and the trace check before and after to upgrade.md
-      covers: D7@1
+      covers: D7@2
       changes: skills/spectrace-start/references/upgrade.md (+12 -0)
+      └─ reviewed 2026-10-19: the package install (011/T008) holds under the new text
 - [x] T005 [agent] [status:done] Hook the upgrade check into spectrace-start Phase 0 and the direct-request route
       covers: D2@1, D3@1
       changes: skills/spectrace-start/SKILL.md (+6 -2)
 - [x] T006 [agent] [status:done] Point Phase 3 steps 3 and 4 of spectrace-start at upgrade.md instead of repeating the rules
-      covers: D5@1
+      covers: D5@2
       changes: skills/spectrace-start/SKILL.md (+4 -5)
+      └─ reviewed 2026-10-19: the package install (011/T008) holds under the new text
 - [x] T007 [agent] [status:done] Document the two-step update in README.md Install
       covers: D8@1
       changes: README.md (+7 -1)
