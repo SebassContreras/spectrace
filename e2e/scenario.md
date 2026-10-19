@@ -195,6 +195,26 @@ every R item in it is built on before step 6.
 
    > Execute the next spectrace task. Don't commit.
 
+## Step 7 — Find and fix
+
+1. The driver injects the bug by hand, the one exception to "never edits files the
+   harness owns": in `tdo/store.py`, the title-length comparison becomes off by one
+   (`> 120` becomes `>= 120`, in whatever form the harness wrote it). The driver logs
+   `git diff` of that edit in `e2e/report.md` and does not commit.
+2. Prompt, new conversation:
+
+   > Use the spectrace-fix skill. `tdo add` rejects a title of exactly 120 characters; it should accept it.
+
+   | Question | Answer |
+   |---|---|
+   | Files changed outside any task (`start` or `check` lists the hand edit) | Ignore them (`--ignore`): the edit is the bug. |
+   | The classification | The code deviates from the title-length requirement; fix it under that requirement. |
+   | The task list | Approve as proposed. |
+
+3. Then, each a new conversation, until `trace check --strict` exits 0:
+
+   > Execute the next spectrace task. Don't commit.
+
 ## Verification
 
 Run by the driver, in Git Bash, from the throwaway repo's root. `trace` is
@@ -276,3 +296,55 @@ line, and exactly one task went from `todo` to `done` in that conversation. Also
    1 with a `suspect` for each finished task that covered `@N`; `changes.md` records
    `MODIFIED R<n>@N → R<n>@N+1`.
 4. After the cleanup tasks: `trace check --strict` exits 0.
+
+### Records (015 R1)
+
+For each task conversation, with `$B`/`$A` its snapshots and `NNN-TNNN` the task:
+
+```bash
+python - "$B" "$A" .spectrace/changes/NNN-TNNN.touch.json <<'PY'
+import json, subprocess, sys
+b, a, path = sys.argv[1:]
+rec = json.load(open(path, encoding="utf-8"))
+num = subprocess.run(["git", "diff", "--numstat", "-M", b, a, "--", ".", ":(exclude)planning",
+                      ":(exclude).spectrace"], capture_output=True, text=True).stdout.split("\n")
+want = {l.split("\t")[2].split(" => ")[-1]: [int(l.split("\t")[0]), int(l.split("\t")[1])]
+        for l in num if l and not l.startswith("-")}
+got = {p: f["lines"] for p, f in rec["files"].items() if f["lines"] is not None}
+sums = all(f["lines"] == [sum(s["lines"][i] for s in f["symbols"]) + sum(v[i] for v in f["other"].values())
+                          for i in (0, 1)] for f in rec["files"].values() if f["lines"] is not None)
+print("TOTALS", "OK" if got == want else f"DIFF {got} != {want}", "ADDS UP" if sums else "UNACCOUNTED")
+PY
+git diff -U0 -M "$B" "$A" -- '*.py' ':(exclude)planning' ':(exclude).spectrace' | grep '^@@'
+```
+
+Pass: `TOTALS OK ADDS UP` for every task, and every Python symbol whose lines the `-U0`
+hunks touch (read the hunk headers against the snapshot's file) is in the record's
+`symbols` for that file.
+
+### Why (015 R2)
+
+Run `trace why tdo/store.py::<function>` for each of `add`, `list_tasks` and `complete`
+(as the harness named them) after step 3, after step 4 and after step 5. Pass: each
+time, the tasks listed are exactly the tasks of the steps so far whose records name
+that function, newest first, each with the item it covers and `retired` on the JSON
+or SQLite item once it is retired; after step 4 the SQLite tasks come first.
+
+### Leftover (015 R3)
+
+During step 4: after the change conversation, `trace check --strict` exits 1; after
+each cleanup task, record the exit code and whether the output has a `leftover:` line.
+Pass: 1 until the last cleanup task is done, then 0, and no `leftover:` line for the
+JSON functions in the final output (a cleanup that rewrote a function is not a
+leftover; one that left it untouched is).
+
+### Find and fix (015 R4)
+
+1. The fix conversation's transcript shows `trace locate` and `trace why` run before
+   the classification.
+2. In `planning/specs/001-*/tasks.md`: a new `kind: test` task comes right before a new
+   task with `kind: fix`, and both have `covers:` the title-length item at its current
+   revision (`R<n>@N+1` after step 6).
+3. After the fix task: its record (`NNN-TNNN.touch.json`) lists the function that holds
+   the check as `modified`; `trace check --strict` exits 0; `trace why
+   tdo/store.py::<that function>` lists the fix task first.

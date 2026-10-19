@@ -1,0 +1,46 @@
+diff --git a/e2e/scenario.md b/e2e/scenario.md
+index 3f875b9..5a13c65 100644
+--- a/e2e/scenario.md
++++ b/e2e/scenario.md
+@@ -195,6 +195,26 @@ every R item in it is built on before step 6.
+ 
+    > Execute the next spectrace task. Don't commit.
+ 
++## Step 7 — Find and fix
++
++1. The driver injects the bug by hand, the one exception to "never edits files the
++   harness owns": in `tdo/store.py`, the title-length comparison becomes off by one
++   (`> 120` becomes `>= 120`, in whatever form the harness wrote it). The driver logs
++   `git diff` of that edit in `e2e/report.md` and does not commit.
++2. Prompt, new conversation:
++
++   > Use the spectrace-fix skill. `tdo add` rejects a title of exactly 120 characters; it should accept it.
++
++   | Question | Answer |
++   |---|---|
++   | Files changed outside any task (`start` or `check` lists the hand edit) | Ignore them (`--ignore`): the edit is the bug. |
++   | The classification | The code deviates from the title-length requirement; fix it under that requirement. |
++   | The task list | Approve as proposed. |
++
++3. Then, each a new conversation, until `trace check --strict` exits 0:
++
++   > Execute the next spectrace task. Don't commit.
++
+ ## Verification
+ 
+ Run by the driver, in Git Bash, from the throwaway repo's root. `trace` is
+@@ -317,3 +337,14 @@ each cleanup task, record the exit code and whether the output has a `leftover:`
+ Pass: 1 until the last cleanup task is done, then 0, and no `leftover:` line for the
+ JSON functions in the final output (a cleanup that rewrote a function is not a
+ leftover; one that left it untouched is).
++
++### Find and fix (015 R4)
++
++1. The fix conversation's transcript shows `trace locate` and `trace why` run before
++   the classification.
++2. In `planning/specs/001-*/tasks.md`: a new `kind: test` task comes right before a new
++   task with `kind: fix`, and both have `covers:` the title-length item at its current
++   revision (`R<n>@N+1` after step 6).
++3. After the fix task: its record (`NNN-TNNN.touch.json`) lists the function that holds
++   the check as `modified`; `trace check --strict` exits 0; `trace why
++   tdo/store.py::<that function>` lists the fix task first.
