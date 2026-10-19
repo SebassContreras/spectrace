@@ -43,3 +43,5 @@ Costs of decisions the table above does not cover.
 | Decision | Pros | Cons | Mitigation |
 |---|---|---|---|
 | D2 `--diff` rebuilds state and index in memory | works on a clean CI checkout | cost on a large diff | only the files of the diff; output capped, "Not analysed" lists the rest |
+| D1 strips Spanish and English plurals | requests in the users' two languages match | two fixed languages; some false matches | `--limit`, the matched tokens printed; another language only when measured |
+| D7 runs the packet on every pull request | the recipe is used here first | CI time; a shallow clone has no history | `fetch-depth: 0`; the step only writes the summary, it never fails the job |

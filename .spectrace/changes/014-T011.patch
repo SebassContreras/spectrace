@@ -1,0 +1,83 @@
+diff --git a/skills/spectrace-change/SKILL.md b/skills/spectrace-change/SKILL.md
+index 6ed6617..e25a843 100644
+--- a/skills/spectrace-change/SKILL.md
++++ b/skills/spectrace-change/SKILL.md
+@@ -78,11 +78,12 @@ Why: <the user's reason>
+ 
+ ## Phase 3 — Manifest
+ 
+-Run `trace impact NNN/<item>` (or `A<n>`) for every revised or retired item, and show
++Run `trace impact NNN/<item> --deep` (or `A<n>`) for every revised or retired item, and show
+ the combined result as the **retirement manifest**: each task that covered the old
+ item, its status, whether it is a test, and per file how many of the lines it added
+ are still in the code (`file deleted` when gone), and the symbols it introduced with
+-`unchanged`, `changed` or `gone` (`anchored` when the task predates records). A
++`unchanged`, `changed` or `gone` (`anchored` when the task predates records), with what
++depends on each and the tests that reference it (`exact` or `inferred`). A
+ finished task with no patch recorded is listed as "search by hand" — grep for what its
+ text describes and show what you find before relying on it.
+ 
+diff --git a/skills/spectrace-plan/SKILL.md b/skills/spectrace-plan/SKILL.md
+index 7969036..e36f679 100644
+--- a/skills/spectrace-plan/SKILL.md
++++ b/skills/spectrace-plan/SKILL.md
+@@ -43,7 +43,9 @@ each answer:
+ 
+ 1. **Approach** — "How should this get built, in plain terms?"
+ 2. **Deliverables** — "What does this create or change?" (files/modules; assets/pages;
+-   runbook steps; datasets/analyses).
++   runbook steps; datasets/analyses). When the repo already has code, first run
++   `python3 .spectrace/trace.py locate "<the requirement's key words>"` for each R item
++   and propose the existing files and symbols it names, so the design extends them.
+ 3. **Sequencing** — "Does anything here have to happen in a specific order, or need
+    something from another spec the roadmap doesn't record?"
+ 4. **Decisions settled** — "Does this settle any stack, tooling or convention question
+diff --git a/skills/spectrace-start/SKILL.md b/skills/spectrace-start/SKILL.md
+index 64d52e0..b5b9a3c 100644
+--- a/skills/spectrace-start/SKILL.md
++++ b/skills/spectrace-start/SKILL.md
+@@ -73,7 +73,7 @@ language (quote the opening request back and ask them to expand). Record it verb
+ then structure it — problem, users, main flow, data, integrations — without inventing
+ choices. Settle `project-type` (for software, the concrete form). Draft `goal` from the
+ narrative and show it for yes / changes. Then the remaining Phase A dimensions, grounded
+-in the narrative. Close with the sweep.
++in the narrative — `codebase` included when the folder already has code. Close with the sweep.
+ 
+ ## Phase 3 — Scaffold
+ 
+@@ -85,7 +85,9 @@ in the narrative. Close with the sweep.
+ 3. **Trace.** Copy `assets/trace.py`, the whole `assets/spectrace/` folder (without
+    `__pycache__`) and `assets/format.md` (paths relative to this skill's folder) into
+    `.spectrace/` — the script and its package are one unit. If they already exist, follow
+-   `references/upgrade.md` instead (it asks before replacing).
++   `references/upgrade.md` instead (it asks before replacing). When `codebase` says code
++   exists, run `python3 .spectrace/trace.py index --status` and show what it can and
++   cannot analyse (languages without an adapter are file-level).
+ 4. **Protocol.** Write the protocol block into `AGENTS.md` by the rule in
+    `references/upgrade.md` → "Writes". Touch nothing else in `AGENTS.md`.
+ 
+diff --git a/skills/spectrace-start/assets/agents-protocol.md b/skills/spectrace-start/assets/agents-protocol.md
+index 68332c9..77f5e4b 100644
+--- a/skills/spectrace-start/assets/agents-protocol.md
++++ b/skills/spectrace-start/assets/agents-protocol.md
+@@ -7,7 +7,7 @@ trace with `python3` (`python` on Windows).
+ When executing tasks (even across multiple specs), loop steps 1–5 for each task:
+ 1. `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
+ 2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them. Never edit files without an open task.
+-3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task, following `planning/architecture.md`. Before editing code you did not write, run `python3 .spectrace/trace.py why <path[::symbol]>` to see the decisions behind it.
++3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task, following `planning/architecture.md`. To find code, `python3 .spectrace/trace.py locate "<words>"`; before editing code you did not write, `python3 .spectrace/trace.py why <path[::symbol]>` shows the decisions behind it.
+ 4. Verify it against the task text and the R items it covers. Run the narrowest test command from `AGENTS.md` "Testing" for the files the task changed; run the full suite only if the task touched a shared module (config, core, public interfaces), or at session end.
+ 5. `python3 .spectrace/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`. Always close the open task before moving to the next task or next spec.
+ 6. Before saying you're finished with the session: `python3 .spectrace/trace.py check` must exit 0 (run once at the end of the session, not after every individual task).
+diff --git a/skills/spectrace-start/references/question-bank.md b/skills/spectrace-start/references/question-bank.md
+index 25393f8..0b80599 100644
+--- a/skills/spectrace-start/references/question-bank.md
++++ b/skills/spectrace-start/references/question-bank.md
+@@ -26,6 +26,7 @@ web-verified standards, shown in full for yes / changes / defer.
+ | `done-when` | "How will you know the whole thing is finished? What's observably true then?" |
+ | `constraints-hard` | "Any hard constraints — deadline, budget, a platform or vendor you must use, a rule you can't break?" |
+ | `stakeholders` | "Does anyone else need to review or approve work as it goes?" |
++| `codebase` | Only when the folder already has code (look first: `git ls-files`). "There's existing code here — is it the project we're planning, or something separate?" · "Which languages matter most?" — Python and Markdown are read by symbol, others at file level; say so. |
+ | `automatability` | "Which parts of this do you expect an agent to do unattended, and which do you want to keep in your own hands?" — drives each task's `agent`/`human` owner. |
+ 
+ ## Phase B — Technologies, architecture & tools

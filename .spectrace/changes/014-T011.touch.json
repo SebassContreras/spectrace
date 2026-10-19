@@ -1,0 +1,121 @@
+{
+ "files": {
+  "skills/spectrace-change/SKILL.md": {
+   "lang": "markdown",
+   "lines": [
+    3,
+    2
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "1459dcd3da52f40f",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      3,
+      2
+     ],
+     "name": "spectrace-change > Phase 3 — Manifest"
+    }
+   ]
+  },
+  "skills/spectrace-plan/SKILL.md": {
+   "lang": "markdown",
+   "lines": [
+    3,
+    1
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "d551b3897f3c8d55",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      3,
+      1
+     ],
+     "name": "spectrace-plan > Phase 1 — Design (skip if the spec already has D items)"
+    }
+   ]
+  },
+  "skills/spectrace-start/SKILL.md": {
+   "lang": "markdown",
+   "lines": [
+    4,
+    2
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "5f12161d89d9ee05",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "spectrace-start > Phase 2 — Type & vision (question bank, Phase A)"
+    },
+    {
+     "body": "380383548da59f15",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      3,
+      1
+     ],
+     "name": "spectrace-start > Phase 3 — Scaffold"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/agents-protocol.md": {
+   "lang": "markdown",
+   "lines": [
+    1,
+    1
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "f610c301b5b24d43",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "Working on tasks"
+    }
+   ]
+  },
+  "skills/spectrace-start/references/question-bank.md": {
+   "lang": "markdown",
+   "lines": [
+    1,
+    0
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "98d747aa523eb3cb",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "Interview question bank > Phase A — Type & vision (all project types)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

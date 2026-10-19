@@ -43,7 +43,9 @@ each answer:
 
 1. **Approach** — "How should this get built, in plain terms?"
 2. **Deliverables** — "What does this create or change?" (files/modules; assets/pages;
-   runbook steps; datasets/analyses).
+   runbook steps; datasets/analyses). When the repo already has code, first run
+   `python3 .spectrace/trace.py locate "<the requirement's key words>"` for each R item
+   and propose the existing files and symbols it names, so the design extends them.
 3. **Sequencing** — "Does anything here have to happen in a specific order, or need
    something from another spec the roadmap doesn't record?"
 4. **Decisions settled** — "Does this settle any stack, tooling or convention question

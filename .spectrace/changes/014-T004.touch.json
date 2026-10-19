@@ -1,0 +1,167 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/commands.py": {
+   "lang": "python",
+   "lines": [
+    1,
+    1
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "735340c9dd5aef6d",
+     "change": "modified",
+     "kind": "variable",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "COMMANDS"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/index.py": {
+   "lang": "python",
+   "lines": [
+    7,
+    3
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "3ab9cb896b8441b2",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      5,
+      1
+     ],
+     "name": "connect",
+     "sig": "(root, rebuild=False, memory=False)"
+    },
+    {
+     "body": "8ea449bee8f84c01",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      2,
+      2
+     ],
+     "name": "refresh",
+     "sig": "(root, rebuild=False, memory=False)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/index_view.py": {
+   "lang": "python",
+   "lines": [
+    2,
+    2
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "1530b50e9cff9073",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      2,
+      2
+     ],
+     "name": "graph",
+     "sig": "(repo, rebuild=False, memory=False)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/packet.py": {
+   "lang": "python",
+   "lines": [
+    33,
+    4
+   ],
+   "other": {
+    "imports": [
+     3,
+     2
+    ],
+    "module": [
+     4,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "b37b6051d5e71db6",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "CHANGE_RE"
+    },
+    {
+     "body": "b4afef05b13eb2f9",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "added_tasks",
+     "sig": "(repo, base, current)"
+    },
+    {
+     "body": "471c6a44daf47c60",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "cmd_packet",
+     "sig": "(repo, args)"
+    },
+    {
+     "body": "72adf9075f999cf5",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      11,
+      0
+     ],
+     "name": "diff_packet",
+     "sig": "(repo, args)"
+    },
+    {
+     "body": "d06a19c20f975bdb",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      4,
+      1
+     ],
+     "name": "emit",
+     "sig": "(p, as_json)"
+    },
+    {
+     "body": "91ecd1125a8886ea",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      2,
+      1
+     ],
+     "name": "render",
+     "sig": "(p)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

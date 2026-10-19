@@ -1,0 +1,125 @@
+"""Golden queries for `trace locate`, over this repo and a fixture project.
+
+Run: python -m unittest discover -s tests
+Compare with ripgrep: python tests/test_locate.py --compare
+"""
+import contextlib
+import io
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.abspath(os.path.join(HERE, ".."))
+sys.path.insert(0, os.environ.get("SPECTRACE_ASSETS") or os.path.join(REPO, "skills", "spectrace-start", "assets"))
+from spectrace.cli import main  # noqa: E402
+
+PKG = "skills/spectrace-start/assets/spectrace/"
+GIT_ENV = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+TOP = 5
+
+# (query, a string the label of one of the top results must contain)
+REPO_QUERIES = [
+    ("record fingerprints", PKG + "model.py::Repo.record_fingerprints"),
+    ("ensure ignores in gitignore", PKG + "state.py::ensure_ignores"),
+    ("parse patch hunks", PKG + "patches.py::parse_patch"),
+    ("snapshot of the working tree", PKG + "gitio.py::snapshot"),
+    ("decision conflict when blocking", "016/R1@1"),
+    ("keep a leftover with a reason", PKG + "leftover.py::cmd_keep"),
+    ("markdown headings as sections", PKG + "symbols/markdown.py"),
+    ("python adapter decorators", PKG + "symbols/python.py"),
+    ("accent folding and plurals", PKG + "tokens.py"),
+    ("resolution rate", PKG + "linker.py::Graph.resolution_rate"),
+    ("anchored patch lines", PKG + "records.py::anchored"),
+    ("severity signals of a packet", PKG + "views/packet.py::signals"),
+    ("mentions of deleted files", PKG + "model.py::Repo.deleted_mentions"),
+    ("next task by priority", PKG + "model.py::Repo.next_task"),
+    ("write status and stage into the roadmap", PKG + "model.py::Repo.write_roadmap"),
+    ("sqlite index refresh", PKG + "index.py::refresh"),
+]
+
+FIXTURE = {
+    "planning/roadmap.md": "| ID | Spec | Status | Depends on | Stage | Priority |\n|---|---|---|---|---|---|\n"
+                           "| 001 | auth | | — | | 1 |\n",
+    "planning/specs/001-auth/requirements.md": "- R1@1: La sesión expira a las 24 horas.\n",
+    "auth.py": "def hash_password(password):\n    return password[::-1]\n\n\n"
+               "def check_expiry(session, now):\n    return now - session.started > 86400\n",
+    "store.py": "class UserStore:\n    def add(self, user):\n        self.users.append(user)\n",
+    "docs.md": "# Usage\n\n## Login form\n\nType the email and the password.\n",
+}
+FIXTURE_QUERIES = [
+    ("session expiry", "auth.py::check_expiry"),
+    ("sesiones expiradas", "001/R1@1"),
+    ("store the users", "store.py::UserStore"),
+    ("password hashes", "auth.py::hash_password"),
+    ("login form", "docs.md::Usage > Login form"),
+]
+
+
+def locate(root, query):
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+        main(["-C", root, "locate", query, "--limit", str(TOP)])
+    return out.getvalue()
+
+
+def make_fixture():
+    root = tempfile.mkdtemp(prefix="spectrace-locate-")
+    for rel, text in FIXTURE.items():
+        path = os.path.join(root, *rel.split("/"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True, env=GIT_ENV)
+    return root
+
+
+class LocateTest(unittest.TestCase):
+    def test_golden_queries_over_this_repo_rank_the_expected_code_in_the_top_five(self):
+        for query, expected in REPO_QUERIES:
+            with self.subTest(query=query):
+                self.assertIn(expected, locate(REPO, query))
+
+    def test_golden_queries_over_a_fixture_rank_the_expected_code_in_the_top_five(self):
+        root = make_fixture()
+        self.addCleanup(shutil.rmtree, root, True)
+        for query, expected in FIXTURE_QUERIES:
+            with self.subTest(query=query):
+                self.assertIn(expected, locate(root, query))
+
+    def test_each_result_says_which_words_matched(self):
+        root = make_fixture()
+        self.addCleanup(shutil.rmtree, root, True)
+        self.assertIn("matched name(expiry), body(session)", locate(root, "session expiry"))
+
+
+def compare():
+    """Print, per query, locate's rank of the expected code and how many files `rg` would list."""
+    root = make_fixture()
+    try:
+        hits = 0
+        print("| query | locate rank | rg files (any word) | rg has the file |")
+        print("|---|---|---|---|")
+        for base, queries in ((REPO, REPO_QUERIES), (root, FIXTURE_QUERIES)):
+            for query, expected in queries:
+                lines = [l for l in locate(base, query).splitlines() if l[:1].isdigit()]
+                rank = next((n for n, l in enumerate(lines, 1) if expected in l), None)
+                hits += rank is not None
+                words = [w for w in query.split() if len(w) > 3]
+                rg = subprocess.run(["rg", "-i", "-l", *sum((["-e", w] for w in words), [])], cwd=base,
+                                    capture_output=True, text=True).stdout.split()
+                path = expected.split("::")[0]
+                print(f"| {query} | {rank or '-'} | {len(rg)} | {'yes' if any(f.replace(os.sep, '/') == path for f in rg) else 'no'} |")
+        print(f"\nlocate: {hits}/{len(REPO_QUERIES) + len(FIXTURE_QUERIES)} in the top {TOP}")
+    finally:
+        shutil.rmtree(root, True)
+
+
+if __name__ == "__main__":
+    if "--compare" in sys.argv:
+        compare()
+    else:
+        unittest.main()

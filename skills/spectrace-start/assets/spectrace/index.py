@@ -19,22 +19,29 @@ CREATE TABLE IF NOT EXISTS files (path TEXT PRIMARY KEY, hash TEXT, size INTEGER
 CREATE TABLE IF NOT EXISTS symbols (path TEXT, name TEXT, kind TEXT, start INTEGER, end INTEGER);
 CREATE TABLE IF NOT EXISTS imports (path TEXT, bound TEXT, module TEXT, name TEXT, line INTEGER);
 CREATE TABLE IF NOT EXISTS refs (path TEXT, symbol TEXT, kind TEXT, name TEXT, base TEXT, line INTEGER);
+CREATE TABLE IF NOT EXISTS tokens (path TEXT, symbol TEXT, token TEXT, count INTEGER);
 CREATE INDEX IF NOT EXISTS symbols_path ON symbols (path);
 CREATE INDEX IF NOT EXISTS imports_path ON imports (path);
 CREATE INDEX IF NOT EXISTS refs_path ON refs (path);
+CREATE INDEX IF NOT EXISTS tokens_token ON tokens (token);
+CREATE INDEX IF NOT EXISTS tokens_path ON tokens (path);
 """
 TEST_RE = re.compile(r"(^|/)tests?/|(^|/)test_[^/]*\.py$|_test\.py$")
 LIMIT = 1_000_000  # bytes: a larger file is listed, not extracted
 
 
-FACTS_VERSION = 2  # bump when facts.py extracts differently: the cache is rebuilt
+FACTS_VERSION = 3  # bump when facts.py extracts differently: the cache is rebuilt
 
 
-def connect(root, rebuild=False):
+def connect(root, rebuild=False, memory=False):
     try:
         import sqlite3
     except ImportError:
         raise TraceError("this Python has no sqlite3 module: the code index needs it")
+    if memory:  # a clean CI checkout: nothing is written to disk
+        db = sqlite3.connect(":memory:")
+        db.executescript(SCHEMA)
+        return db
     path = os.path.join(root, *DB.split("/"))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if rebuild and os.path.exists(path):
@@ -59,9 +66,9 @@ def listed(root):
     return sorted(p for p in out if p and not p.startswith((".spectrace/", "planning/")))
 
 
-def refresh(root, rebuild=False):
+def refresh(root, rebuild=False, memory=False):
     """Bring the index up to date with the working tree and return the open connection."""
-    db = connect(root, rebuild)
+    db = connect(root, rebuild, memory)
     known = {r[0]: r[1:] for r in db.execute("SELECT path, hash, size, mtime FROM files")}
     present = listed(root)
     for path in set(known) - set(present):
@@ -83,17 +90,19 @@ def refresh(root, rebuild=False):
             continue
         forget(db, path)
         text = None if st.st_size > LIMIT or b"\0" in data[:1024] else data.decode("utf-8", errors="replace")
-        syms, imps, refs, status = extract(path, text) if text is not None else ([], [], [], "too large or binary")
+        syms, imps, refs, toks, status = extract(path, text) if text is not None else \
+            ([], [], [], [], "too large or binary")
         lang = language(path)
         db.execute("INSERT INTO files VALUES (?, ?, ?, ?, ?, ?, ?)",
                    (path, digest, st.st_size, st.st_mtime, lang, int(is_test(path)), status))
         db.executemany("INSERT INTO symbols VALUES (?, ?, ?, ?, ?)", [(path, *s) for s in syms])
         db.executemany("INSERT INTO imports VALUES (?, ?, ?, ?, ?)", [(path, *i) for i in imps])
         db.executemany("INSERT INTO refs VALUES (?, ?, ?, ?, ?, ?)", [(path, *r) for r in refs])
+        db.executemany("INSERT INTO tokens VALUES (?, ?, ?, ?)", [(path, *t) for t in toks])
     db.commit()
     return db
 
 
 def forget(db, path):
-    for table in ("files", "symbols", "imports", "refs"):
+    for table in ("files", "symbols", "imports", "refs", "tokens"):
         db.execute(f"DELETE FROM {table} WHERE path = ?", (path,))

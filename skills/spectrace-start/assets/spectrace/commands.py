@@ -10,6 +10,8 @@ from .leftover import cmd_keep
 from .mentions import removed_mentions, removed_terms
 from .views.impact import cmd_impact
 from .views.index_view import cmd_index, graph
+from .views.locate import cmd_locate
+from .views.packet import cmd_packet
 from .views.why import cmd_why
 
 PATCH_LIMIT = 200_000
@@ -196,7 +198,7 @@ def cmd_review(repo, args):
     return 0
 
 
-# name: (handler, help, arguments) — "--x" is a switch, "--x=" takes a value, anything else positional.
+# name: (handler, help, arguments) — "--x" is a switch, "--x=" takes a value, "x?" is optional, else positional.
 COMMANDS = {
     "status": (cmd_status, "spec status, stage and next task (--write: into roadmap.md)", ("--write", "--json")),
     "start": (cmd_start, "open a task and snapshot the working tree", ("task", "--adopt", "--ignore")),
@@ -211,5 +213,8 @@ COMMANDS = {
     "keep": (cmd_keep, "accept a retired task's symbol that stays, with a written reason", ("address", "reason")),
     "index": (cmd_index, "build the code index (--status: what it holds, --rebuild, --dump: JSON)",
               ("--status", "--rebuild", "--dump")),
+    "locate": (cmd_locate, "rank the decisions, tasks, files and symbols matching some words", ("text", "--limit=")),
+    "packet": (cmd_packet, "a review packet for a task (--diff [--base ref]: for a diff), Markdown or --json",
+               ("task?", "--json", "--diff", "--base=")),
     "why": (cmd_why, "the tasks and decisions behind a piece of code: path or path::symbol", ("address",)),
 }

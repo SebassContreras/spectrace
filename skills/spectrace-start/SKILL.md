@@ -73,7 +73,7 @@ language (quote the opening request back and ask them to expand). Record it verb
 then structure it — problem, users, main flow, data, integrations — without inventing
 choices. Settle `project-type` (for software, the concrete form). Draft `goal` from the
 narrative and show it for yes / changes. Then the remaining Phase A dimensions, grounded
-in the narrative. Close with the sweep.
+in the narrative — `codebase` included when the folder already has code. Close with the sweep.
 
 ## Phase 3 — Scaffold
 
@@ -85,7 +85,9 @@ in the narrative. Close with the sweep.
 3. **Trace.** Copy `assets/trace.py`, the whole `assets/spectrace/` folder (without
    `__pycache__`) and `assets/format.md` (paths relative to this skill's folder) into
    `.spectrace/` — the script and its package are one unit. If they already exist, follow
-   `references/upgrade.md` instead (it asks before replacing).
+   `references/upgrade.md` instead (it asks before replacing). When `codebase` says code
+   exists, run `python3 .spectrace/trace.py index --status` and show what it can and
+   cannot analyse (languages without an adapter are file-level).
 4. **Protocol.** Write the protocol block into `AGENTS.md` by the rule in
    `references/upgrade.md` → "Writes". Touch nothing else in `AGENTS.md`.
 

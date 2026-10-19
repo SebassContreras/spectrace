@@ -1,0 +1,66 @@
+{
+ "files": {
+  "tests/test_skills.py": {
+   "lang": "python",
+   "lines": [
+    17,
+    0
+   ],
+   "other": {
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "ad83ba40ad7f3d85",
+     "change": "added",
+     "kind": "class",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "ReadmeTest",
+     "sig": "(unittest.TestCase)"
+    },
+    {
+     "body": "62d975c1ec69e022",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "ReadmeTest.setUp",
+     "sig": "(self)"
+    },
+    {
+     "body": "be75b19ff39c027b",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "ReadmeTest.test_every_skill_is_listed",
+     "sig": "(self)"
+    },
+    {
+     "body": "cf2724fb80547807",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "ReadmeTest.test_the_ci_recipe_names_the_gate_and_the_packet",
+     "sig": "(self)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

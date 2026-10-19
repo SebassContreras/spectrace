@@ -1,8 +1,10 @@
 """Per-file Python facts for the index: definitions, imports, and the names each symbol uses."""
 import ast
 import builtins
+from collections import Counter
 
 from .symbols import language, symbols as spans_of
+from .tokens import tokens
 
 BUILTINS = set(dir(builtins))
 
@@ -87,18 +89,28 @@ def imports(tree):
     return out
 
 
+def symbol_tokens(spans, text):
+    """(symbol, token, count) for the words of each symbol's own lines: names, strings, comments."""
+    lines, out = text.splitlines(), []
+    for s in spans:
+        counts = Counter(tokens("\n".join(lines[s.start - 1:s.end])) + tokens(s.name))
+        out += [(s.name, t, n) for t, n in sorted(counts.items())]
+    return out
+
+
 def extract(path, text):
-    """(symbols, imports, refs, status) of one file. Only Python is read for relations."""
+    """(symbols, imports, refs, tokens, status) of one file. Only Python is read for relations."""
     if not path.endswith(".py"):
         if language(path) == "file":
-            return [], [], [], "no adapter"
-        return [(s.name, s.kind, s.start, s.end) for s in spans_of(path, text)], [], [], "symbols only"
+            return [], [], [], [], "no adapter"
+        spans = spans_of(path, text)
+        return [(s.name, s.kind, s.start, s.end) for s in spans], [], [], symbol_tokens(spans, text), "symbols only"
     try:
         tree = ast.parse(text)
-        spans = spans_of(path, text)
+        spans = [s for s in spans_of(path, text) if s.kind != "import"]
     except (SyntaxError, ValueError) as e:
-        return [], [], [], f"does not parse: {type(e).__name__}"
+        return [], [], [], [], f"does not parse: {type(e).__name__}"
     walker = Refs()
     walker.visit(tree)
-    defs = [(s.name, s.kind, s.start, s.end) for s in spans if s.kind != "import"]
-    return defs, imports(tree), walker.out, "ok"
+    defs = [(s.name, s.kind, s.start, s.end) for s in spans]
+    return defs, imports(tree), walker.out, symbol_tokens(spans, text), "ok"

@@ -107,6 +107,9 @@ def file_record(root, a, b, block, file_level, skipped):
                  "body": (post if live else pre).hash(span)}
         if span.sig is not None:
             entry["sig"] = span.sig
+        old = pre.by_name.get(renamed.get(name, name)) if live else None
+        if old is not None and change in ("modified", "renamed") and old.sig != span.sig:
+            entry["sig_from"] = old.sig
         if name in renamed:
             entry["from"] = renamed[name]
         rec["symbols"].append(entry)

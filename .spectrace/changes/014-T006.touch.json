@@ -1,0 +1,183 @@
+{
+ "files": {
+  "tests/test_locate.py": {
+   "lang": "python",
+   "lines": [
+    125,
+    0
+   ],
+   "other": {
+    "imports": [
+     9,
+     0
+    ],
+    "module": [
+     26,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "10739860cb620c06",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      9,
+      0
+     ],
+     "name": "FIXTURE"
+    },
+    {
+     "body": "ca233b0b32693734",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      7,
+      0
+     ],
+     "name": "FIXTURE_QUERIES"
+    },
+    {
+     "body": "3edc55b47bbbb85c",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "GIT_ENV"
+    },
+    {
+     "body": "23b6448daffea694",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "HERE"
+    },
+    {
+     "body": "e186b932eb4cf635",
+     "change": "added",
+     "kind": "class",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "LocateTest",
+     "sig": "(unittest.TestCase)"
+    },
+    {
+     "body": "c1d6f86e39381a68",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "LocateTest.test_each_result_says_which_words_matched",
+     "sig": "(self)"
+    },
+    {
+     "body": "606f6fe036fbe912",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      6,
+      0
+     ],
+     "name": "LocateTest.test_golden_queries_over_a_fixture_rank_the_expected_code_in_the_top_five",
+     "sig": "(self)"
+    },
+    {
+     "body": "951c3434d6c270fe",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "LocateTest.test_golden_queries_over_this_repo_rank_the_expected_code_in_the_top_five",
+     "sig": "(self)"
+    },
+    {
+     "body": "81266959e88ea71e",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "PKG"
+    },
+    {
+     "body": "9855cc66fa4e3c83",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "REPO"
+    },
+    {
+     "body": "36201c749a4881d7",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      18,
+      0
+     ],
+     "name": "REPO_QUERIES"
+    },
+    {
+     "body": "e5d780cfde030aac",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "TOP"
+    },
+    {
+     "body": "9fa5e86c975a0a98",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      20,
+      0
+     ],
+     "name": "compare",
+     "sig": "()"
+    },
+    {
+     "body": "fdc516b245c7d42b",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "locate",
+     "sig": "(root, query)"
+    },
+    {
+     "body": "41183d0dc088dafb",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      9,
+      0
+     ],
+     "name": "make_fixture",
+     "sig": "()"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

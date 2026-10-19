@@ -26,6 +26,7 @@ web-verified standards, shown in full for yes / changes / defer.
 | `done-when` | "How will you know the whole thing is finished? What's observably true then?" |
 | `constraints-hard` | "Any hard constraints — deadline, budget, a platform or vendor you must use, a rule you can't break?" |
 | `stakeholders` | "Does anyone else need to review or approve work as it goes?" |
+| `codebase` | Only when the folder already has code (look first: `git ls-files`). "There's existing code here — is it the project we're planning, or something separate?" · "Which languages matter most?" — Python and Markdown are read by symbol, others at file level; say so. |
 | `automatability` | "Which parts of this do you expect an agent to do unattended, and which do you want to keep in your own hands?" — drives each task's `agent`/`human` owner. |
 
 ## Phase B — Technologies, architecture & tools

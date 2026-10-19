@@ -78,11 +78,12 @@ Why: <the user's reason>
 
 ## Phase 3 — Manifest
 
-Run `trace impact NNN/<item>` (or `A<n>`) for every revised or retired item, and show
+Run `trace impact NNN/<item> --deep` (or `A<n>`) for every revised or retired item, and show
 the combined result as the **retirement manifest**: each task that covered the old
 item, its status, whether it is a test, and per file how many of the lines it added
 are still in the code (`file deleted` when gone), and the symbols it introduced with
-`unchanged`, `changed` or `gone` (`anchored` when the task predates records). A
+`unchanged`, `changed` or `gone` (`anchored` when the task predates records), with what
+depends on each and the tests that reference it (`exact` or `inferred`). A
 finished task with no patch recorded is listed as "search by hand" — grep for what its
 text describes and show what you find before relying on it.
 

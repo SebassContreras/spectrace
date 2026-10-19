@@ -17,6 +17,8 @@ def parser():
         for a in arguments:
             if a.endswith("="):  # "--x=" takes a value
                 s.add_argument(a[:-1])
+            elif a.endswith("?"):  # "x?" is an optional positional
+                s.add_argument(a[:-1], nargs="?")
             elif a.startswith("--"):
                 s.add_argument(a, action="store_true")
             else:

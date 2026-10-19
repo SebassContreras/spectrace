@@ -1,0 +1,105 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/commands.py": {
+   "lang": "python",
+   "lines": [
+    2,
+    0
+   ],
+   "other": {
+    "imports": [
+     1,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "65260934108ef55c",
+     "change": "modified",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "COMMANDS"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/locate.py": {
+   "lang": "python",
+   "lines": [
+    65,
+    0
+   ],
+   "other": {
+    "imports": [
+     3,
+     0
+    ],
+    "module": [
+     9,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "6719a275cf9cb7f1",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "EXPAND"
+    },
+    {
+     "body": "32a8c5cf9fae1189",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "WEIGHTS"
+    },
+    {
+     "body": "8ac4e31facae7b90",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      28,
+      0
+     ],
+     "name": "candidates",
+     "sig": "(repo, words)"
+    },
+    {
+     "body": "59def33633a504b9",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      21,
+      0
+     ],
+     "name": "cmd_locate",
+     "sig": "(repo, args)"
+    },
+    {
+     "body": "02079f0b04f18485",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "score",
+     "sig": "(found)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

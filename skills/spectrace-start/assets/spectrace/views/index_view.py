@@ -6,11 +6,11 @@ from ..linker import Graph
 from ..patches import follow, load_patches
 
 
-def graph(repo, rebuild=False):
+def graph(repo, rebuild=False, memory=False):
     """The linked graph over a freshly refreshed index: what every index-reading command uses.
 
     A file is a test by path or name, or because a `kind: test` task recorded it."""
-    db = index.refresh(repo.root, rebuild)
+    db = index.refresh(repo.root, rebuild, memory)
     g = Graph(db)
     recs = repo.records
     g.mark_tests(p for s in repo.specs.values() for t in s.tasks if t.kind == "test" and t.ref in recs

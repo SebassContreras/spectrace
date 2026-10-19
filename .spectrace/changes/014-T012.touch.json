@@ -1,0 +1,42 @@
+{
+ "files": {
+  ".github/workflows/ci.yml": {
+   "lang": "file",
+   "lines": [
+    10,
+    1
+   ],
+   "other": {
+    "file": [
+     10,
+     1
+    ]
+   },
+   "status": "modified",
+   "symbols": []
+  },
+  "README.md": {
+   "lang": "markdown",
+   "lines": [
+    1,
+    1
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "ce5c915df7a36c84",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "spectrace > CI recipe"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

@@ -1,0 +1,112 @@
+diff --git a/skills/spectrace-start/assets/spectrace/records.py b/skills/spectrace-start/assets/spectrace/records.py
+index c53ea94..fe8421e 100644
+--- a/skills/spectrace-start/assets/spectrace/records.py
++++ b/skills/spectrace-start/assets/spectrace/records.py
+@@ -107,6 +107,9 @@ def file_record(root, a, b, block, file_level, skipped):
+                  "body": (post if live else pre).hash(span)}
+         if span.sig is not None:
+             entry["sig"] = span.sig
++        old = pre.by_name.get(renamed.get(name, name)) if live else None
++        if old is not None and change in ("modified", "renamed") and old.sig != span.sig:
++            entry["sig_from"] = old.sig
+         if name in renamed:
+             entry["from"] = renamed[name]
+         rec["symbols"].append(entry)
+diff --git a/skills/spectrace-start/assets/spectrace/views/packet.py b/skills/spectrace-start/assets/spectrace/views/packet.py
+index 031b717..3749ec8 100644
+--- a/skills/spectrace-start/assets/spectrace/views/packet.py
++++ b/skills/spectrace-start/assets/spectrace/views/packet.py
+@@ -11,18 +11,42 @@ CHANGE_RE = re.compile(r"changes/(\d{3})-T(\d{3})\.(?:patch|touch\.json)$")
+ 
+ 
+ def symbols_of(rec):
++    keep = ("from", "sig", "sig_from")
+     return [{"path": p, "name": s["name"], "kind": s["kind"], "change": s["change"],
+-             **({"from": s["from"]} if s.get("from") else {})}
++             **{k: s[k] for k in keep if s.get(k) is not None}}
+             for p, f in sorted(rec.get("files", {}).items()) for s in f["symbols"]]
+ 
+ 
++def signals(p, ref_counts):
++    """Facts a reviewer weighs, never a score: in a fixed order."""
++    out = []
++    for s in p["symbols"]:
++        key = f"{s['path']}::{s['name']}"
++        if "sig_from" in s:
++            out.append(f"signature changed: {key} {s['sig_from']} → {s['sig']}")
++        if s["change"] == "removed" and ref_counts.get(s["name"].rsplit(".", 1)[-1]):
++            out.append(f"removed but still referenced: {key} — {ref_counts[s['name'].rsplit('.', 1)[-1]]} "
++                       "reference(s) by that name (inferred)")
++    for key, rows in sorted(p["dependents"].items()):
++        if rows:
++            out.append(f"{len(rows)} dependent(s): {key}")
++    for key, tests in sorted(p["tests"].items()):
++        if not tests:
++            out.append(f"no test references: {key}")
++    if p["partial"]:
++        out.append("partial record: some files were read at file level")
++    if p["not_analysed"]:
++        out.append(f"{sum(len(v) for v in p['not_analysed'].values())} file(s) not analysed")
++    return out
++
++
+ def dependents(g, path, name):
+     rows = sorted({(e.src_path, e.src_symbol or "", e.confidence, e.candidates) for _, e in walk(g, path, name, "in", 1)})
+     return [{"path": p, "symbol": s, "confidence": c, **({"candidates": n} if c == "inferred" else {})}
+             for p, s, c, n in rows]
+ 
+ 
+-def assemble(repo, g, tasks, rec):
++def assemble(repo, g, db, tasks, rec):
+     """The packet for some tasks and the record of their changes."""
+     decisions = sorted({label for t in tasks for label in repo.covers_label(t)})
+     syms = symbols_of(rec)
+@@ -37,9 +61,11 @@ def assemble(repo, g, tasks, rec):
+     skipped = {k: v for k, v in not_analysed(g).items()}
+     if rec.get("skipped"):
+         skipped["skipped by the record"] = sorted(s["path"] for s in rec["skipped"])
+-    return {"tasks": sorted(t.ref for t in tasks), "decisions": decisions, "symbols": syms,
+-            "dependents": deps, "tests": tests, "incidents": incidents,
+-            "partial": bool(rec.get("partial")), "not_analysed": skipped}
++    p = {"tasks": sorted(t.ref for t in tasks), "decisions": decisions, "symbols": syms,
++         "dependents": deps, "tests": tests, "incidents": incidents,
++         "partial": bool(rec.get("partial")), "not_analysed": skipped}
++    p["signals"] = signals(p, dict(db.execute("SELECT name, count(*) FROM refs GROUP BY name")))
++    return p
+ 
+ 
+ def render(p):
+@@ -59,8 +85,7 @@ def render(p):
+     out += ["", "## Tests"]
+     out += [f"- {key}: {', '.join(t) if t else 'none found'}" for key, t in sorted(p["tests"].items())] or ["- none"]
+     out += ["", "## Incidents"] + ([f"- {i}" for i in p["incidents"]] or ["- none"])
+-    if "signals" in p:
+-        out += ["", "## Severity signals"] + ([f"- {s}" for s in p["signals"]] or ["- none"])
++    out += ["", "## Severity signals"] + ([f"- {s}" for s in p["signals"]] or ["- none"])
+     out += ["", "## Not analysed"]
+     out += [f"- {reason}: {len(paths)} — {', '.join(paths[:5])}" + (f" +{len(paths) - 5} more" if len(paths) > 5 else "")
+             for reason, paths in sorted(p["not_analysed"].items())] or ["- nothing"]
+@@ -90,8 +115,10 @@ def diff_packet(repo, args):
+         raise TraceError(f"no git ref {args.base!r}; on CI, check out with full history (fetch-depth: 0)")
+     current = snapshot(repo.root)
+     g, db = graph(repo, memory=True)
+-    db.close()
+-    return assemble(repo, g, added_tasks(repo, base, current), records.record(repo.root, base, current))
++    try:
++        return assemble(repo, g, db, added_tasks(repo, base, current), records.record(repo.root, base, current))
++    finally:
++        db.close()
+ 
+ 
+ def cmd_packet(repo, args):
+@@ -106,6 +133,8 @@ def cmd_packet(repo, args):
+     if task.ref not in repo.records:
+         raise TraceError(f"{task.ref} has no change record (finished before records, or not done yet)")
+     g, db = graph(repo)
+-    db.close()
+-    emit(assemble(repo, g, [task], repo.records[task.ref]), args.json)
++    try:
++        emit(assemble(repo, g, db, [task], repo.records[task.ref]), args.json)
++    finally:
++        db.close()
+     return 0
