@@ -9,7 +9,7 @@ import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from spectrace.cli import main  # noqa: E402,F401
-from spectrace.model import ITEM_RE, RETIRED_RE, TASK_RE, FIELD_RE  # noqa: E402,F401
+from spectrace.model import ITEM_RE, RETIRED_RE, TASK_RE, FIELD_RE, BLOCKED_RE  # noqa: E402,F401
 
 if __name__ == "__main__":
     sys.exit(main())

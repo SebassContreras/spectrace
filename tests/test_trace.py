@@ -209,6 +209,20 @@ class TraceTest(unittest.TestCase):
         self.task("001/T003", {"src/c.txt": "cccc\n"})
         self.assertEqual(self.status()["specs"][0]["status"], "done")
 
+    def test_a_decision_conflict_holds_the_spec_until_the_task_resumes(self):
+        code, _ = run(self.root, "block", "001/T001", "conflicts 001/D1: two stores are needed")
+        self.assertEqual(code, 0)
+        code, out = self.check("--strict")
+        self.assertEqual(code, 1)
+        self.assertIn("001/T001  decision conflict: 001/D1 — two stores are needed; keep it, edit it or retire it", out)
+        self.assertEqual(run(self.root, "start", "001/T001")[0], 0)
+        self.assertNotIn("decision conflict", self.check()[1])
+
+    def test_a_conflict_naming_no_item_is_refused_and_writes_nothing(self):
+        before = self.read("planning/specs/001-auth/tasks.md")
+        self.assertEqual(run(self.root, "block", "001/T001", "conflicts 001/D9: not an item")[0], 1)
+        self.assertEqual(self.read("planning/specs/001-auth/tasks.md"), before)
+
     # --- trace ---
 
     def test_revision_bump_makes_done_task_suspect(self):
@@ -362,6 +376,33 @@ class TraceTest(unittest.TestCase):
         self.assertIn("suspect: covers D1@1, now @2", out)
         self.assertNotIn("changed under finished work", out)
 
+    def test_an_architecture_item_changes_only_with_a_bump_and_an_entry(self):
+        self.replace("planning/architecture.md", "- A1@1: Python 3.9+.", "- A1@1: Python 3.11+.")
+        self.assertIn("text of A1@1 changed without a revision bump", self.check()[1])
+        self.replace("planning/architecture.md", "- A1@1: Python 3.11+.", "- A1@2: Python 3.11+.")
+        code, out = self.check("--strict")
+        self.assertEqual(code, 1)
+        self.assertIn("A1@2 bumped from @1 with no changes.md entry naming A1@2", out)
+        self.write("planning/changes.md", "# Changes\n\n## 2026-10-19 — newer Python\nWhy: x\n- MODIFIED A1@1 → A1@2\n")
+        self.assertEqual(self.check("--strict")[0], 0)
+
+    def test_a_built_item_neither_disappears_nor_retires_without_an_entry(self):
+        self.task("001/T001", {"src/a.txt": "aaaa\n"})
+        line = "- D1@1 (implements R1): Sessions live in localStorage.\n"
+        self.replace("planning/specs/001-auth/design.md", line, "")
+        self.assertIn("001/D1 disappeared without being retired", self.check()[1])
+        self.write("planning/specs/001-auth/design.md", DESIGN.replace(
+            line, "- ~~D1@1 (implements R1): Sessions live in localStorage.~~ retired 2026-10-19\n"))
+        self.assertIn("001/D1@1 retired with no changes.md entry", self.check()[1])
+        self.write("planning/specs/001-auth/changes.md", "# Changes\n\n## 2026-10-19 — no store\nWhy: x\n- REMOVED D1@1\n")
+        self.assertNotIn("changes.md entry", self.check()[1])
+
+    def test_a_repo_with_items_is_adopted_without_findings(self):
+        os.remove(os.path.join(self.root, ".spectrace", "fingerprints.json"))
+        self.replace("planning/architecture.md", "- A1@1: Python 3.9+.", "- A1@2: Python 3.11+.")
+        run(self.root, "status", "--write")
+        self.assertEqual(self.check("--strict")[0], 0)
+
     def test_restore_brings_back_what_a_task_removed(self):
         self.task("001/T001", {"src/store.txt": "localStorage.setItem(session)\n"})
         self.write("planning/specs/001-auth/tasks.md", self.read("planning/specs/001-auth/tasks.md") +
@@ -424,6 +465,8 @@ class FormatDocTest(unittest.TestCase):
                 self.assertTrue(trace.TASK_RE.match(line), line)
             elif "└─" not in line:
                 self.assertTrue(trace.FIELD_RE.match(line), line)
+        conflict = next(line for line in tasks.splitlines() if "conflicts" in line)
+        self.assertEqual(trace.BLOCKED_RE.match(conflict).group("ref"), "001/D3")
 
 
 if __name__ == "__main__":

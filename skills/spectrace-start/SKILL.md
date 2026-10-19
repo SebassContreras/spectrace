@@ -79,7 +79,8 @@ in the narrative. Close with the sweep.
 
 1. **git.** No repository here → ask, then `git init`. The trace needs git.
 2. **Files** (only if missing), from `references/templates.md`: `AGENTS.md`,
-   `planning/product.md` (filled from `goal`, `audience`, `mvp`), `planning/architecture.md`
+   `planning/product.md` ("What this is" from `goal`, "Who uses it" from `audience`,
+   "Current MVP scope" and "Not for now" from the two `mvp` answers), `planning/architecture.md`
    (headers keyed to `project-type`), `planning/roadmap.md`, `planning/specs/`.
 3. **Trace.** Copy `assets/trace.py`, the whole `assets/spectrace/` folder (without
    `__pycache__`) and `assets/format.md` (paths relative to this skill's folder) into

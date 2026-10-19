@@ -136,6 +136,11 @@ def cmd_abort(repo, args):
 
 def cmd_block(repo, args):
     task = need_task(repo, args.task)
+    if args.reason.startswith("conflicts "):
+        ref, sep, why = args.reason[len("conflicts "):].partition(":")
+        if not sep or not why.strip():
+            raise TraceError('a conflict reads "conflicts <ref>: <why>", e.g. "conflicts 011/D2: needs two stores"')
+        find_item(repo, ref.strip())
     if load_state(repo.root).get("open") == task.ref:
         drop(repo.root, "base")
         save_state(repo.root, {})

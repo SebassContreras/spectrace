@@ -1,0 +1,37 @@
+diff --git a/skills/spectrace-change/SKILL.md b/skills/spectrace-change/SKILL.md
+index f05cb39..44c4c21 100644
+--- a/skills/spectrace-change/SKILL.md
++++ b/skills/spectrace-change/SKILL.md
+@@ -27,6 +27,20 @@ before the user confirms what is about to change.
+    flight leaves it half on each side.
+ 3. Run `trace check` and note existing `error`s; this skill must not add new ones.
+ 
++## Phase 0b — Start from a conflict
++
++Enter here when the user names a decision conflict or `trace check` lists one
++(`decision conflict: <ref> — <why>`, on a blocked task).
++
++1. Show the item's current text, the task and the recorded reason.
++2. Propose the simplest direct change first, then ask **keep**, **edit** or **retire**:
++   "<ref> forces <what the task would have to work around>; propose <change>. Approved?"
++3. **Keep** — write no decision. Add `└─ conflict kept YYYY-MM-DD: <how the task will fit>`
++   under the task, and tell the user the agent resumes it with `trace start`. Stop.
++4. **Edit** or **retire** — continue with Phase 1, the item preselected and the recorded
++   reason as the entry's `Why`. In Phase 4 the blocked task is re-pointed or replaced like
++   any not-started task that covers a changed item.
++
+ ## Phase 1 — What changed
+ 
+ 1. Ask what changed and why, in the user's words. If they name a spec, start there;
+@@ -121,8 +135,9 @@ for confirmation, then write it, and complete the entry's `Tasks:` line.
+ 
+ 1. Run `trace status --write`, then `trace check`. There must be no `error`. The only
+    `pending` items left must be suspect tasks whose cleanup tasks are now `todo`, and
+-   those cleanup tasks themselves ("cleanup … not done yet") — any other pending item
+-   means the change is incomplete: fix it with the user.
++   those cleanup tasks themselves ("cleanup … not done yet"), plus the decision conflicts
++   of the changed item until their tasks are resumed — any other pending item means the
++   change is incomplete: fix it with the user.
+ 2. Report: what changed, the manifest in short, the new tasks, and that the spec
+    stays open until they are done (`trace check --strict` passes then). Any agent
+    executes them through the protocol in `AGENTS.md`.

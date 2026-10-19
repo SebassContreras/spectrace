@@ -50,4 +50,10 @@ When executing tasks (even across multiple specs), loop steps 1–5 for each tas
 4. Verify it against the task text and the R items it covers. Run the narrowest test command from "Testing" above for the files the task changed; run the full suite only if the task touched a shared module (config, core, public interfaces), or at session end.
 5. `python skills/spectrace-start/assets/trace.py done NNN/TNNN` — records exactly what changed. Stuck? `block NNN/TNNN "reason"`. Always close the open task before moving to the next task or next spec.
 6. Before saying you're finished with the session: `python skills/spectrace-start/assets/trace.py check` must exit 0 (run once at the end of the session, not after every individual task).
+
+**When a decision is in the way**, do not work around it. Run
+`block NNN/TNNN "conflicts <ref>: <why>"` (for example `conflicts 002/D3: needs two stores`),
+propose the simplest direct change to that item, and let the user keep, edit or retire it
+(the `spectrace-change` skill). Scope filter: what the MVP needs goes in, by the simplest
+route; what it does not need is postponed without debate.
 <!-- /spectrace:protocol -->

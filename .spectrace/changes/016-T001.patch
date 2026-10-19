@@ -1,0 +1,16 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 2b9fa90..2e3bf14 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -136,6 +136,11 @@ def cmd_abort(repo, args):
+ 
+ def cmd_block(repo, args):
+     task = need_task(repo, args.task)
++    if args.reason.startswith("conflicts "):
++        ref, sep, why = args.reason[len("conflicts "):].partition(":")
++        if not sep or not why.strip():
++            raise TraceError('a conflict reads "conflicts <ref>: <why>", e.g. "conflicts 011/D2: needs two stores"')
++        find_item(repo, ref.strip())
+     if load_state(repo.root).get("open") == task.ref:
+         drop(repo.root, "base")
+         save_state(repo.root, {})

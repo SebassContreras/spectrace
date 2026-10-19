@@ -66,7 +66,9 @@ change nothing else without asking.
 
 ## Who uses it
 
-## Out of scope
+## Current MVP scope
+
+## Not for now
 ```
 
 ## `planning/architecture.md`

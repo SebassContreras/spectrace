@@ -1,0 +1,29 @@
+diff --git a/skills/spectrace-start/SKILL.md b/skills/spectrace-start/SKILL.md
+index 8732fda..64d52e0 100644
+--- a/skills/spectrace-start/SKILL.md
++++ b/skills/spectrace-start/SKILL.md
+@@ -79,7 +79,8 @@ in the narrative. Close with the sweep.
+ 
+ 1. **git.** No repository here → ask, then `git init`. The trace needs git.
+ 2. **Files** (only if missing), from `references/templates.md`: `AGENTS.md`,
+-   `planning/product.md` (filled from `goal`, `audience`, `mvp`), `planning/architecture.md`
++   `planning/product.md` ("What this is" from `goal`, "Who uses it" from `audience`,
++   "Current MVP scope" and "Not for now" from the two `mvp` answers), `planning/architecture.md`
+    (headers keyed to `project-type`), `planning/roadmap.md`, `planning/specs/`.
+ 3. **Trace.** Copy `assets/trace.py`, the whole `assets/spectrace/` folder (without
+    `__pycache__`) and `assets/format.md` (paths relative to this skill's folder) into
+diff --git a/skills/spectrace-start/references/templates.md b/skills/spectrace-start/references/templates.md
+index a931331..2a3530b 100644
+--- a/skills/spectrace-start/references/templates.md
++++ b/skills/spectrace-start/references/templates.md
+@@ -66,7 +66,9 @@ change nothing else without asking.
+ 
+ ## Who uses it
+ 
+-## Out of scope
++## Current MVP scope
++
++## Not for now
+ ```
+ 
+ ## `planning/architecture.md`

@@ -27,7 +27,8 @@ read it first; never restate it to the user from memory. Run the trace with `pyt
    an existing task list is the `spectrace-change` skill's job.
 4. Read `requirements.md`, `planning/product.md` (project type), `planning/architecture.md`,
    `AGENTS.md`, and `.spectrace/interview.md` if present. The design must stay
-   consistent with existing A items.
+   consistent with existing A items; when one gets in the way, never design around it —
+   propose the simplest direct change to it and hand that change to `spectrace-change`.
 
 ## Phase 1 — Design (skip if the spec already has D items)
 
@@ -71,8 +72,9 @@ Write `design.md` as:
 - Decisions must comply with project architecture conventions in `planning/architecture.md` (SRP, Service Layer/Anti-Corruption, Composition, Testability, KISS/YAGNI). Verify unfamiliar APIs and patterns against industry standards on the web. Note non-trivial trade-offs (pros/cons) and concrete mitigations.
 - A project-wide decision (answer 4) is appended to `planning/architecture.md` as the
   next A item under its header, with its operative line in `AGENTS.md` → "Stack &
-  conventions". Append only: if it contradicts an existing A item, stop and point to
-  the `spectrace-change` skill.
+  conventions". Append only: if it contradicts an existing A item, propose the change
+  to that item ("A4 forces X; propose Y. Approved?") and, on a yes, run it through the
+  `spectrace-change` skill before continuing.
 - Never invent a decision the user didn't make — it goes under "Open questions".
 
 ## Phase 2 — Design gate

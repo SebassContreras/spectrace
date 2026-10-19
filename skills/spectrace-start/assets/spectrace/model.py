@@ -15,6 +15,7 @@ TASKISH_RE = re.compile(r"^- \[[ xX]\] ")
 FIELD_RE = re.compile(r"^\s+(?P<key>covers|kind|retires|changes):\s*(?P<val>.*?)\s*$")
 REF_RE = re.compile(r"^(?:(?P<spec>\d{3})/)?(?P<kind>[RDA])(?P<num>\d+)(?:@(?P<rev>\d+))?$")
 TASKREF_RE = re.compile(r"^(?:(?P<spec>\d{3})/)?T(?P<num>\d+)$")
+BLOCKED_RE = re.compile(r"^\s+└─ blocked: (?:conflicts (?P<ref>[^:\s]+)\s*:\s*(?P<why>.*?)\s*$)?")
 SEVERITY = {"error": 0, "pending": 1, "warning": 2}
 
 
@@ -71,6 +72,7 @@ class Task:
         self.spec, self.num, self.owner, self.status = spec, num, owner, status
         self.box, self.text, self.line = box, text, line
         self.covers, self.retires, self.kind, self.changes = [], [], None, None
+        self.conflict = None  # (ref, why) when the last block note reads `conflicts <ref>: <why>`
 
     @property
     def ref(self):
@@ -210,6 +212,9 @@ class Repo:
             if not line[0].isspace():
                 task = None
                 continue
+            if task and (b := BLOCKED_RE.match(line)):  # the latest block reason wins
+                task.conflict = (b.group("ref"), b.group("why")) if b.group("ref") else None
+                continue
             f = FIELD_RE.match(line)
             if task and f:
                 key, val = f.group("key"), f.group("val")
@@ -280,11 +285,15 @@ class Repo:
                         self.issue("pending", t.ref, f"suspect: covers {raw}, {why}", spec.id)
                     else:
                         self.issue("pending", t.ref, f"covers outdated {raw} ({why})", spec.id)
+                if t.status == "blocked" and t.owner == "agent" and t.conflict:
+                    self.issue("pending", t.ref, f"decision conflict: {t.conflict[0]} — {t.conflict[1]}; keep it, edit it "
+                               "or retire it (spectrace-change), then resume with start", spec.id)
                 if t.status == "done" and t.owner == "agent" and t.changes is None:
                     self.issue("warning", t.ref, "done without changes: (finished outside trace)", spec.id)
             self.uncovered(spec)
         self.deleted_mentions()
         self.changed_text()
+        self.record_guard()
 
     def items(self):
         yield from (i for i in self.global_items.values() if not i.retired)
@@ -302,21 +311,80 @@ class Repo:
                         out.setdefault(item.ref, set()).add(spec.id)
         return out
 
+    def guarded_refs(self):
+        """{item ref: spec ids} whose text is guarded: built-on items, and every active A item."""
+        out = self.built_on()
+        for item in self.global_items.values():
+            if not item.retired:
+                out.setdefault(item.ref, set())
+        return out
+
     def changed_text(self):
-        """An item's meaning must not change under finished work without a revision bump."""
-        for item_ref, specs in self.built_on().items():
+        """A guarded item's meaning must not change without a revision bump."""
+        for item_ref, specs in self.guarded_refs().items():
             item = next(i for i in self.items() if i.ref == item_ref)
             seen = self.fingerprints.get(item_ref)
             if seen and seen != item.fingerprint:
-                for sid in sorted(specs):
-                    self.issue("pending", item.where, f"text of {item_ref} changed under finished work: bump its "
-                               f"revision (spectrace-change), or `review {item_ref.split('@')[0]}` if wording only", sid)
+                under = "under finished work" if specs else "without a revision bump"
+                for sid in sorted(specs) or [None]:
+                    self.issue("pending", item.where, f"text of {item_ref} changed {under}: bump its revision "
+                               f"(spectrace-change), or `review {item_ref.split('@')[0]}` if wording only", sid)
+
+    # --- record guard: no decision changes or disappears without a changes.md entry ---
+
+    def all_items(self):
+        """{item ID: item} for every item, retired ones included; the ID has no revision."""
+        out = {i.key: i for i in self.global_items.values()}
+        for spec in self.specs.values():
+            out.update({f"{spec.id}/{i.key}": i for i in spec.items.values()})
+        return out
+
+    def built_ids(self):
+        """IDs of items a finished task covers, at any revision."""
+        out = set()
+        for spec in self.specs.values():
+            for t in (t for t in spec.tasks if t.status == "done"):
+                for raw in t.covers:
+                    if (m := REF_RE.match(raw)) and m.group("kind") != "A":
+                        out.add(f"{m.group('spec') or spec.id}/{m.group('kind')}{int(m.group('num'))}")
+        return out
+
+    def has_entry(self, item):
+        rel = f"{self.specs[item.spec].dir}/changes.md" if item.spec else "planning/changes.md"
+        try:
+            text = "".join(read_lines(self.path(rel)))
+        except OSError:
+            return False
+        return re.search(rf"\b{item.key}@{item.rev}\b", text) is not None
+
+    def record_guard(self):
+        """Findings on guarded IDs seen before: gone without retiring, or bumped or retired with no entry."""
+        self.unrecorded = set()
+        current, built = self.all_items(), self.built_ids()
+        for iid, (rev, retired) in self.fingerprints.get("_ids", {}).items():
+            if not (iid.startswith("A") or iid in built):
+                continue
+            sid = iid.split("/")[0] if "/" in iid else None
+            item = current.get(iid)
+            if item is None:
+                self.unrecorded.add(iid)
+                home = self.specs[sid].dir if sid in self.specs else "planning/architecture.md"
+                self.issue("pending", home, f"{iid} disappeared without being retired: put it back struck "
+                           "through (spectrace-change)", sid)
+            elif (item.rev > rev or (item.retired and not retired)) and not self.has_entry(item):
+                self.unrecorded.add(iid)
+                what = "retired" if item.retired and not retired else f"bumped from @{rev}"
+                self.issue("pending", item.where, f"{item.ref} {what} with no changes.md entry naming "
+                           f"{item.key}@{item.rev} (spectrace-change)", sid)
 
     def record_fingerprints(self):
-        built = self.built_on()
+        guarded = self.guarded_refs()
         fresh = {i.ref: i.fingerprint for i in self.items()}
-        kept = {k: v for k, v in self.fingerprints.items() if k in built}
-        merged = {**fresh, **kept}
+        kept = {k: v for k, v in self.fingerprints.items() if k in guarded}
+        seen = self.fingerprints.get("_ids", {})
+        ids = {iid: [i.rev, i.retired] for iid, i in self.all_items().items()}
+        ids.update({iid: seen[iid] for iid in self.unrecorded})  # findings keep their baseline
+        merged = {**fresh, **kept, "_ids": dict(sorted(ids.items()))}
         if merged != self.saved_fingerprints:
             os.makedirs(self.path(".spectrace"), exist_ok=True)
             with open(self.path(".spectrace/fingerprints.json"), "w", encoding="utf-8", newline="\n") as f:

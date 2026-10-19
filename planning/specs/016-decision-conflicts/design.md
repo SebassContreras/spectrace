@@ -41,3 +41,13 @@ something is built on it; after that, a bump and the usual cleanup.
 After 011 and before 012. The trace first (block, then the report, then its test), then
 `format.md`, the skills and the protocol, then the template, then this repo's own files, then
 the `spectrace-change` session for the earlier items (T010).
+
+## Trade-offs context
+
+Costs of decisions the table above does not cover.
+
+| Decision | Pros | Cons | Mitigation |
+|---|---|---|---|
+| D3 adds a phase to `spectrace-change` | a conflict has one entry point | the skill grows toward its 200-line budget | the A5 test guards it; the phase reuses Phases 1–5 |
+| D4 leaves existing `product.md` files alone | no overwrite of the user's text | old repos lack the new sections | the upgrade report names them; the user adds them when wanted |
+| D6 revises items of 002 and 010 | the old text matches the package install | noise in their history | refactor in place, with the reason written (A6) |
