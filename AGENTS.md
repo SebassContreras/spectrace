@@ -10,6 +10,8 @@ lists exactly what to remove or redo. See `planning/product.md`.
 - `planning/roadmap.md` — specs, order, status. `python skills/spectrace-start/assets/trace.py status` is the live view.
 - `planning/specs/NNN-name/` — `requirements.md` (R), `design.md` (D), `tasks.md`, `changes.md`.
 - `skills/spectrace-start/assets/format.md` — the format. Single source; cite it, never restate it.
+- `skills/spectrace-start/assets/trace.py` — the launcher; the code is the `spectrace/` package beside it.
+- `planning/graph-plan.md` — the plan behind the code map (specs 011–016).
 
 ## Rules for agents
 
@@ -17,7 +19,7 @@ lists exactly what to remove or redo. See `planning/product.md`.
 - Never change an R, D or A item's meaning by hand: bump or retire it and record it in the spec's `changes.md` (the `spectrace-change` skill).
 - Never edit `Status`/`Stage` in the roadmap, a task's status, or a `changes:` line — `trace.py` owns them (A3).
 - Never guess a CLI flag or file format — verify it before writing it into a skill.
-- No GitHub repository, remote or push until the maintainer asks.
+- No push to the `origin` remote until the maintainer asks.
 - **Follow industry standards**: Align designs, patterns, and code structure with established industry standards.
 - **Web research for verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
 - **Trade-off analysis (Pros & Cons)**: Detail the pros and cons of technical decisions; explicitly specify and implement solutions or mitigations to counter the identified drawbacks.

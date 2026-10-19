@@ -20,7 +20,7 @@ For (d), skip "Testing" unless `project-type` is `software` (from
 `.spectrace/interview.md`, else the `Type:` line at the top of `AGENTS.md`). The
 protocol block is probe (c)'s job, not a section.
 
-A missing `.spectrace/trace.py` or `.spectrace/format.md` counts as outdated.
+A missing `.spectrace/trace.py`, `.spectrace/spectrace/` or `.spectrace/format.md` counts as outdated.
 
 No probe outdated → say nothing and return to the caller.
 
@@ -39,7 +39,10 @@ skipped in the report.
 ## Writes
 
 - **Trace + format.** Copy `assets/trace.py` and `assets/format.md` over
-  `.spectrace/trace.py` and `.spectrace/format.md`.
+  `.spectrace/trace.py` and `.spectrace/format.md`, and replace the package as one unit:
+  copy `assets/spectrace/` (without `__pycache__`) to `.spectrace/spectrace.new/`, delete
+  `.spectrace/spectrace/`, then rename `spectrace.new` to `spectrace`, so a module a later
+  version dropped does not linger and a failed copy leaves the old package intact.
 - **Protocol.** Write `assets/agents-protocol.md` into `AGENTS.md`, replacing the text
   between `<!-- spectrace:protocol -->` and `<!-- /spectrace:protocol -->` (markers
   included) if present, appending it at the end otherwise. Then run `git diff AGENTS.md`:
@@ -55,7 +58,7 @@ skipped in the report.
 
 ## Scope and gate
 
-- Writes only `.spectrace/trace.py`, `.spectrace/format.md`, `.spectrace/interview.md`
+- Writes only `.spectrace/trace.py`, `.spectrace/spectrace/`, `.spectrace/format.md`, `.spectrace/interview.md`
   and `AGENTS.md`. Never `planning/`: no spec, item, task or roadmap row.
 - Run `python3 .spectrace/trace.py check` before the first write and again after the
   last. If the first passed and the second fails, print its output and say the upgrade

@@ -21,7 +21,7 @@ items, tasks and the roadmap is in `assets/format.md` (copied to `.spectrace/for
 **Owns only:** `AGENTS.md` (its sections and the protocol block), `planning/product.md`,
 `planning/architecture.md`, `planning/styles.md`, `planning/roadmap.md` (rows, never
 `Status`/`Stage`), `planning/specs/*/requirements.md` and the stubs beside it,
-`planning/handoff.md`, and `.spectrace/` (`trace.py`, `format.md`, `interview.md`). Never
+`planning/handoff.md`, and `.spectrace/` (`trace.py`, `spectrace/`, `format.md`, `interview.md`). Never
 create `CLAUDE.md`, a README, CI config or anything else — those are project
 deliverables the roadmap decides.
 
@@ -81,8 +81,9 @@ in the narrative. Close with the sweep.
 2. **Files** (only if missing), from `references/templates.md`: `AGENTS.md`,
    `planning/product.md` (filled from `goal`, `audience`, `mvp`), `planning/architecture.md`
    (headers keyed to `project-type`), `planning/roadmap.md`, `planning/specs/`.
-3. **Trace.** Copy `assets/trace.py` and `assets/format.md` (paths relative to this
-   skill's folder) into `.spectrace/`. If they already exist, follow
+3. **Trace.** Copy `assets/trace.py`, the whole `assets/spectrace/` folder (without
+   `__pycache__`) and `assets/format.md` (paths relative to this skill's folder) into
+   `.spectrace/` — the script and its package are one unit. If they already exist, follow
    `references/upgrade.md` instead (it asks before replacing).
 4. **Protocol.** Write the protocol block into `AGENTS.md` by the rule in
    `references/upgrade.md` → "Writes". Touch nothing else in `AGENTS.md`.

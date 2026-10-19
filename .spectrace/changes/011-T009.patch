@@ -1,0 +1,79 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 1a11562..ce27489 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -10,6 +10,8 @@ lists exactly what to remove or redo. See `planning/product.md`.
+ - `planning/roadmap.md` — specs, order, status. `python skills/spectrace-start/assets/trace.py status` is the live view.
+ - `planning/specs/NNN-name/` — `requirements.md` (R), `design.md` (D), `tasks.md`, `changes.md`.
+ - `skills/spectrace-start/assets/format.md` — the format. Single source; cite it, never restate it.
++- `skills/spectrace-start/assets/trace.py` — the launcher; the code is the `spectrace/` package beside it.
++- `planning/graph-plan.md` — the plan behind the code map (specs 011–016).
+ 
+ ## Rules for agents
+ 
+@@ -17,7 +19,7 @@ lists exactly what to remove or redo. See `planning/product.md`.
+ - Never change an R, D or A item's meaning by hand: bump or retire it and record it in the spec's `changes.md` (the `spectrace-change` skill).
+ - Never edit `Status`/`Stage` in the roadmap, a task's status, or a `changes:` line — `trace.py` owns them (A3).
+ - Never guess a CLI flag or file format — verify it before writing it into a skill.
+-- No GitHub repository, remote or push until the maintainer asks.
++- No push to the `origin` remote until the maintainer asks.
+ - **Follow industry standards**: Align designs, patterns, and code structure with established industry standards.
+ - **Web research for verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
+ - **Trade-off analysis (Pros & Cons)**: Detail the pros and cons of technical decisions; explicitly specify and implement solutions or mitigations to counter the identified drawbacks.
+diff --git a/README.md b/README.md
+index 71c5a7b..1222025 100644
+--- a/README.md
++++ b/README.md
+@@ -15,9 +15,10 @@ test that implemented the old decision and turns them into cleanup tasks, so not
+ from the old approach is left behind. Any coding agent can execute the tasks; there is
+ no orchestrator to run.
+ 
+-> **Status:** early. The trace is tested on Linux and Windows (Python 3.9 and 3.13);
+-> the full flow with a fresh agent is not yet verified end to end
+-> ([spec 006](planning/specs/006-e2e-verification/requirements.md)).
++> **Status:** early. The trace is tested on Linux and Windows (Python 3.9 and 3.13),
++> and the full flow was verified end to end with fresh agents under Claude Code and
++> `agy` ([spec 006](planning/specs/006-e2e-verification/requirements.md),
++> [report](e2e/report.md)).
+ 
+ ## Install
+ 
+@@ -34,8 +35,8 @@ project, `--skill '*' -y` to skip the prompts.
+ 
+ **Updating** takes two steps. `pnpm dlx skills update` updates the skills, but not the
+ files they copied into your project. Then, inside each project, run `spectrace-start`
+-or ask "update spectrace in this project". It compares `.spectrace/trace.py`,
+-`.spectrace/format.md`, the protocol block and the sections in `AGENTS.md` with the new
++or ask "update spectrace in this project". It compares `.spectrace/trace.py` (and its
++`.spectrace/spectrace/` package), `.spectrace/format.md`, the protocol block and the sections in `AGENTS.md` with the new
+ versions, shows the differences, and writes only the ones you accept.
+ 
+ Running spectrace needs **git** and **Python 3.9+** in the project. Nothing else.
+@@ -121,6 +122,9 @@ python3 -m unittest discover -s tests
+ python3 skills/spectrace-start/assets/trace.py check
+ ```
+ 
++`trace.py` is a launcher; the code is the `spectrace/` package beside it, one module per
++concern (`model`, `gitio`, `state`, `patches`, `commands`, `cli`), each at most 600 lines.
++
+ This repository is planned and built with spectrace itself: see
+ [`planning/`](planning/roadmap.md) and [`AGENTS.md`](AGENTS.md).
+ 
+diff --git a/skills/spectrace-start/assets/format.md b/skills/spectrace-start/assets/format.md
+index fe41124..0552145 100644
+--- a/skills/spectrace-start/assets/format.md
++++ b/skills/spectrace-start/assets/format.md
+@@ -19,11 +19,11 @@ planning/specs/NNN-name/
+   tasks.md                        tasks
+   changes.md                      history of changes to this spec
+ .spectrace/
+-  trace.py  format.md             copied in by `spectrace-start`
++  trace.py  spectrace/  format.md copied in by `spectrace-start` (the script and its package)
+   interview.md                    interview ledger
+   changes/NNN-TNNN.patch          exact diff of each finished task (committed)
+   fingerprints.json               hash of each item's text, written by trace (committed)
+-  state.json                      open task (git-ignored)
++  state.json                      open task (git-ignored, with `__pycache__/`)
+ ```
+ 
+ ## Items: R, D, A

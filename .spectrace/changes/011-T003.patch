@@ -1,0 +1,76 @@
+diff --git a/skills/spectrace-start/assets/spectrace/patches.py b/skills/spectrace-start/assets/spectrace/patches.py
+index 51256c4..561b467 100644
+--- a/skills/spectrace-start/assets/spectrace/patches.py
++++ b/skills/spectrace-start/assets/spectrace/patches.py
+@@ -51,3 +51,27 @@ def load_patches(root):
+                 if gone["old"].rsplit("/", 1)[-1] == new["new"].rsplit("/", 1)[-1] and same >= 0.8 * len(set(gone["removed"])):
+                     renames[gone["old"]] = new["new"]
+     return patches, renames
++
++
++def follow(root, path, renames):
++    seen = set()
++    while not os.path.exists(os.path.join(root, *path.split("/"))) and path in renames and path not in seen:
++        seen.add(path)
++        path = renames[path]
++    return path
++
++
++def file_presence(root, blocks, renames):
++    out = []
++    for b in blocks:
++        if b["status"] == "deleted" or not b["new"] or not b["added"]:
++            continue
++        now_path = follow(root, b["new"], renames)
++        label = b["new"] if now_path == b["new"] else f"{b['new']} → {now_path}"
++        target, now = os.path.join(root, *now_path.split("/")), set()
++        if os.path.exists(target):
++            with open(target, encoding="utf-8", errors="replace") as f:
++                now = {l.strip() for l in f}
++        out.append({"path": label, "present": sum(1 for a in b["added"] if a in now),
++                    "added": len(b["added"]), "deleted": not os.path.exists(target)})
++    return out
+diff --git a/skills/spectrace-start/assets/trace.py b/skills/spectrace-start/assets/trace.py
+index caca5c0..bf02a12 100644
+--- a/skills/spectrace-start/assets/trace.py
++++ b/skills/spectrace-start/assets/trace.py
+@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ from spectrace import VERSION, TraceError  # noqa: E402
+ from spectrace.gitio import git, snapshot, keep, kept, drop, reference_tree, diff, numstat  # noqa: E402
+ from spectrace.state import load_state, save_state, edit_task  # noqa: E402
+-from spectrace.patches import load_patches  # noqa: E402
++from spectrace.patches import load_patches, file_presence  # noqa: E402
+ from spectrace.model import (ITEM_RE, RETIRED_RE, TASK_RE, FIELD_RE, REF_RE, SEVERITY, Repo)  # noqa: E402
+ 
+ PATCH_LIMIT = 200_000
+@@ -169,30 +169,6 @@ def cmd_check(repo, args):
+ 
+ 
+ 
+-def follow(root, path, renames):
+-    seen = set()
+-    while not os.path.exists(os.path.join(root, *path.split("/"))) and path in renames and path not in seen:
+-        seen.add(path)
+-        path = renames[path]
+-    return path
+-
+-
+-def file_presence(root, blocks, renames):
+-    out = []
+-    for b in blocks:
+-        if b["status"] == "deleted" or not b["new"] or not b["added"]:
+-            continue
+-        now_path = follow(root, b["new"], renames)
+-        label = b["new"] if now_path == b["new"] else f"{b['new']} → {now_path}"
+-        target, now = os.path.join(root, *now_path.split("/")), set()
+-        if os.path.exists(target):
+-            with open(target, encoding="utf-8", errors="replace") as f:
+-                now = {l.strip() for l in f}
+-        out.append({"path": label, "present": sum(1 for a in b["added"] if a in now),
+-                    "added": len(b["added"]), "deleted": not os.path.exists(target)})
+-    return out
+-
+-
+ def find_item(repo, raw):
+     m = REF_RE.match(raw)
+     if not m or (m.group("kind") != "A" and not m.group("spec")):

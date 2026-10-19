@@ -19,11 +19,11 @@ planning/specs/NNN-name/
   tasks.md                        tasks
   changes.md                      history of changes to this spec
 .spectrace/
-  trace.py  format.md             copied in by `spectrace-start`
+  trace.py  spectrace/  format.md copied in by `spectrace-start` (the script and its package)
   interview.md                    interview ledger
   changes/NNN-TNNN.patch          exact diff of each finished task (committed)
   fingerprints.json               hash of each item's text, written by trace (committed)
-  state.json                      open task (git-ignored)
+  state.json                      open task (git-ignored, with `__pycache__/`)
 ```
 
 ## Items: R, D, A

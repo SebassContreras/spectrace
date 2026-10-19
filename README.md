@@ -15,9 +15,10 @@ test that implemented the old decision and turns them into cleanup tasks, so not
 from the old approach is left behind. Any coding agent can execute the tasks; there is
 no orchestrator to run.
 
-> **Status:** early. The trace is tested on Linux and Windows (Python 3.9 and 3.13);
-> the full flow with a fresh agent is not yet verified end to end
-> ([spec 006](planning/specs/006-e2e-verification/requirements.md)).
+> **Status:** early. The trace is tested on Linux and Windows (Python 3.9 and 3.13),
+> and the full flow was verified end to end with fresh agents under Claude Code and
+> `agy` ([spec 006](planning/specs/006-e2e-verification/requirements.md),
+> [report](e2e/report.md)).
 
 ## Install
 
@@ -34,8 +35,8 @@ project, `--skill '*' -y` to skip the prompts.
 
 **Updating** takes two steps. `pnpm dlx skills update` updates the skills, but not the
 files they copied into your project. Then, inside each project, run `spectrace-start`
-or ask "update spectrace in this project". It compares `.spectrace/trace.py`,
-`.spectrace/format.md`, the protocol block and the sections in `AGENTS.md` with the new
+or ask "update spectrace in this project". It compares `.spectrace/trace.py` (and its
+`.spectrace/spectrace/` package), `.spectrace/format.md`, the protocol block and the sections in `AGENTS.md` with the new
 versions, shows the differences, and writes only the ones you accept.
 
 Running spectrace needs **git** and **Python 3.9+** in the project. Nothing else.
@@ -120,6 +121,9 @@ The whole format is defined once, in
 python3 -m unittest discover -s tests
 python3 skills/spectrace-start/assets/trace.py check
 ```
+
+`trace.py` is a launcher; the code is the `spectrace/` package beside it, one module per
+concern (`model`, `gitio`, `state`, `patches`, `commands`, `cli`), each at most 600 lines.
 
 This repository is planned and built with spectrace itself: see
 [`planning/`](planning/roadmap.md) and [`AGENTS.md`](AGENTS.md).

@@ -142,6 +142,11 @@ class TraceTest(unittest.TestCase):
                          "patches must survive CRLF checkouts for restore")
         self.assertEqual(run(self.root, "start", "001/T002")[0], 1)
 
+    def test_an_existing_gitignore_gains_the_missing_generated_paths(self):
+        self.write(".spectrace/.gitignore", "state.json\nlocal-notes.txt")
+        run(self.root, "start", "001/T001")
+        self.assertEqual(self.read(".spectrace/.gitignore"), "state.json\nlocal-notes.txt\n__pycache__/\n")
+
     def test_done_prints_next_task(self):
         run(self.root, "start", "001/T001")
         self.write("src/store.txt", "store\n")

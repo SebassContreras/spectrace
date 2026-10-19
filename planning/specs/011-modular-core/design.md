@@ -8,7 +8,7 @@ Code moves; it is not rewritten. The existing tests are the proof that nothing c
 - D2@1 (implements R1): `trace.py` becomes a launcher: it puts its own folder on `sys.path`, imports `main` from `cli.py` and the regexes `tests/test_trace.py` uses from `model.py`, and exposes them under the same names, so that test file runs unchanged. Run as a script it calls `main()` as before.
 - D3@1 (implements R2): `spectrace-start` Phase 3 and `references/upgrade.md` copy `assets/trace.py` and the whole `assets/spectrace/` folder, without `__pycache__`, into `.spectrace/`. An upgrade deletes the old folder before copying the new one, so a module dropped in a later version does not linger. The check still compares `VERSION` (probe a), which does not change here.
 - D4@1 (implements R3): `tests/test_skills.py` replaces the single `trace.py` cap with one check per module under `assets/spectrace/`: at most 600 lines (A5@4). The `SKILL.md` body checks stay.
-- D5@1 (implements R4): `state.py` gains `ensure_ignores(root)`, which appends any missing line (`state.json`, `index.db`, `__pycache__/`) to `.spectrace/.gitignore` and creates the file when absent; `save_state` calls it, replacing today's create-if-missing code.
+- D5@2 (implements R4): `state.py` gains `ensure_ignores(root)`, which appends any missing line (`state.json`, `__pycache__/`) to `.spectrace/.gitignore` and creates the file when absent; `save_state` calls it, replacing today's create-if-missing code.
 
 ## Trade-offs
 
