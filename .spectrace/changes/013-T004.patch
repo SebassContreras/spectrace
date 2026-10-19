@@ -1,0 +1,65 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index a731926..02a8ff5 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -8,6 +8,7 @@ from .model import SEVERITY, Repo, find_item
+ from .state import load_state, save_state, edit_task
+ from .leftover import cmd_keep
+ from .views.impact import cmd_impact
++from .views.index_view import cmd_index
+ from .views.why import cmd_why
+ 
+ PATCH_LIMIT = 200_000
+@@ -200,5 +201,7 @@ COMMANDS = {
+     "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),
+     "restore": (cmd_restore, "undo a finished task's recorded changes, inside the open task", ("task",)),
+     "keep": (cmd_keep, "accept a retired task's symbol that stays, with a written reason", ("address", "reason")),
++    "index": (cmd_index, "build the code index (--status: what it holds, --rebuild, --dump: JSON)",
++              ("--status", "--rebuild", "--dump")),
+     "why": (cmd_why, "the tasks and decisions behind a piece of code: path or path::symbol", ("address",)),
+ }
+diff --git a/skills/spectrace-start/assets/spectrace/views/index_view.py b/skills/spectrace-start/assets/spectrace/views/index_view.py
+new file mode 100644
+index 0000000..ffe2541
+--- /dev/null
++++ b/skills/spectrace-start/assets/spectrace/views/index_view.py
+@@ -0,0 +1,39 @@
++"""`trace index [--status] [--rebuild] [--dump]`: build the code index and say what it holds."""
++import json
++
++from .. import index
++from ..linker import Graph
++
++
++def graph(root, rebuild=False):
++    """The linked graph over a freshly refreshed index: what every index-reading command uses."""
++    db = index.refresh(root, rebuild)
++    return Graph(db), db
++
++
++def not_analysed(g):
++    """{reason: [paths]} for files whose relations were not read."""
++    out = {}
++    for path, f in sorted(g.files.items()):
++        if f["status"] != "ok":
++            out.setdefault(f["status"], []).append(path)
++    return out
++
++
++def cmd_index(repo, args):
++    g, db = graph(repo.root, args.rebuild)
++    try:
++        if args.dump:
++            tables = {t: [list(r) for r in db.execute(f"SELECT * FROM {t} ORDER BY 1, 2")]
++                      for t in ("files", "symbols", "imports", "refs")}
++            print(json.dumps(tables, indent=1, ensure_ascii=False))
++            return 0
++        symbols = db.execute("SELECT count(*) FROM symbols").fetchone()[0]
++        print(f"indexed {len(g.files)} file(s), {symbols} symbol(s), {len(g.edges)} relation(s)")
++        if args.status:
++            for reason, paths in not_analysed(g).items():
++                shown = ", ".join(paths[:5]) + (f" +{len(paths) - 5} more" if len(paths) > 5 else "")
++                print(f"not analysed ({reason}): {len(paths)} — {shown}")
++    finally:
++        db.close()
++    return 0

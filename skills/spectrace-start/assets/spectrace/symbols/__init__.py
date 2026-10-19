@@ -11,6 +11,11 @@ Span = namedtuple("Span", "name kind start end sig")
 ADAPTERS = {}  # extension: (language, symbols function)
 
 
+def matches(name, symbol):
+    """A symbol answers for itself and for what it contains (`Store` for `Store.save`)."""
+    return name == symbol or name.startswith(symbol + ".") or name.startswith(symbol + " > ")
+
+
 def extension(path):
     name = path.rsplit("/", 1)[-1]
     return name.rsplit(".", 1)[-1].lower() if "." in name else ""

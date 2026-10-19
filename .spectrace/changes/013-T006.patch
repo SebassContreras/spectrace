@@ -1,0 +1,130 @@
+diff --git a/skills/spectrace-start/assets/spectrace/cli.py b/skills/spectrace-start/assets/spectrace/cli.py
+index cd7a461..c9394c4 100644
+--- a/skills/spectrace-start/assets/spectrace/cli.py
++++ b/skills/spectrace-start/assets/spectrace/cli.py
+@@ -15,7 +15,12 @@ def parser():
+     for name, (_, text, arguments) in COMMANDS.items():
+         s = sub.add_parser(name, help=text)
+         for a in arguments:
+-            s.add_argument(a, action="store_true") if a.startswith("--") else s.add_argument(a)
++            if a.endswith("="):  # "--x=" takes a value
++                s.add_argument(a[:-1])
++            elif a.startswith("--"):
++                s.add_argument(a, action="store_true")
++            else:
++                s.add_argument(a)
+     return p
+ 
+ 
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 02a8ff5..264cc67 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -189,7 +189,7 @@ def cmd_review(repo, args):
+     return 0
+ 
+ 
+-# name: (handler, help, arguments) — "--x" is a switch, anything else positional.
++# name: (handler, help, arguments) — "--x" is a switch, "--x=" takes a value, anything else positional.
+ COMMANDS = {
+     "status": (cmd_status, "spec status, stage and next task (--write: into roadmap.md)", ("--write", "--json")),
+     "start": (cmd_start, "open a task and snapshot the working tree", ("task", "--adopt", "--ignore")),
+@@ -197,7 +197,8 @@ COMMANDS = {
+     "abort": (cmd_abort, "close the open task without recording it", ("task",)),
+     "block": (cmd_block, "mark a task blocked with a reason", ("task", "reason")),
+     "check": (cmd_check, "verify the trace; exit 1 on errors (--strict: also on pending)", ("--strict",)),
+-    "impact": (cmd_impact, "what implemented an item: tasks, files, lines still present", ("ref",)),
++    "impact": (cmd_impact, "what implemented an item, or what depends on code (path[::symbol])",
++               ("ref", "--direction=", "--depth=")),
+     "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),
+     "restore": (cmd_restore, "undo a finished task's recorded changes, inside the open task", ("task",)),
+     "keep": (cmd_keep, "accept a retired task's symbol that stays, with a written reason", ("address", "reason")),
+diff --git a/skills/spectrace-start/assets/spectrace/views/__init__.py b/skills/spectrace-start/assets/spectrace/views/__init__.py
+index 8b46134..767df90 100644
+--- a/skills/spectrace-start/assets/spectrace/views/__init__.py
++++ b/skills/spectrace-start/assets/spectrace/views/__init__.py
+@@ -11,4 +11,3 @@ def address(raw):
+     if not path:
+         raise TraceError("use a code address: path or path::Qualified.name")
+     return path, symbol.strip() or None
+-
+diff --git a/skills/spectrace-start/assets/spectrace/views/impact.py b/skills/spectrace-start/assets/spectrace/views/impact.py
+index 8de904c..0d32c4d 100644
+--- a/skills/spectrace-start/assets/spectrace/views/impact.py
++++ b/skills/spectrace-start/assets/spectrace/views/impact.py
+@@ -2,8 +2,13 @@
+ import os
+ from collections import Counter
+ 
+-from .. import records
+-from ..model import find_item
++from .. import TraceError, records
++from ..linker import hits
++from ..model import REF_RE, find_item
++from . import address
++from .index_view import graph, not_analysed
++
++LIST_LIMIT = 20
+ from ..patches import file_presence, load_patches, parse_patch
+ 
+ 
+@@ -45,7 +50,59 @@ def anchored_lines(root, blocks, renames):
+             for name in sorted(names)]
+ 
+ 
++def walk(g, path, symbol, direction, depth):
++    """[(depth, edge)] reachable from the code, breadth first; `in` follows dependents, `out` dependencies."""
++    frontier, seen, out = {(path, symbol)}, set(), []
++    for level in range(1, depth + 1):
++        found = set()
++        for e in g.edges:
++            src, dst = (e.src_path, e.src_symbol), (e.dst_path, e.dst_symbol)
++            near, far = (dst, src) if direction == "in" else (src, dst)
++            if far in seen or not any(near[0] == p and hits(near[1], s) for p, s in frontier):
++                continue
++            if far[0] == path and hits(far[1], symbol):
++                continue  # inside the code asked about
++            out.append((level, e))
++            found.add(far)
++        seen |= found
++        frontier = found
++    return out
++
++
++def cmd_code_impact(repo, args):
++    path, symbol = address(args.ref)
++    direction, depth = args.direction or "in", int(args.depth or 2)
++    if direction not in ("in", "out"):
++        raise TraceError("--direction is in (what depends on it) or out (what it depends on)")
++    g, db = graph(repo)
++    db.close()
++    rows = walk(g, path, symbol, direction, depth)
++    label = "Dependents" if direction == "in" else "Dependencies"
++    print(f"# Impact of {args.ref} — {label.lower()}, depth {depth}\n")
++    for confidence in ("exact", "inferred"):
++        group = [(lv, e) for lv, e in rows if e.confidence == confidence]
++        if not group:
++            continue
++        print(f"{label} ({confidence}):")
++        for lv, e in group[:LIST_LIMIT]:
++            p, s = (e.src_path, e.src_symbol) if direction == "in" else (e.dst_path, e.dst_symbol)
++            extra = f", {e.candidates} candidates" if e.confidence == "inferred" else ""
++            print(f"- {p}{'::' + s if s else ''} [{e.kind}, depth {lv}{extra}] line {e.line}")
++        if len(group) > LIST_LIMIT:
++            print(f"+{len(group) - LIST_LIMIT} more")
++    if not rows:
++        print(f"No {label.lower()} found among the analysed files.")
++    if direction == "in":
++        tests = g.tests_of(path, symbol)
++        print("\nTests that reference it: " + (", ".join(f"{p}::{s} ({c})" for p, s, c in tests) or "none found"))
++    skipped = not_analysed(g)
++    print("\nNot analysed: " + (", ".join(f"{len(v)} file(s) ({k})" for k, v in skipped.items()) or "nothing"))
++    return 0
++
++
+ def cmd_impact(repo, args):
++    if not REF_RE.match(args.ref):
++        return cmd_code_impact(repo, args)
+     item = find_item(repo, args.ref)
+     targets = [item]
+     if item.kind == "R":

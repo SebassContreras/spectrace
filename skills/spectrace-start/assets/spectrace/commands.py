@@ -7,7 +7,9 @@ from .gitio import git, snapshot, keep, kept, drop, reference_tree, diff, numsta
 from .model import SEVERITY, Repo, find_item
 from .state import load_state, save_state, edit_task
 from .leftover import cmd_keep
+from .mentions import removed_mentions, removed_terms
 from .views.impact import cmd_impact
+from .views.index_view import cmd_index, graph
 from .views.why import cmd_why
 
 PATCH_LIMIT = 200_000
@@ -162,6 +164,12 @@ def cmd_block(repo, args):
 
 def cmd_check(repo, args):
     root = repo.root
+    if removed_terms(repo.records):  # only then is the index worth refreshing
+        g, db = graph(repo)
+        db.close()
+        defined = {n for names in g.defs.values() for n in names}
+        for rel, n, term, (path, name, ref) in removed_mentions(root, repo.records, defined):
+            repo.issue("warning", f"{rel}:{n}", f"mentions {term}, which {ref} removed from {path}", ref[:3])
     if not load_state(root).get("open"):
         reference, current = reference_tree(root), snapshot(root)
         stray = numstat(root, reference, current)
@@ -188,7 +196,7 @@ def cmd_review(repo, args):
     return 0
 
 
-# name: (handler, help, arguments) — "--x" is a switch, anything else positional.
+# name: (handler, help, arguments) — "--x" is a switch, "--x=" takes a value, anything else positional.
 COMMANDS = {
     "status": (cmd_status, "spec status, stage and next task (--write: into roadmap.md)", ("--write", "--json")),
     "start": (cmd_start, "open a task and snapshot the working tree", ("task", "--adopt", "--ignore")),
@@ -196,9 +204,12 @@ COMMANDS = {
     "abort": (cmd_abort, "close the open task without recording it", ("task",)),
     "block": (cmd_block, "mark a task blocked with a reason", ("task", "reason")),
     "check": (cmd_check, "verify the trace; exit 1 on errors (--strict: also on pending)", ("--strict",)),
-    "impact": (cmd_impact, "what implemented an item: tasks, files, lines still present", ("ref",)),
+    "impact": (cmd_impact, "what implemented an item, or what depends on code (path[::symbol])",
+               ("ref", "--direction=", "--depth=", "--deep")),
     "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),
     "restore": (cmd_restore, "undo a finished task's recorded changes, inside the open task", ("task",)),
     "keep": (cmd_keep, "accept a retired task's symbol that stays, with a written reason", ("address", "reason")),
+    "index": (cmd_index, "build the code index (--status: what it holds, --rebuild, --dump: JSON)",
+              ("--status", "--rebuild", "--dump")),
     "why": (cmd_why, "the tasks and decisions behind a piece of code: path or path::symbol", ("address",)),
 }

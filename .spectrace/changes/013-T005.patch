@@ -1,0 +1,115 @@
+diff --git a/skills/spectrace-start/assets/spectrace/linker.py b/skills/spectrace-start/assets/spectrace/linker.py
+index 314e29a..284ceed 100644
+--- a/skills/spectrace-start/assets/spectrace/linker.py
++++ b/skills/spectrace-start/assets/spectrace/linker.py
+@@ -7,6 +7,8 @@ counted in the resolution rate; names bound to modules outside the repo are exte
+ """
+ from collections import namedtuple
+ 
++from .symbols import matches
++
+ EXTERNAL = ("external", None)
+ Edge = namedtuple("Edge", "src_path src_symbol dst_path dst_symbol confidence candidates line kind")
+ 
+@@ -25,6 +27,11 @@ def module_names(path, paths):
+     return {n for n in names if n}
+ 
+ 
++def hits(name, symbol):
++    """Does code named `name` fall under the queried `symbol` (None: the whole file)?"""
++    return symbol is None or (name is not None and matches(name, symbol))
++
++
+ class Graph:
+     def __init__(self, db):
+         self.files = {r[0]: {"lang": r[1], "test": bool(r[2]), "status": r[3]}
+@@ -132,6 +139,20 @@ class Graph:
+ 
+     # --- queries ---
+ 
++    def mark_tests(self, paths):
++        """Also treat these files as tests (recorded by a `kind: test` task)."""
++        for p in paths:
++            if p in self.files:
++                self.files[p]["test"] = True
++
++    def is_test(self, path):
++        return self.files.get(path, {}).get("test", False)
++
++    def tests_of(self, path, symbol=None):
++        """Test symbols whose resolved references include that code: [(path, symbol, confidence)]."""
++        return sorted({(e.src_path, e.src_symbol, e.confidence) for e in self.edges
++                       if self.is_test(e.src_path) and e.dst_path == path and hits(e.dst_symbol, symbol)})
++
+     def resolution_rate(self, lang="python"):
+         done, lost = self.resolved.get(lang, 0), self.dropped.get(lang, 0)
+         return done / (done + lost) if done + lost else None
+diff --git a/skills/spectrace-start/assets/spectrace/symbols/__init__.py b/skills/spectrace-start/assets/spectrace/symbols/__init__.py
+index d96a281..6a635d1 100644
+--- a/skills/spectrace-start/assets/spectrace/symbols/__init__.py
++++ b/skills/spectrace-start/assets/spectrace/symbols/__init__.py
+@@ -11,6 +11,11 @@ Span = namedtuple("Span", "name kind start end sig")
+ ADAPTERS = {}  # extension: (language, symbols function)
+ 
+ 
++def matches(name, symbol):
++    """A symbol answers for itself and for what it contains (`Store` for `Store.save`)."""
++    return name == symbol or name.startswith(symbol + ".") or name.startswith(symbol + " > ")
++
++
+ def extension(path):
+     name = path.rsplit("/", 1)[-1]
+     return name.rsplit(".", 1)[-1].lower() if "." in name else ""
+diff --git a/skills/spectrace-start/assets/spectrace/views/__init__.py b/skills/spectrace-start/assets/spectrace/views/__init__.py
+index 56ecd6a..8b46134 100644
+--- a/skills/spectrace-start/assets/spectrace/views/__init__.py
++++ b/skills/spectrace-start/assets/spectrace/views/__init__.py
+@@ -1,5 +1,6 @@
+ """Read-only views over the records: one module per command."""
+ from .. import TraceError
++from ..symbols import matches  # noqa: F401  (re-exported for the views)
+ 
+ 
+ def address(raw):
+@@ -11,7 +12,3 @@ def address(raw):
+         raise TraceError("use a code address: path or path::Qualified.name")
+     return path, symbol.strip() or None
+ 
+-
+-def matches(name, symbol):
+-    """A symbol answers for itself and for what it contains (`Store` for `Store.save`)."""
+-    return name == symbol or name.startswith(symbol + ".") or name.startswith(symbol + " > ")
+diff --git a/skills/spectrace-start/assets/spectrace/views/index_view.py b/skills/spectrace-start/assets/spectrace/views/index_view.py
+index ffe2541..8678991 100644
+--- a/skills/spectrace-start/assets/spectrace/views/index_view.py
++++ b/skills/spectrace-start/assets/spectrace/views/index_view.py
+@@ -5,10 +5,16 @@ from .. import index
+ from ..linker import Graph
+ 
+ 
+-def graph(root, rebuild=False):
+-    """The linked graph over a freshly refreshed index: what every index-reading command uses."""
+-    db = index.refresh(root, rebuild)
+-    return Graph(db), db
++def graph(repo, rebuild=False):
++    """The linked graph over a freshly refreshed index: what every index-reading command uses.
++
++    A file is a test by path or name, or because a `kind: test` task recorded it."""
++    db = index.refresh(repo.root, rebuild)
++    g = Graph(db)
++    recs = repo.records
++    g.mark_tests(p for s in repo.specs.values() for t in s.tasks if t.kind == "test" and t.ref in recs
++                 for p in recs[t.ref]["files"])
++    return g, db
+ 
+ 
+ def not_analysed(g):
+@@ -21,7 +27,7 @@ def not_analysed(g):
+ 
+ 
+ def cmd_index(repo, args):
+-    g, db = graph(repo.root, args.rebuild)
++    g, db = graph(repo, args.rebuild)
+     try:
+         if args.dump:
+             tables = {t: [list(r) for r in db.execute(f"SELECT * FROM {t} ORDER BY 1, 2")]

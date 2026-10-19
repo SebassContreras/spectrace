@@ -1,0 +1,48 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/views/index_view.py": {
+   "lang": "python",
+   "lines": [
+    21,
+    0
+   ],
+   "other": {
+    "imports": [
+     1,
+     0
+    ],
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "81e41779f5199111",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      8,
+      0
+     ],
+     "name": "cmd_index",
+     "sig": "(repo, args)"
+    },
+    {
+     "body": "4774814851a08bf3",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      10,
+      0
+     ],
+     "name": "coverage",
+     "sig": "(repo, g)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

@@ -48,6 +48,26 @@ def unfenced(lines):
             yield i, line.rstrip("\r\n")
 
 
+def text_lines(root):
+    """(path, line number, line) of every text file outside history, retired item lines left out.
+
+    History is `.spectrace/` and the `tasks.md` and `changes.md` files under `planning/`."""
+    listed = git(root, "ls-files", "-z", "-co", "--exclude-standard").split("\0")
+    for rel in filter(None, listed):
+        history = rel.startswith(".spectrace/") or (
+            rel.startswith("planning/") and rel.rsplit("/", 1)[-1] in ("tasks.md", "changes.md"))
+        full = os.path.join(root, *rel.split("/"))
+        if history or not os.path.isfile(full) or os.path.getsize(full) > 1_000_000:
+            continue
+        with open(full, "rb") as f:
+            data = f.read()
+        if b"\0" in data[:1024]:
+            continue
+        for n, line in enumerate(data.decode("utf-8", errors="replace").splitlines(), 1):
+            if not RETIRED_RE.match(line):
+                yield rel, n, line
+
+
 # ---------- model ----------
 
 class Item:
@@ -418,23 +438,10 @@ class Repo:
                    and not os.path.exists(self.path(b["old"]))}
         if not deleted:
             return
-        listed = git(self.root, "ls-files", "-z", "-co", "--exclude-standard").split("\0")
-        for rel in filter(None, listed):
-            history = rel.startswith(".spectrace/") or (
-                rel.startswith("planning/") and rel.rsplit("/", 1)[-1] in ("tasks.md", "changes.md"))
-            full = self.path(rel)
-            if history or not os.path.isfile(full) or os.path.getsize(full) > 1_000_000:
-                continue
-            with open(full, "rb") as f:
-                data = f.read()
-            if b"\0" in data[:1024]:
-                continue
-            for n, line in enumerate(data.decode("utf-8", errors="replace").splitlines(), 1):
-                if RETIRED_RE.match(line):
-                    continue
-                for path, ref in deleted.items():
-                    if path in line:
-                        self.issue("pending", f"{rel}:{n}", f"mentions {path}, deleted by {ref}", ref[:3])
+        for rel, n, line in text_lines(self.root):
+            for path, ref in deleted.items():
+                if path in line:
+                    self.issue("pending", f"{rel}:{n}", f"mentions {path}, deleted by {ref}", ref[:3])
 
     def leftover(self):
         """Code a retired task added must be gone once its cleanup is done, or kept with a reason."""

@@ -1,0 +1,221 @@
+{
+ "files": {
+  "tests/test_index.py": {
+   "lang": "python",
+   "lines": [
+    117,
+    0
+   ],
+   "other": {
+    "imports": [
+     12,
+     0
+    ],
+    "module": [
+     13,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "7c9ef4391a8334b6",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      14,
+      0
+     ],
+     "name": "FILES"
+    },
+    {
+     "body": "3edc55b47bbbb85c",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "GIT_ENV"
+    },
+    {
+     "body": "23b6448daffea694",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "HERE"
+    },
+    {
+     "body": "96979d22f0955ef5",
+     "change": "added",
+     "kind": "class",
+     "lines": [
+      14,
+      0
+     ],
+     "name": "IndexTest",
+     "sig": "(unittest.TestCase)"
+    },
+    {
+     "body": "b39efb90f0c3e553",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "IndexTest.edge",
+     "sig": "(self, src, dst)"
+    },
+    {
+     "body": "fe13f95b56c36042",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "IndexTest.graph",
+     "sig": "(self)"
+    },
+    {
+     "body": "c5c3127787e25c56",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "IndexTest.run_trace",
+     "sig": "(self, *args)"
+    },
+    {
+     "body": "9fb8e29a8bba024a",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      9,
+      0
+     ],
+     "name": "IndexTest.setUp",
+     "sig": "(self)"
+    },
+    {
+     "body": "d68c91e2e05bc64a",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      7,
+      0
+     ],
+     "name": "IndexTest.test_a_mention_of_a_removed_symbol_warns_and_never_holds_the_spec_open",
+     "sig": "(self)"
+    },
+    {
+     "body": "7661333345b7771d",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "IndexTest.test_a_name_bound_by_an_import_resolves_exactly",
+     "sig": "(self)"
+    },
+    {
+     "body": "8c97bb6b7eef9118",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      6,
+      0
+     ],
+     "name": "IndexTest.test_a_refresh_re_reads_only_the_file_that_changed",
+     "sig": "(self)"
+    },
+    {
+     "body": "530cb484e0117ede",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "IndexTest.test_an_attribute_of_an_unknown_object_is_inferred_with_its_candidates",
+     "sig": "(self)"
+    },
+    {
+     "body": "dbbe00d4216b75f7",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "IndexTest.test_files_that_do_not_parse_are_reported",
+     "sig": "(self)"
+    },
+    {
+     "body": "a702825af5bc3341",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "IndexTest.test_impact_lists_dependents_and_the_tests_that_reference_the_code",
+     "sig": "(self)"
+    },
+    {
+     "body": "2e8c947a8e4ab8d3",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "IndexTest.test_impact_never_claims_no_impact",
+     "sig": "(self)"
+    },
+    {
+     "body": "fc876b2a93db4f65",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "IndexTest.test_impact_out_lists_what_the_code_depends_on",
+     "sig": "(self)"
+    },
+    {
+     "body": "f3852ee12e00b7a3",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "IndexTest.test_self_method_resolves_exactly_through_the_class",
+     "sig": "(self)"
+    },
+    {
+     "body": "852673880ebc0a03",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "IndexTest.write",
+     "sig": "(self, rel, text)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

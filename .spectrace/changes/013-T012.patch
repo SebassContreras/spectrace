@@ -1,0 +1,21 @@
+diff --git a/README.md b/README.md
+index 1222025..039dc48 100644
+--- a/README.md
++++ b/README.md
+@@ -114,6 +114,16 @@ The whole format is defined once, in
+ - **Work outside the repo** — a CMS, an email, a dashboard setting — leaves no diff to
+   trace; record it as a `[human]` task.
+ - **One open task at a time.** Parallel agents in one working tree would mix their diffs.
++- **The code map is static and name-based.** `trace index` reads Python by its AST and
++  Markdown by its headings; every other file is file-level. Relations are `exact` (an
++  import, the same module, `self` through the class) or `inferred` (an attribute name
++  matched across the repo, with its candidate count); only exact findings may hold a spec
++  open. Reflection, `getattr`, registration by string and dynamic imports are invisible,
++  so `impact` never says "no impact" — it says what it could not analyse. Measured on
++  this repo (2026-10-19): 99.7% of 1558 references to repo code resolved; trace coverage
++  66% exact, 33% anchored; `tests/eval_index.py` recall 0/8 co-changed files, because the
++  history mostly pairs `trace.py` with a test that loads it through `importlib` — a
++  dynamic import the index cannot follow.
+ 
+ ## Development
+ 

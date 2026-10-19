@@ -1,0 +1,153 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/index.py": {
+   "lang": "python",
+   "lines": [
+    94,
+    0
+   ],
+   "other": {
+    "imports": [
+     3,
+     0
+    ],
+    "module": [
+     21,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "92ba2b1f5e72da23",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "DB"
+    },
+    {
+     "body": "2f2e91fce8f8bcaf",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "LIMIT"
+    },
+    {
+     "body": "8c0d8153b08eaa90",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      10,
+      0
+     ],
+     "name": "SCHEMA"
+    },
+    {
+     "body": "53e1a9f412c23e16",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "TEST_RE"
+    },
+    {
+     "body": "f560357b33dddc66",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      12,
+      0
+     ],
+     "name": "connect",
+     "sig": "(root, rebuild=False)"
+    },
+    {
+     "body": "70a38c07fb7c0a47",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "extract",
+     "sig": "(path, text)"
+    },
+    {
+     "body": "beaf4d10f2b55af8",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "forget",
+     "sig": "(db, path)"
+    },
+    {
+     "body": "f537ff8c540e8872",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "is_test",
+     "sig": "(path)"
+    },
+    {
+     "body": "0bb587c18de00fdc",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "listed",
+     "sig": "(root)"
+    },
+    {
+     "body": "6f75720f51e44458",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      33,
+      0
+     ],
+     "name": "refresh",
+     "sig": "(root, rebuild=False)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/state.py": {
+   "lang": "python",
+   "lines": [
+    1,
+    1
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "60cdb32a987bbf33",
+     "change": "modified",
+     "kind": "variable",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "IGNORES"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

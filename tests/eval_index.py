@@ -1,0 +1,57 @@
+"""Recall and precision of the code index's dependents against this repo's co-change history.
+
+Not collected as a test: it measures, it sets no threshold (013 D7). Run from the repo root:
+
+    python tests/eval_index.py [repo]
+
+For every commit that changed at least two Python files, each changed file's changed
+symbols are looked up in the index; their dependents (depth 1) are the prediction, and
+the commit's other changed Python files are the truth. Recall: share of the truth that
+was predicted. Precision proxy: share of the prediction that did co-change. The index is
+today's code, not each commit's: symbols that no longer exist predict nothing.
+"""
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "skills", "spectrace-start", "assets"))
+from spectrace import records  # noqa: E402
+from spectrace.model import Repo  # noqa: E402
+from spectrace.views.impact import walk  # noqa: E402
+from spectrace.views.index_view import graph  # noqa: E402
+
+
+def evaluate(root):
+    g, db = graph(Repo(root))
+    db.close()
+    commits = subprocess.run(["git", "rev-list", "--reverse", "HEAD"], cwd=root, capture_output=True,
+                             text=True, check=True).stdout.split()
+    found = truth_total = predicted_total = commits_used = 0
+    for parent, commit in zip(commits, commits[1:]):
+        rec = records.record(root, parent + "^{tree}", commit + "^{tree}")
+        changed = {p: f for p, f in rec["files"].items() if p.endswith(".py") and f["status"] != "deleted"}
+        if len(changed) < 2:
+            continue
+        commits_used += 1
+        for path, f in changed.items():
+            names = [s["name"] for s in f["symbols"] if s["change"] != "removed"]
+            predicted = {e.src_path for name in names for _, e in walk(g, path, name, "in", 1)} - {path}
+            truth = set(changed) - {path}
+            found += len(predicted & truth)
+            truth_total += len(truth)
+            predicted_total += len(predicted)
+    return commits_used, found, truth_total, predicted_total
+
+
+def main(root):
+    used, found, truth, predicted = evaluate(root)
+    recall = found / truth if truth else 0.0
+    precision = found / predicted if predicted else 0.0
+    print(f"commits with 2+ changed Python files: {used}")
+    print(f"recall: {recall:.1%} ({found}/{truth} co-changed files predicted)")
+    print(f"precision proxy: {precision:.1%} ({found}/{predicted} predicted files co-changed)")
+
+
+if __name__ == "__main__":
+    main(os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..")))

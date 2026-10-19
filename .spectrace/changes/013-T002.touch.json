@@ -1,0 +1,220 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/facts.py": {
+   "lang": "python",
+   "lines": [
+    101,
+    0
+   ],
+   "other": {
+    "imports": [
+     3,
+     0
+    ],
+    "module": [
+     11,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "7f9a38c32f426a73",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "BUILTINS"
+    },
+    {
+     "body": "91cab9d265a57101",
+     "change": "added",
+     "kind": "class",
+     "lines": [
+      9,
+      0
+     ],
+     "name": "Refs",
+     "sig": "(ast.NodeVisitor)"
+    },
+    {
+     "body": "ae1fe2d88941e6e1",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "Refs.__init__",
+     "sig": "(self)"
+    },
+    {
+     "body": "91d9a3274c53e45a",
+     "change": "added",
+     "kind": "attribute",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "Refs.visit_AsyncFunctionDef"
+    },
+    {
+     "body": "e8045a79c4d13336",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "Refs.visit_Attribute",
+     "sig": "(self, node)"
+    },
+    {
+     "body": "020b40083f88a95a",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      13,
+      0
+     ],
+     "name": "Refs.visit_ClassDef",
+     "sig": "(self, node)"
+    },
+    {
+     "body": "9a1d7b10e98aa1b8",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      10,
+      0
+     ],
+     "name": "Refs.visit_FunctionDef",
+     "sig": "(self, node)"
+    },
+    {
+     "body": "66660e9a3ed1b367",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "Refs.visit_Name",
+     "sig": "(self, node)"
+    },
+    {
+     "body": "f95238be76e944b9",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "Refs.where",
+     "sig": "(self)"
+    },
+    {
+     "body": "97fbbe79f4f69553",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      15,
+      0
+     ],
+     "name": "extract",
+     "sig": "(path, text)"
+    },
+    {
+     "body": "8d9b0572f7228210",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      12,
+      0
+     ],
+     "name": "imports",
+     "sig": "(tree)"
+    },
+    {
+     "body": "014801f3753add33",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      15,
+      0
+     ],
+     "name": "local_names",
+     "sig": "(fn)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/index.py": {
+   "lang": "python",
+   "lines": [
+    3,
+    6
+   ],
+   "other": {
+    "imports": [
+     2,
+     0
+    ],
+    "module": [
+     0,
+     2
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "70a38c07fb7c0a47",
+     "change": "removed",
+     "kind": "function",
+     "lines": [
+      0,
+      3
+     ],
+     "name": "extract",
+     "sig": "(path, text)"
+    },
+    {
+     "body": "bb6bc43034453a4d",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "refresh",
+     "sig": "(root, rebuild=False)"
+    }
+   ]
+  },
+  "tests/test_trace.py": {
+   "lang": "python",
+   "lines": [
+    1,
+    1
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "7fe777f19ed5c6fa",
+     "change": "modified",
+     "kind": "method",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "TraceTest.test_an_existing_gitignore_gains_the_missing_generated_paths",
+     "sig": "(self)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

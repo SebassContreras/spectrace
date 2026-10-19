@@ -1,0 +1,58 @@
+{
+ "files": {
+  "tests/eval_index.py": {
+   "lang": "python",
+   "lines": [
+    57,
+    0
+   ],
+   "other": {
+    "imports": [
+     7,
+     0
+    ],
+    "module": [
+     22,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "23b6448daffea694",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "HERE"
+    },
+    {
+     "body": "5bea19969f76f783",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      20,
+      0
+     ],
+     "name": "evaluate",
+     "sig": "(root)"
+    },
+    {
+     "body": "bb01dbd2630cc504",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      7,
+      0
+     ],
+     "name": "main",
+     "sig": "(root)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

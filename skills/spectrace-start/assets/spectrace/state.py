@@ -16,7 +16,7 @@ def load_state(root):
         return {}
 
 
-IGNORES = ("state.json", "__pycache__/")
+IGNORES = ("state.json", "__pycache__/", "index.db")
 
 
 def ensure_ignores(root):

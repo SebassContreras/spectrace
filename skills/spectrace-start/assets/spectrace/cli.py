@@ -15,7 +15,12 @@ def parser():
     for name, (_, text, arguments) in COMMANDS.items():
         s = sub.add_parser(name, help=text)
         for a in arguments:
-            s.add_argument(a, action="store_true") if a.startswith("--") else s.add_argument(a)
+            if a.endswith("="):  # "--x=" takes a value
+                s.add_argument(a[:-1])
+            elif a.startswith("--"):
+                s.add_argument(a, action="store_true")
+            else:
+                s.add_argument(a)
     return p
 
 

@@ -1,0 +1,172 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/linker.py": {
+   "lang": "python",
+   "lines": [
+    21,
+    0
+   ],
+   "other": {
+    "imports": [
+     1,
+     0
+    ],
+    "module": [
+     3,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "c881689002b20f18",
+     "change": "modified",
+     "kind": "class",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "Graph",
+     "sig": "()"
+    },
+    {
+     "body": "407eafdf2cf94f3c",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      2,
+      0
+     ],
+     "name": "Graph.is_test",
+     "sig": "(self, path)"
+    },
+    {
+     "body": "53a68e5508d227a0",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      5,
+      0
+     ],
+     "name": "Graph.mark_tests",
+     "sig": "(self, paths)"
+    },
+    {
+     "body": "3a74ca05ee3dc8cb",
+     "change": "added",
+     "kind": "method",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "Graph.tests_of",
+     "sig": "(self, path, symbol=None)"
+    },
+    {
+     "body": "e1e6cc1a5806221e",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "hits",
+     "sig": "(name, symbol)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/symbols/__init__.py": {
+   "lang": "python",
+   "lines": [
+    5,
+    0
+   ],
+   "other": {
+    "module": [
+     2,
+     0
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "243558f5fec6544e",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      3,
+      0
+     ],
+     "name": "matches",
+     "sig": "(name, symbol)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/__init__.py": {
+   "lang": "python",
+   "lines": [
+    1,
+    4
+   ],
+   "other": {
+    "imports": [
+     1,
+     0
+    ],
+    "module": [
+     0,
+     1
+    ]
+   },
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "243558f5fec6544e",
+     "change": "removed",
+     "kind": "function",
+     "lines": [
+      0,
+      3
+     ],
+     "name": "matches",
+     "sig": "(name, symbol)"
+    }
+   ]
+  },
+  "skills/spectrace-start/assets/spectrace/views/index_view.py": {
+   "lang": "python",
+   "lines": [
+    11,
+    5
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "fc9c1ae1900bbc22",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "cmd_index",
+     "sig": "(repo, args)"
+    },
+    {
+     "body": "dffc77f5cc0835db",
+     "change": "modified",
+     "kind": "function",
+     "lines": [
+      10,
+      4
+     ],
+     "name": "graph",
+     "sig": "(repo, rebuild=False)"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}
