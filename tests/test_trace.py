@@ -408,7 +408,7 @@ class TraceTest(unittest.TestCase):
         self.task("001/T001", {"src/store.txt": "localStorage.setItem(session)\n"})
         self.write("planning/specs/001-auth/tasks.md", self.read("planning/specs/001-auth/tasks.md") +
                    "- [ ] T004 [agent] [status:todo] Remove the store\n      covers: D1@1\n      retires: T001\n"
-                   "- [ ] T005 [agent] [status:todo] Bring the store back\n      covers: D1@1\n")
+                   "- [ ] T005 [agent] [status:todo] Bring the store back\n      covers: D1@1\n      retires: T004\n")
         run(self.root, "status", "--write")
         self.assertEqual(run(self.root, "start", "001/T004")[0], 0)
         os.remove(os.path.join(self.root, "src", "store.txt"))
@@ -421,6 +421,9 @@ class TraceTest(unittest.TestCase):
         self.assertIn("+localStorage.setItem(session)", self.read(".spectrace/changes/001-T005.patch"))
         self.assertEqual(run(self.root, "start", "001/T002")[0], 0)
         self.assertEqual(run(self.root, "restore", "001/T004")[0], 1, "no longer applies: the file is back")
+        run(self.root, "abort", "001/T002")
+        # With T005 retiring T004, check is clean and T004 is retired rather than suspect
+        self.assertEqual(self.check("--strict")[0], 0)
 
     def test_restore_reverses_trailing_blank_context_and_binary_files(self):
         store, logo = "keep = 1\nstore = 'local'\n\n\n", bytes(range(256))

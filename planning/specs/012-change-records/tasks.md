@@ -40,7 +40,8 @@
       covers: D5@1
       changes: skills/spectrace-start/assets/spectrace/commands.py (+2 -52), skills/spectrace-start/assets/spectrace/model.py (+13 -0), skills/spectrace-start/assets/spectrace/records.py (+30 -0), skills/spectrace-start/assets/spectrace/views/impact.py (+80 -0)
 - [x] T013 [agent] [status:done] Add the `leftover` check, `trace keep` and `keeps.json`
-      covers: D6@1, A11@1
+      covers: D6@2, A11@1
+      └─ reviewed 2026-10-20: initial leftover implementation and keep command remain valid
       changes: skills/spectrace-start/assets/spectrace/commands.py (+2 -0), skills/spectrace-start/assets/spectrace/leftover.py (+55 -0), skills/spectrace-start/assets/spectrace/model.py (+9 -1)
 - [x] T014 [agent] [status:done] Add the anchored fallback for tasks without a record
       covers: D7@1, A11@1

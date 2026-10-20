@@ -167,6 +167,18 @@ class ViewsTest(unittest.TestCase):
         self.assertEqual(self.p.run("keep", "store.py::save", "the CLI still saves")[0], 0)
         self.assertNotIn("leftover", self.p.run("check")[1])
 
+    def test_a_reinstated_symbol_is_not_a_leftover_if_recorded_by_a_task_after_cleanup(self):
+        self.p.write("planning/specs/001-store/tasks.md", TASKS +
+                     "- [ ] T006 [agent] [status:todo] Drop the store\n      covers: D1@1\n      retires: T001\n" +
+                     "- [ ] T007 [agent] [status:todo] Reinstate the store\n      covers: D1@1\n")
+        # Cleanup task drops save():
+        self.p.task("001/T006", lambda: self.p.write("store.py", STORE.split("\n\ndef save")[0] + "\n"))
+        # Later task brings back save() identical to T001:
+        self.p.task("001/T007", lambda: self.p.write("store.py", STORE))
+        code, out = self.p.run("check", "--strict")
+        self.assertNotIn("leftover: store.py::save", out)
+
+
     def test_keep_needs_a_reason(self):
         self.assertEqual(self.p.run("keep", "store.py::save", " ")[0], 1)
 

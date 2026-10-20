@@ -129,7 +129,8 @@ applies, otherwise delete its line (nothing was built) and say so in the entry.
 **Reinstate.** Find the tasks that removed the old work (`impact` on the old item:
 the tasks listed under "retired by"). For each, add a task covering the reinstated
 item whose text says to run `trace restore NNN/TNNN` on it inside that task, then
-re-verify the result; the restored code is recorded as that task's change. Also
+re-verify the result; the restored code is recorded as that task's change. The restore
+task also `retires:` the task it undoes, so the undone task does not stay suspect. Also
 retire what the current item's tasks built (the usual redo). If `restore` reports the
 changes no longer apply, that task becomes a redo instead.
 

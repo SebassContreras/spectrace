@@ -10,7 +10,7 @@
       covers: R1@1, R2@1, R3@1, R4@1, D1@1, D2@1
       kind: test
       └─ blocked: needs real harness runs: step 0 installs the skills from the published repo, which lacks 011-016 until the maintainer pushes; then 20+ fresh claude/agy conversations
-      └─ blocked: conflicts 012/D6: restored or rebuilt code identical to a retired task's is reported as leftover (e2e step 5, tdo/store.py _read/_write/add/complete)
+      └─ conflict kept 2026-10-20: 012/D6@2 resolves false leftover and 015/T008 resolves suspect restore task
 - [ ] T004 [agent] [status:blocked] agy: the same run, recorded in `e2e/report.md`
       covers: R1@1, R2@1, R3@1, R4@1, D1@1, D2@1
       kind: test
@@ -19,3 +19,13 @@
       covers: R5@1, D3@1
       kind: test
       └─ blocked: waits for the results of 015/T003 and 015/T004
+- [x] T006 [agent] [status:done] Test leftover regression: reinstated/rebuilt symbol is not a leftover when recorded by a task after cleanup
+      covers: 012/D6@2
+      kind: test
+      changes: tests/test_records.py (+12 -0)
+- [x] T007 [agent] [status:done] Update leftover check to ignore symbols touched by any task done after the retiring task
+      covers: 012/D6@2
+      changes: skills/spectrace-start/assets/spectrace/leftover.py (+12 -1)
+- [x] T008 [agent] [status:done] Fix Reinstate in spectrace-change skill to retire the task it undoes and test restore task suspect state
+      covers: 004/D7@1
+      changes: skills/spectrace-change/SKILL.md (+2 -1), tests/test_trace.py (+4 -1)
