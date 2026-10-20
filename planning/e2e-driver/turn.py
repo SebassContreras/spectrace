@@ -2,7 +2,10 @@
 
 usage: python turn.py <harness: claude|agy> <repo> <log name> <prompt file> [conversation id]
 """
-import json, os, shutil, subprocess, sys, time
+import io, json, os, shutil, subprocess, sys, time
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 harness, repo, name, prompt_file = sys.argv[1:5]
 conv = sys.argv[5] if len(sys.argv) > 5 else None

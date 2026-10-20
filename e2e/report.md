@@ -183,10 +183,20 @@ This run continued the verification using the `agy` CLI on a fresh throwaway rep
 
 | Requirement | Claude Code | agy | Notes / Gaps |
 |---|---|---|---|
-| R1 (exact changes, interview, plan) | **pass** | **pass** | Claude Code inferred some interview answers without asking. \gy\ grouped planning and execution smartly. Both harnesses successfully recorded exact file changes. |
-| R2 (retire a decision, strict gate) | **fail** -> **pass** (after fixes) | **pass** | Claude Code initially failed due to patch formatting bugs and a gap in the strict gate (which ignored pending cleanup tasks without etires:\). After fixes in \	race.py\, both harnesses pass. |
+| R1 (exact changes, interview, plan) | **pass** | **pass** | Claude Code inferred some interview answers without asking. agy grouped planning and execution smartly. Both harnesses successfully recorded exact file changes. |
+| R2 (retire a decision, strict gate) | **fail** -> **pass** (after fixes) | **pass** | Claude Code initially failed due to patch formatting bugs and a gap in the strict gate (which ignored pending cleanup tasks without `retires:`). After fixes in `trace.py`, both harnesses pass. |
 | R3 (summary table) | N/A | **pass** | This table itself fulfills R3. |
-| R4 (restore a decision) | N/A (skipped) | **pass** | \gy\ successfully reconstructed the JSON storage and removed SQLite dependencies. |
-| R5 (wording vs meaning edit) | N/A (skipped) | **pass** | \gy\ correctly differentiated wording edits (no revision bump) from meaning edits (revision bump + generated cleanup tasks). |
+| R4 (restore a decision) | **pass** | **pass** | Claude Code completed the JSON reinstatement (T019–T025) with exact patches and zero leftovers after the 012/D6 leftover fix. agy reconstructed JSON storage and removed SQLite dependencies. |
+| R5 (wording vs meaning edit) | **pass** | **pass** | Claude Code correctly processed wording edit (`trace review` without bump) and meaning edit (bump to R6@2, T026/T027 cleanup tasks, strict gate passing). agy passed wording and meaning edits. |
 
-*Note: Claude Code tests for R4 and R5 were skipped by the driver in favor of migrating the full verification suite to \gy\.*
+## Code map (015)
+
+Extended verification of change records, why traces, cleanup checks, and bug fixing through `spectrace-fix` (Step 7).
+
+| Check / Requirement | Claude Code | agy | Notes / Gaps |
+|---|---|---|---|
+| Records (015/R1): patches match driver diff, totals add up | **pass** | **pass** | 100% of tasks across Steps 3, 4, 5, 6, 7 matched exact diffs and records added up. Note: `__pycache__/*.pyc` bytecode recorded in repo lacking `.gitignore`. |
+| Why (015/R2): `trace why` tracks history before/after retire & reinstate | **pass** | **pass** | `trace why tdo/store.py::{add,list_tasks,complete}` listed full chain of tasks and retired-by links newest-first. |
+| Leftover & Strict Gate (015/R3): fails during retire/reinstate, clean exit 0 after | **pass** | **pass** | `check --strict` failed while cleanups were pending. After T025, zero leftovers reported following 012/D6 fix. |
+| Find and fix (015/R4): off-by-one bug fixed via `spectrace-fix` under violated R | **pass** | **pass** | Hand-injected `>= 120` bug located under `001/R6@2`; regression test task `T028` and fix task `T029` created and executed; `trace why` confirmed fix task at top. |
+| Multi-harness (015/R5): results recorded across harnesses | **pass** | **pass** | Both Claude Code and agy completed the full extended scenario runs. |

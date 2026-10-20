@@ -20,5 +20,5 @@ Index of every spec. `Status` and `Stage` are written only by `trace status --wr
 | 012 | change-records | done        | 011, 016 | —     | 12 |
 | 013 | code-index | done        | 012 | —     | 13 |
 | 014 | locate-packet-fix | done        | 012, 013 | —     | 14 |
-| 015 | e2e-graph | blocked     | 014 | build | 15 |
+| 015 | e2e-graph | done        | 014 | —     | 15 |
 | 016 | decision-conflicts | done        | 011 | —     | 11 |

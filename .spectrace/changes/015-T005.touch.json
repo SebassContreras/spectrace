@@ -1,0 +1,37 @@
+{
+ "files": {
+  "e2e/report.md": {
+   "lang": "markdown",
+   "lines": [
+    15,
+    5
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "20ccfffb4bf98dcc",
+     "change": "added",
+     "kind": "section",
+     "lines": [
+      11,
+      0
+     ],
+     "name": "End-to-end report > Code map (015)"
+    },
+    {
+     "body": "a193fc4a6b9a4bf5",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      4,
+      5
+     ],
+     "name": "End-to-end report > Summary"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}
