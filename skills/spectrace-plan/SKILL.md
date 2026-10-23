@@ -71,7 +71,7 @@ Write `design.md` as:
 
 - Each D item is **one** decision and names the R items it serves. Deliverables,
   sequencing and open questions are context, not items. Omit an empty section.
-- Decisions must comply with project architecture conventions in `planning/architecture.md` (SRP, Service Layer/Anti-Corruption, Composition, Testability, KISS/YAGNI). Verify unfamiliar APIs and patterns against industry standards on the web. Note non-trivial trade-offs (pros/cons) and concrete mitigations.
+- Decisions must comply with the 10 engineering principles and project architecture conventions in `planning/architecture.md` (KISS/YAGNI proportionality, SRP, DRY via composition, Service Layer / Anti-Corruption wrappers for third-party libraries/APIs, pure functions and testable injected dependencies). Verify unfamiliar APIs and patterns against industry standards on the web. Note non-trivial trade-offs (pros/cons) and concrete mitigations.
 - A project-wide decision (answer 4) is appended to `planning/architecture.md` as the
   next A item under its header, with its operative line in `AGENTS.md` → "Stack &
   conventions". Append only: if it contradicts an existing A item, propose the change
@@ -100,8 +100,9 @@ Draft a numbered list from `requirements.md` and `design.md`:
   runtime, a framework, a convention enforced in code) lists that A item in `covers:`
   too — otherwise changing the decision later can't find the task.
 - Every R item that states a checkable outcome gets at most one `kind: test` task
-  covering it, at the lowest level that proves it: a unit test with a fake adapter
-  before an integration test. Skip code without logic and a vendor's own behavior.
+  covering it, at the lowest level that proves it: test observable behavior or explicit
+  failure modes (no vacuous getter/mock tests), with a fake adapter before an integration test.
+  External vendor dependencies must be isolated behind an adapter/interface. Skip code without logic.
 - e2e, smoke or browser-driven test tasks only when the `verification` answer asks for
   them. Then prefer automated headless scripts (owner `agent`, `kind: test`); reserve
   owner `human` for manual visual review or scenarios requiring user credentials or

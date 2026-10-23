@@ -1,0 +1,37 @@
+{
+ "files": {
+  "skills/spectrace-plan/SKILL.md": {
+   "lang": "markdown",
+   "lines": [
+    4,
+    3
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "8e853c30170e13f0",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "spectrace-plan > Phase 1 — Design (skip if the spec already has D items)"
+    },
+    {
+     "body": "1b098bb06992c6e2",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      3,
+      2
+     ],
+     "name": "spectrace-plan > Phase 3 — Tasks"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

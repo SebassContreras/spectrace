@@ -1,0 +1,58 @@
+{
+ "files": {
+  "skills/spectrace-start/SKILL.md": {
+   "lang": "markdown",
+   "lines": [
+    1,
+    0
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "b6b043582c5db61b",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "spectrace-start > Interview contract"
+    }
+   ]
+  },
+  "skills/spectrace-start/references/question-bank.md": {
+   "lang": "markdown",
+   "lines": [
+    2,
+    2
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "d38eaed3e61b8ca6",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "Interview question bank > Phase A — Type & vision (all project types)"
+    },
+    {
+     "body": "6063affe4345bc24",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      1,
+      1
+     ],
+     "name": "Interview question bank > Phase B — Technologies, architecture & tools > B-software"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

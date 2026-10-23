@@ -38,6 +38,7 @@ Applies to every Q&A phase. `references/question-bank.md` defines the dimensions
 - **Never infer an answer** to close a dimension — leave it `open`, ask again in the
   sweep. `TBD` on disk beats a guess.
 - **Follow up** on anything named but unspecified ("the dashboard", "our brand").
+- **Critical inquiry & anti-sycophancy.** Actively probe requests: ask what exact problem is solved, what observable success looks like, challenge premature abstractions or unneeded scope, and inquire about failure modes and edge cases rather than accepting answers passively.
 - **Unsure user** → the question bank's help-me-decide protocol.
 - **Plain chat questions** by default. A selectable-options tool only for a closed
   choice with 2–6 real answers (project type, yes/no) — never with a skip preselected.

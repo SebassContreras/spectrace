@@ -1,0 +1,48 @@
+{
+ "files": {
+  "AGENTS.md": {
+   "lang": "markdown",
+   "lines": [
+    11,
+    4
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "7f6011e54322dfcc",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      11,
+      4
+     ],
+     "name": "spectrace > Rules for agents"
+    }
+   ]
+  },
+  "skills/spectrace-start/references/templates.md": {
+   "lang": "markdown",
+   "lines": [
+    11,
+    4
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "96f0d7125196a510",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      11,
+      4
+     ],
+     "name": "File templates > `AGENTS.md`"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

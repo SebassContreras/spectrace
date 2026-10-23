@@ -31,10 +31,17 @@ yet answered stays `TBD`.
 ## Rules for agents
 
 <agent-rules answers; default rules below apply unless overridden>
-- **Follow industry standards**: Align designs, patterns, and code structure with established industry standards.
-- **Web research for verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
-- **Trade-off analysis (Pros & Cons)**: Detail the pros and cons of technical decisions; explicitly specify and implement solutions or mitigations to counter the identified drawbacks.
-- **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in `planning/architecture.md`.
+- **KISS / YAGNI — No Over-Engineering**: Proportionality; start simple and direct; abstract only for 2+ uses/vendors or isolation for testing.
+- **SRP / Separation of Concerns**: One responsibility per file/module/class; split multi-concern units.
+- **DRY via Composition, not Inheritance**: Extract shared logic into injectable helpers/services; avoid deep inheritance.
+- **Service Layer + Anti-Corruption / Dependency Inversion**: Wrap external libraries/APIs in adapter interfaces; business logic depends on interfaces, not vendors.
+- **Small Interfaces & Pure Functions**: When in doubt, prefer small interfaces, pure functions, and injected testable dependencies.
+- **Testing — Behavior, not Coverage**: Test observable behavior and explicit failure modes; regression test before every bug fix; never weaken tests to pass code.
+- **Testing Hygiene**: Strict Given-When-Then / Arrange-Act-Assert; clear behavior-stating test names; no conditionals/loops in tests; mock boundary dependencies only.
+- **Follow the Stack's Standards**: Idiomatic conventions, official style guides, and codebase consistency.
+- **Web Research for Verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
+- **Trade-off Analysis (Pros & Cons) & Mitigations**: Detail pros and cons of technical decisions; explicitly specify and implement concrete solutions/mitigations for drawbacks.
+- **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in planning/architecture.md.
 
 ## Testing
 

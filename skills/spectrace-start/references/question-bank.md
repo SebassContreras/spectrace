@@ -18,7 +18,7 @@ web-verified standards, shown in full for yes / changes / defer.
 
 | Dimension | Questions |
 |---|---|
-| `idea-detail` | "Tell me in your own words, in detail, what this idea is — what problem it solves, how you picture it working step by step, and anything you've tried or seen that makes you think it's possible. Take as long as you need." · Then structure what was said into problem, users, main flow, entities/data and integrations, without inventing choices; use it as the starting point for the rest of the interview. |
+| `idea-detail` | "Tell me in your own words, in detail, what this idea is — what exact problem it solves, how you picture it working step by step, and anything you've tried or seen that makes you think it's possible. Take as long as you need." · Critically probe the problem: what observable outcome defines success? What failure modes, edge cases, or invalid inputs must be handled? Challenge premature complexity and unneeded abstractions; use structured findings as the starting point for the rest of the interview. |
 | `project-type` | "What kind of thing is this — software, a marketing or content project, an operations/process project, a research project, or something else?" · For software, also the concrete form: mobile app (iOS/Android/both), web app, desktop app, backend service/API, CLI, library, or a combination. "An app" alone is not an answer — ask which. |
 | `goal` | Drafted by the agent from `idea-detail` and `project-type` as a short statement (what it is, for whom, what it achieves), then shown: "Is this the goal, or would you change it?" Covered only on the user's yes or edit. |
 | `audience` | "Who or what is this for?" |
@@ -39,7 +39,7 @@ A item in `planning/architecture.md`: `- A<n>@1: <decision> — why: <reason>`.
 | Dimension | Questions |
 |---|---|
 | `runtime` | "What language and runtime version?" |
-| `framework` | "Which framework(s) and key libraries? Anything you specifically *don't* want used?" |
+| `framework` | "Which framework(s) and key libraries? Anything you specifically *don't* want used?" · Probe dependencies: challenge single-use external SDKs and check if third-party libraries require an adapter/service layer (A16, A17). |
 | `toolchain` | "Package manager, test runner, formatter/linter — and the exact commands to run each?" For tests, ask for three commands: one file or module, affected only, full suite (record "none" for a mode the runner lacks). Record only tools and commands the toolchain actually accepts — never a tool by name alone. |
 | `datastore` | "Where does data live? Which database, and how are schema changes managed?" |
 | `data-model` | "What are the main entities and how do they relate?" |
