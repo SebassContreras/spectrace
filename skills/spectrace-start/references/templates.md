@@ -42,6 +42,7 @@ yet answered stays `TBD`.
 - **Web Research for Verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
 - **Trade-off Analysis (Pros & Cons) & Mitigations**: Detail pros and cons of technical decisions; explicitly specify and implement concrete solutions/mitigations for drawbacks.
 - **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in planning/architecture.md.
+- **Sync Before Status**: Always synchronize repository status (`git pull` and `git status`) before reporting pending tasks or answering queries like "what's next" / "¿qué sigue?".
 
 ## Testing
 

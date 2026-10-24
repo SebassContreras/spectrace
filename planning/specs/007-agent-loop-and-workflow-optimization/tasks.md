@@ -10,3 +10,8 @@
 - [x] T003 [agent] [status:done] Protocol updates: document loop execution, single check at session end, and UI/browser testing guidance
       covers: D1@1, D4@1
       changes: AGENTS.md (+5 -4), skills/spectrace-plan/SKILL.md (+3 -1), skills/spectrace-start/assets/agents-protocol.md (+5 -4)
+- [x] T004 [agent] [status:done] Update protocol and templates to require git pull/status before status checks
+      covers: D1@2
+      retires: T003
+      changes: AGENTS.md (+2 -1), skills/spectrace-start/assets/agents-protocol.md (+1 -1), skills/spectrace-start/references/templates.md (+1 -0)
+

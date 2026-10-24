@@ -31,6 +31,7 @@ lists exactly what to remove or redo. See `planning/product.md`.
 - **Web Research for Verification**: Ground non-trivial choices, APIs, libraries, and code examples with official documentation and web research.
 - **Trade-off Analysis (Pros & Cons) & Mitigations**: Detail pros and cons of technical decisions; explicitly specify and implement concrete solutions/mitigations for drawbacks.
 - **Adhere to Architecture Guidelines**: Strictly follow the project-wide conventions recorded in planning/architecture.md.
+- **Sync Before Status**: Always synchronize repository status (`git pull` and `git status`) before reporting pending tasks or answering queries like "what's next" / "¿qué sigue?".
 
 ## Testing
 
@@ -51,7 +52,7 @@ In this repo the script is `skills/spectrace-start/assets/trace.py` (target repo
 `.spectrace/trace.py`). Use `python` on Windows, `python3` elsewhere.
 
 When executing tasks (even across multiple specs), loop steps 1–5 for each task:
-1. `python skills/spectrace-start/assets/trace.py status` — pick the `next` task, or the one you were asked for.
+1. Synchronize with origin (`git pull` and `git status`) before checking status or answering what's next. Then `python skills/spectrace-start/assets/trace.py status` — pick the `next` task, or the one you were asked for.
 2. `python skills/spectrace-start/assets/trace.py start NNN/TNNN` — before editing anything. Never edit files without an open task.
 3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task.
 4. Verify it against the task text and the R items it covers. Run the narrowest test command from "Testing" above for the files the task changed; run the full suite only if the task touched a shared module (config, core, public interfaces), or at session end.

@@ -15,7 +15,7 @@ Agents and engineers executing specs in target repositories, ensuring tasks are 
 
 ## Requirements
 
-- R1@1: The protocol in `AGENTS.md` and `skills/spectrace-start/assets/agents-protocol.md` explicitly specifies loop execution behavior: each task must be opened with `trace start` and closed with `trace done` before proceeding to any other task or spec.
+- R1@2: The protocol in `AGENTS.md` and `skills/spectrace-start/assets/agents-protocol.md` explicitly specifies loop execution behavior: sync with origin (`git pull` / `git status`) before checking task status or answering what's next, and open each task with `trace start` and close it with `trace done` before proceeding to any other task or spec.
 - R2@1: `trace start` prints the resolved items (R/D/A) and their text covered by the opened task, reducing mandatory full-file context reads.
 - R3@1: `trace done` prints the `next:` task recommendation and start command upon completing a task.
 - R4@1: The protocol explicitly states that `trace check` is run once before finishing the overall session, not after every individual task.

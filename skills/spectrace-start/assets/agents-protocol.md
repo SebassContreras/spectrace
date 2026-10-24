@@ -5,7 +5,7 @@ Specs live in `planning/`; how they are written is in `.spectrace/format.md`. Ru
 trace with `python3` (`python` on Windows).
 
 When executing tasks (even across multiple specs), loop steps 1–5 for each task:
-1. `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
+1. Synchronize with origin (`git pull` and `git status`) before checking status or answering what's next. Then `python3 .spectrace/trace.py status` — pick the `next` task, or the one you were asked for. Skip `[human]` tasks; tell the user they are theirs.
 2. `python3 .spectrace/trace.py start NNN/TNNN` — before editing anything. If it lists files changed outside any task, ask the user whether to `--adopt` or `--ignore` them. Never edit files without an open task.
 3. Read the spec's `requirements.md` and `design.md` (or the items printed by `start`); do only that task, following `planning/architecture.md`. To find code, `python3 .spectrace/trace.py locate "<words>"`; before editing code you did not write, `python3 .spectrace/trace.py why <path[::symbol]>` shows the decisions behind it.
 4. Verify it against the task text and the R items it covers. Run the narrowest test command from `AGENTS.md` "Testing" for the files the task changed; run the full suite only if the task touched a shared module (config, core, public interfaces), or at session end.
