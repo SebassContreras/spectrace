@@ -1,0 +1,91 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/spectrace/audit.py": {
+   "lang": "python",
+   "lines": [
+    159,
+    0
+   ],
+   "other": {
+    "imports": [
+     2,
+     0
+    ],
+    "module": [
+     13,
+     0
+    ]
+   },
+   "status": "new",
+   "symbols": [
+    {
+     "body": "1ba03d822f705e87",
+     "change": "added",
+     "kind": "variable",
+     "lines": [
+      1,
+      0
+     ],
+     "name": "AuditIssue"
+    },
+    {
+     "body": "8591f8cfc34f465d",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      8,
+      0
+     ],
+     "name": "_read_file",
+     "sig": "(path: str) -> str"
+    },
+    {
+     "body": "1b646fa79010093d",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      25,
+      0
+     ],
+     "name": "check_architecture_alignment",
+     "sig": "(repo) -> List[AuditIssue]"
+    },
+    {
+     "body": "5b9ce01ecace20ad",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      39,
+      0
+     ],
+     "name": "check_interview_alignment",
+     "sig": "(repo) -> List[AuditIssue]"
+    },
+    {
+     "body": "b9c7766395ccb58a",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      64,
+      0
+     ],
+     "name": "check_scope_alignment",
+     "sig": "(repo) -> List[AuditIssue]"
+    },
+    {
+     "body": "a9928643154d23e7",
+     "change": "added",
+     "kind": "function",
+     "lines": [
+      7,
+      0
+     ],
+     "name": "run_audit",
+     "sig": "(repo) -> List[AuditIssue]"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}

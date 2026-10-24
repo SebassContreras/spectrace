@@ -209,6 +209,10 @@ python3 .spectrace/trace.py status            # (python on Windows)
 python3 .spectrace/trace.py start 001/T005    # before editing anything
 python3 .spectrace/trace.py done 001/T005     # writes changes: and the patch
 python3 .spectrace/trace.py check             # must exit 0 before you finish
+python3 .spectrace/trace.py check --audit     # trace verification plus consistency audit
+python3 .spectrace/trace.py audit             # consistency audit across architecture, product and interview
+python3 .spectrace/trace.py audit --strict    # exit 1 on audit warnings (CI / release gates)
+python3 .spectrace/trace.py audit --json      # machine-readable JSON output
 ```
 
 `start` snapshots the working tree without committing or touching the staging area;

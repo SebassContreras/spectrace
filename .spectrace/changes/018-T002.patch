@@ -1,0 +1,57 @@
+diff --git a/skills/spectrace-start/assets/spectrace/commands.py b/skills/spectrace-start/assets/spectrace/commands.py
+index 3f4d5f0..d811564 100644
+--- a/skills/spectrace-start/assets/spectrace/commands.py
++++ b/skills/spectrace-start/assets/spectrace/commands.py
+@@ -8,6 +8,7 @@ from .model import SEVERITY, Repo, find_item
+ from .state import load_state, save_state, edit_task
+ from .leftover import cmd_keep
+ from .mentions import removed_mentions, removed_terms
++from .audit import run_audit
+ from .views.impact import cmd_impact
+ from .views.index_view import cmd_index, graph
+ from .views.locate import cmd_locate
+@@ -166,6 +167,9 @@ def cmd_block(repo, args):
+ 
+ def cmd_check(repo, args):
+     root = repo.root
++    if getattr(args, "audit", False):
++        for sev, where, msg, sp in run_audit(repo):
++            repo.issue(sev, where, msg, sp)
+     if removed_terms(repo.records):  # only then is the index worth refreshing
+         g, db = graph(repo)
+         db.close()
+@@ -190,6 +194,24 @@ def cmd_check(repo, args):
+ 
+ 
+ 
++def cmd_audit(repo, args):
++    issues = sorted(run_audit(repo), key=lambda x: SEVERITY[x[0]])
++    if getattr(args, "json", False):
++        items = []
++        for sev, where, msg, sp in issues:
++            f, _, l = where.partition(":")
++            items.append({"severity": sev, "where": where, "file": f, "line": int(l) if l.isdigit() else None,
++                          "message": msg, "spec": sp})
++        print(json.dumps({"audit": items}, indent=2))
++    else:
++        for sev, where, msg, _ in issues:
++            print(f"{sev.upper():<8} {where}  {msg}")
++        counts = {k: sum(1 for i in issues if i[0] == k) for k in SEVERITY}
++        print(f"\n{counts['error']} error(s), {counts['pending']} pending, {counts['warning']} warning(s)")
++    failed = any(i[0] == "error" for i in issues) or (getattr(args, "strict", False) and any(i[0] in ("pending", "warning") for i in issues))
++    return 1 if failed else 0
++
++
+ def cmd_review(repo, args):
+     item = find_item(repo, args.ref)
+     repo.fingerprints[item.ref] = item.fingerprint
+@@ -205,7 +227,8 @@ COMMANDS = {
+     "done": (cmd_done, "close the open task and record its changes", ("task",)),
+     "abort": (cmd_abort, "close the open task without recording it", ("task",)),
+     "block": (cmd_block, "mark a task blocked with a reason", ("task", "reason")),
+-    "check": (cmd_check, "verify the trace; exit 1 on errors (--strict: also on pending)", ("--strict",)),
++    "check": (cmd_check, "verify the trace; exit 1 on errors (--strict: also on pending, --audit: include audit)", ("--strict", "--audit")),
++    "audit": (cmd_audit, "consistency audit across architecture, product and interview (--strict, --json)", ("--strict", "--json")),
+     "impact": (cmd_impact, "what implemented an item, or what depends on code (path[::symbol])",
+                ("ref", "--direction=", "--depth=", "--deep")),
+     "review": (cmd_review, "accept an item's current text as a wording-only edit", ("ref",)),

@@ -1,0 +1,27 @@
+{
+ "files": {
+  "skills/spectrace-start/assets/format.md": {
+   "lang": "markdown",
+   "lines": [
+    4,
+    0
+   ],
+   "other": {},
+   "status": "modified",
+   "symbols": [
+    {
+     "body": "3e76a594b118a219",
+     "change": "modified",
+     "kind": "section",
+     "lines": [
+      4,
+      0
+     ],
+     "name": "spectrace format > Executing tasks"
+    }
+   ]
+  }
+ },
+ "partial": false,
+ "skipped": []
+}
