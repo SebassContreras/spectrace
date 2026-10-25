@@ -24,3 +24,5 @@ Index of every spec. `Status` and `Stage` are written only by `trace status --wr
 | 016 | decision-conflicts | done        | 011 | —     | 11 |
 | 017 | rigorous-engineering-policy | done        | 008, 009 | —      | 16 |
 | 018 | consistency-audit | done        | 008, 011, 017 | —      | 17 |
+| 019 | language-adapters | todo        | 011, 015 | design | 18 |
+| 020 | tracing-docs-alignment | todo        | 018, 019 | design | 19 |
