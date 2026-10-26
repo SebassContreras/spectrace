@@ -1,158 +1,143 @@
 ---
 name: spectrace-change
 description: >-
-  The way to change direction in a spectrace project without leaving anything behind.
-  Revises or retires requirements (R), design (D) or project-wide (A) decisions,
-  records why in changes.md, uses the trace to list every task, file, line and test
-  that implemented the old decision, and turns that list into cleanup tasks (redo by
-  default, refactor only with a written reason) so the spec cannot read as done while
-  old code remains. Use when the user changed their mind or an approach turned out
-  wrong after specs, design or code exist: "change the auth design to JWT", "we no
-  longer need X", "that decision was wrong", "revert the approach in spec 003",
-  "cambiamos de idea", "ya no queremos X". Also for corrections found after the fact.
+  Changes a spectrace project at any time — before or after the first version ships —
+  without leaving old work behind. Handles a change of direction (replaces the old
+  requirement or decision in the spec, finds what it built with git log --grep and
+  git grep, and adds cleanup tasks), a bug (regression test task plus fix task), a new
+  idea or feature (adds it to the right spec or a new one), and a convention that gets
+  in the way (proposes updating it instead of working around it). Use when: "we changed
+  our mind about X", "now we want Y instead", "this decision was wrong", "X is broken",
+  "add this to the plan", "cambiamos de idea", "ya no queremos X", "hay un bug en",
+  "agrega esto", "esta regla estorba".
 ---
 
 # spectrace-change
 
-Run **inside the target repo**. Grammar: `.spectrace/format.md` — read it first. Run
-the trace with `python3` (`python` on Windows): `python3 .spectrace/trace.py <command>`.
-Ask **one question at a time**. This skill edits closed decisions, so nothing is written
-before the user confirms what is about to change.
+Run **inside the target repo**. The format and protocol are in the `<!-- spectrace -->`
+block of `AGENTS.md` — read it first. If the repo has no `planning/`, no block or no
+`.githooks/`, point to the `spectrace-plan` skill (it installs or repairs them) and
+stop.
 
-## Phase 0 — Preconditions
+Changes are normal, not exceptions: never refuse one because a spec is `done` or the
+first version shipped. Write nothing before the user confirms what is about to change.
 
-1. **Refuse** if `.spectrace/trace.py` is missing (point to the `spectrace-start` skill).
-2. **Refuse** if `trace status` shows an open task: tell the user to finish it
-   (`done`), `block` it or `abort` it first — changing decisions under a task in
-   flight leaves it half on each side.
-3. Run `trace check` and note existing `error`s; this skill must not add new ones.
+## Step 1 — What kind of change
 
-## Phase 0b — Start from a conflict
+Ask what changed and why if the user hasn't said, in their words. Then classify, and
+say which:
 
-Enter here when the user names a decision conflict or `trace check` lists one
-(`decision conflict: <ref> — <why>`, on a blocked task).
+- **New idea or feature** → Step 2.
+- **Change of direction** — something already specced or built should be different
+  or go away → Step 3.
+- **Bug** — the code doesn't do what the spec says → Step 4.
+- **A convention in the way** — `AGENTS.md`, `product.md` or a Design line forces a
+  worse solution → Step 5.
 
-1. Show the item's current text, the task and the recorded reason.
-2. Propose the simplest direct change first, then ask **keep**, **edit** or **retire**:
-   "<ref> forces <what the task would have to work around>; propose <change>. Approved?"
-3. **Keep** — write no decision. Add `└─ conflict kept YYYY-MM-DD: <how the task will fit>`
-   under the task, and tell the user the agent resumes it with `trace start`. Stop.
-4. **Edit** or **retire** — continue with Phase 1, the item preselected and the recorded
-   reason as the entry's `Why`. In Phase 4 the blocked task is re-pointed or replaced like
-   any not-started task that covers a changed item.
+## Step 2 — New idea or feature
 
-## Phase 1 — What changed
+- Fits an open spec (not `done`) and is small → new requirement, design line and tasks
+  appended to it.
+- Otherwise → a new spec: follow the `spectrace-plan` skill's Steps 2–4 for it alone.
+- "Someday" ideas → one line in the roadmap's `## Ideas`. No discussion needed.
 
-1. Ask what changed and why, in the user's words. If they name a spec, start there;
-   otherwise find the affected items by reading `requirements.md`, `design.md` and
-   `planning/architecture.md`.
-2. Propose the edit for each affected item — show the current line and the new one:
-   - **Revise** — the meaning changes: next revision (`D3@1` → `D3@2`), new text.
-   - **Reword** — the user confirms the meaning is unchanged: fix the text, keep the
-     revision, then run `trace review <ref>` so the trace accepts it. Record it in
-     `changes.md` as a wording fix and skip Phases 3–4. When in doubt, it's a revise.
-   - **Retire** — it no longer holds: wrap the statement in `~~`, append
-     `retired YYYY-MM-DD` and `→ <replacement>` if there is one.
-   - **Add** — the next free number in that file, at `@1`.
-   - **Reinstate** — "go back to what we had": retire the current item (→ the new
-     one) and add the old statement back as the next item number. Phase 4 brings its
-     code back.
-   For a revised or retired R, also ask whether each D implementing it still holds.
-3. Ask for an explicit yes. On anything else, stop without writing.
-4. Apply the edits. Never renumber or delete an item line.
+## Step 3 — Change of direction
 
-## Phase 2 — History
+1. **Find the items.** Read the specs that mention it; name each R or D that changes.
+2. **Find what the old item built**:
+   - `git log --grep "Spec: NNN/" --stat` — the commits of the tasks that covered it
+     (match task IDs from the spec's `covers`). `git show <sha>` for detail.
+   - `git grep -n` for every name the old approach introduced — files, functions,
+     commands, flags, env vars, config keys — and its key nouns, across code, tests,
+     docs, `AGENTS.md` and other specs. Untracked files are left alone.
+   - **Assumptions.** From the user's reason, list what the old approach assumed —
+     not its names, its habits: "loads the whole collection", "ids are max + 1",
+     "filters in memory", "the file is text". For each, a `git grep` pattern or the
+     files to read.
+   - Read the files those commits touched. Code that relies on the old approach without
+     naming it (a pattern, an assumption, a test that compares raw output) only shows
+     up by reading.
+   Show the list: what is still in the code, what's already gone, and docs that
+   describe the old way.
+3. **Choose where the work goes.** Small and inside one spec that isn't `done` → tasks
+   appended to that spec. Otherwise → a **new spec** named after the change
+   (`006-sqlite-storage`), written with the `spectrace-plan` skill's Step 3; done specs
+   stay `done` and only get their items struck.
+4. **Propose the edit**, current line and new line side by side:
+   - Replace: strike the old item and point to the new one: `- ~~D1 (R1): Sessions in
+     localStorage.~~ → D3` in the same spec, or `→ 006/D1` when the new item lives in a
+     new spec.
+   - Drop: strike it with nothing after it: `- ~~R4: Export to PDF.~~ dropped`.
+   - Wording only (same meaning): edit in place, no strike.
+   For a replaced R, check whether each D serving it still holds. Done tasks that
+   covered a struck item stay as they are — they're history.
+5. **Propose tasks**, in the order they can run without breaking the build:
+   build the new way beside the old code, switch the callers and tests to it, then remove the old code
+   (`— replaces D1`, or `— covers D3; replaces D1` when one task does both), then docs
+   outside `planning/`. When the switch changes a data format, callers and tests move
+   in one task. `planning/` files (product, other specs) are edited directly as part
+   of the change, not as tasks.
+   - Remove and rebuild by default; rewrite in place only when the user prefers it —
+     note why in Changes.
+   - A test of a dropped requirement is deleted; a test of a replaced one is rewritten
+     for the new item.
+   - A not-started task for the old item: delete its line, or re-point its `covers`.
+   - A detail the user didn't settle (a path, a message, a format): pick the simplest
+     and mark it `(assumed)` in the Design line.
+   - **The reason becomes a requirement with a test.** "The JSON file is rewritten on
+     every add" → `R2: add and rm write only that row` plus a test task for it, so
+     whatever still follows the old way fails a test instead of hiding.
+   - **The last task is a review**: `[agent] Review: re-read <the files the old
+     commits touched> and the assumptions list; nothing still assumes <old way> —
+     covers <the new items>`. It closes only with a `reviewed:` note naming what was
+     read and found (the hook refuses it otherwise); anything found becomes a new task
+     before it. Best done by an agent that didn't write the change. The assumptions
+     list it checks against lives in the `## Changes` entry (step 6).
+   - Tasks run in file order. A task added later goes where it must run, not at the
+     end; its number is just the next free one (T009 may sit between T004 and T005).
+6. On a yes, write the edits and tasks, and add to each touched spec's `## Changes`:
+   `- YYYY-MM-DD: D1 → 006/D1. Why: <the user's reason>. Work: 006.` In the spec that
+   holds the work, indent the assumptions list under that line
+   (`  - assumed: loads the whole collection — bkm/cli.py`).
+   Reopen a spec (`in progress`) only when its own tasks were added. If a spec added
+   earlier now depends on the reopened one, check its `Depends on`.
 
-Append one entry, newest last, in the format's History shape — the spec's
-`changes.md` for R and D items, `planning/changes.md` for A items (both if both
-changed); create the file with a `# … — Changes` title if missing:
+## Step 4 — Bug
 
-```
-## YYYY-MM-DD — <short title>
-Why: <the user's reason>
-- MODIFIED D3@1 → D3@2
-- REMOVED R4@1
-- ADDED D7@1
-- Tasks: <filled in Phase 4>
-```
+1. Get the symptom: what was done, what happened, what was expected. Don't turn it
+   into a cause yet.
+2. Find the code (`git grep`, the spec's tasks, `git log --grep "Spec: NNN/"`), read it,
+   and reproduce the bug if you can without editing files.
+3. Decide with the user:
+   - The code breaks a requirement that still holds → tasks in that spec (reopen it if
+     `done`): `[agent] Regression test: <the symptom as a failing check> — covers R2`
+     first, then `[agent] Fix <what> — covers R2`, closed in one commit (the test
+     fails until the fix lands). If a Design line caused the bug,
+     replace it (Step 3.4) and the fix task ends `— covers D4; replaces D2`.
+   - The requirement itself is wrong, or no requirement forbids the behaviour (a
+     Design line allows it) → a change of direction (Step 3) or a new requirement
+     (Step 2), with the regression test task all the same.
+   - The fix belongs in a task not started yet → edit that task instead of adding a
+     fix task; the regression test goes right after it.
+4. If the bug was noted in the roadmap's `## Ideas`, remove that line.
 
-## Phase 3 — Manifest
+## Step 5 — A convention in the way
 
-Run `trace impact NNN/<item> --deep` (or `A<n>`) for every revised or retired item, and show
-the combined result as the **retirement manifest**: each task that covered the old
-item, its status, whether it is a test, and per file how many of the lines it added
-are still in the code (`file deleted` when gone), and the symbols it introduced with
-`unchanged`, `changed` or `gone` (`anchored` when the task predates records), with what
-depends on each and the tests that reference it (`exact` or `inferred`). A
-finished task with no patch recorded is listed as "search by hand" — grep for what its
-text describes and show what you find before relying on it.
+Conventions describe how the project is today; they are not laws.
 
-**Sweep — what the trace can't see.** The trace only knows lines added by tasks that
-covered the old item. A README sentence, a comment in a file another task wrote, a
-spec's context section or an `AGENTS.md` line can still describe the old decision.
-Build the search terms — every path the old decision's tasks created, the names it
-introduced (commands, flags, files, env vars, functions), and its key nouns ("plugin",
-"release") — and grep the whole repo for each. Classify every hit and show the list
-with the manifest:
+1. Name the line, what it forces, and the better solution it blocks.
+2. Propose the simplest change to it: edit, replace or delete the line.
+3. On a yes, edit the file and add a `## Changes` line to the spec that needed it. If
+   code already follows the old convention and should change, treat it as Step 3.
+   On a no, record the user's call in the spec's Changes and continue the old way.
 
-- **History** — `tasks.md`, `changes.md`, `.spectrace/`, a retired item line: keep.
-- **Stale, outside `planning/`** — find which task wrote that code with
-  `trace why <path[::symbol]>` (`git log -S` only when it answers "outside the trace")
-  and add a task in Phase 4 that `retires:` it (covering the item that replaces it, or
-  the spec's own item for that file). Without `retires:`, the strict gate won't track
-  this cleanup; once that task is done, `check` reports any symbol it left unchanged as
-  `leftover` until it is removed or kept with `trace keep`.
-- **Stale, inside `planning/`** (a spec's context, deliverables, a non-item line) —
-  edit it directly as part of this change, after the user confirms.
+## Step 6 — Report and stop
 
-Once tasks have deleted files, `trace check` also flags any remaining mention of their
-paths; the sweep exists for everything else.
-
-## Phase 4 — Classify and write tasks
-
-For each **finished** task in the manifest, propose one, and let the user decide:
-
-- **Still valid** — the task's work holds under the new revision. Re-point its
-  `covers:` to the new revision and add `└─ reviewed YYYY-MM-DD: <why it holds>`.
-- **Redo** — *the default.* A new task that removes what it built
-  (`retires: TNNN`, covering the replacement item), plus the tasks that build the new
-  decision. Deleting and rebuilding beats bending old code into a new shape.
-- **Refactor in place** — only if the user gives a one-sentence reason why changing
-  the existing code is better than removing it; record that sentence in the
-  `changes.md` entry. The task `retires:` the old one and covers the new item.
-- A **test** covering a retired R: a task that deletes the test (`retires:` it) —
-  never adapt a test to a requirement it no longer guards.
-
-For each **not-started** task covering a changed item: re-point it if it still
-applies, otherwise delete its line (nothing was built) and say so in the entry.
-
-**Reinstate.** Find the tasks that removed the old work (`impact` on the old item:
-the tasks listed under "retired by"). For each, add a task covering the reinstated
-item whose text says to run `trace restore NNN/TNNN` on it inside that task, then
-re-verify the result; the restored code is recorded as that task's change. The restore
-task also `retires:` the task it undoes, so the undone task does not stay suspect. Also
-retire what the current item's tasks built (the usual redo). If `restore` reports the
-changes no longer apply, that task becomes a redo instead.
-
-New tasks follow the `spectrace-plan` skill's task rules (single-action, verifiable, `covers:`,
-owner, `kind: test` for checkable R items). Number them after the spec's last task —
-in the spec of the task being retired when the change spans specs. Show the full list
-for confirmation, then write it, and complete the entry's `Tasks:` line.
-
-## Phase 5 — Gate, report, stop
-
-1. Run `trace status --write`, then `trace check`. There must be no `error`. The only
-   `pending` items left must be suspect tasks whose cleanup tasks are now `todo`, and
-   those cleanup tasks themselves ("cleanup … not done yet"), plus the decision conflicts
-   of the changed item until their tasks are resumed — any other pending item means the
-   change is incomplete: fix it with the user.
-2. Report: what changed, the manifest in short, the new tasks, and that the spec
-   stays open until they are done (`trace check --strict` passes then). Any agent
-   executes them through the protocol in `AGENTS.md`.
-3. **Stop.** Never execute the cleanup tasks here.
+Report what changed, what the old approach left in the code, and the new tasks. Any
+agent executes them through the protocol in `AGENTS.md`. **Stop** — never execute the
+tasks here.
 
 ## Style
 
-- Terse; the user's language in conversation, the project's in files.
-- Never invent the reason for a change — ask.
-- Never edit `Status`/`Stage`, a task's status or a `changes:` line — the trace owns them.
+- Terse. The user's language in the conversation; English in the files.
+- Never invent the reason for a change or the expected behaviour — ask.

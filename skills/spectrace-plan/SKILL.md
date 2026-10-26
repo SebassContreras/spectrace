@@ -1,135 +1,106 @@
 ---
 name: spectrace-plan
 description: >-
-  Closes a spectrace spec's design and breaks it into tasks in one flow: design
-  decisions become D items that name the requirements (R items) they implement,
-  project-wide decisions become A items, and every task declares what it covers, so
-  later changes can be traced to the code each task produced. Use when a spec has
-  requirements but no design or no tasks yet: "plan spec 002", "design and break down
-  the auth spec", "close the design for X", "make the tasks for NNN", "planifica la
-  spec 003", "arma las tareas". Requires the spectrace-start skill to have run (.spectrace/).
+  Turns a plan that already exists — written with another agent, pasted in the chat,
+  or in a file — into small ordered specs in planning/ (product.md, roadmap.md, one
+  NNN-name.md per spec with goal, requirements, design and tasks), and writes the
+  spectrace block into AGENTS.md so any agent executes the tasks and closes each one
+  with a git commit carrying a `Spec: NNN/TNNN` trailer. No interview. Also adds new
+  specs to an existing project at any time, including after the first version ships.
+  Use when: "turn this plan into specs", "plan this project", "add a spec for X",
+  "new feature: Y", "pasa este plan a specs", "arma las specs", "nueva spec para Z".
 ---
 
 # spectrace-plan
 
-Run **inside the target repo**. Grammar of items and tasks: `.spectrace/format.md` —
-read it first; never restate it to the user from memory. Run the trace with `python3`
-(`python` on Windows): `python3 .spectrace/trace.py <command>`.
+Run **inside the target repo**. The format and the execution protocol are defined once,
+in `assets/agents-block.md`; once installed, the copy in the repo's `AGENTS.md` is the
+reference. Read it before writing anything.
 
-## Phase 0 — Pick the spec, refuse if not ready
+## Step 1 — Find the plan
 
-1. The user named a spec → use it. Otherwise run `trace status` and ask which spec at
-   stage `design` or `tasks` to plan.
-2. **Refuse** if `.spectrace/trace.py` is missing (point to the `spectrace-start` skill), or the
-   spec's `requirements.md` has no active R item (point to `spectrace-start`, which writes or
-   drafts them).
-3. **Refuse** if the spec already has D items *and* tasks: changing a closed design or
-   an existing task list is the `spectrace-change` skill's job.
-4. Read `requirements.md`, `planning/product.md` (project type), `planning/architecture.md`,
-   `AGENTS.md`, and `.spectrace/interview.md` if present. The design must stay
-   consistent with existing A items; when one gets in the way, never design around it —
-   propose the simplest direct change to it and hand that change to `spectrace-change`.
+1. The plan is in the conversation, or in a file the user names. If neither, ask for it
+   in one sentence — don't interview. A rough plan is enough.
+2. Read what exists: `planning/product.md`, `planning/roadmap.md`, every
+   `planning/NNN-*.md`, `AGENTS.md`, the code layout if there is code (top-level
+   files, the manifest, the test command), and whether this is a git repo. An existing
+   `planning/` means you are **adding** specs.
+3. Ask **one round** of questions, only about what blocks writing the specs (a stack
+   choice the plan leaves open, an account only the user has, `git init` when there is
+   no repo). Everything else: pick
+   the simplest reasonable option and say so in the spec's Design. If the plan already
+   answers everything, ask nothing.
 
-## Phase 1 — Design (skip if the spec already has D items)
+## Step 2 — Cut it into specs
 
-Ask once: close the design here, one question at a time, or have it **drafted** for
-approval. Draft mode uses the same rules as `spectrace-start`'s draft mode: every line the user
-didn't give is marked `_(standard: <name> — <url>)_` or `_(judgement, no standard)_`,
-the full draft is shown for yes / changes / defer, and only a fact the user alone knows
-is asked live.
+- Each spec is a **thin slice** that ends in something that runs and can be checked:
+  a page that loads, a command that answers, a job that writes a row. Prefer three small
+  specs over one large one.
+- The first spec reaches a running skeleton fast (project scaffold + one real path end
+  to end). Polish, scale and extras come later, as their own specs.
+- Order by dependency; record dependencies in the roadmap's `Depends on`.
+- No over-engineering: no abstraction, layer or config the slice doesn't use today.
+  Later specs adjust it when they need to.
+- Anything the plan mentions that isn't needed to get value soon goes to the roadmap's
+  `## Ideas`, not into a spec. Don't argue scope with the user — a new idea is always
+  welcome, it just waits its turn.
 
-Q&A mode — one at a time, phrased for the project type, writing `design.md` after
-each answer:
+## Step 3 — Write each spec
 
-1. **Approach** — "How should this get built, in plain terms?"
-2. **Deliverables** — "What does this create or change?" (files/modules; assets/pages;
-   runbook steps; datasets/analyses). When the repo already has code, first run
-   `python3 .spectrace/trace.py locate "<the requirement's key words>"` for each R item
-   and propose the existing files and symbols it names, so the design extends them.
-3. **Sequencing** — "Does anything here have to happen in a specific order, or need
-   something from another spec the roadmap doesn't record?"
-4. **Decisions settled** — "Does this settle any stack, tooling or convention question
-   not recorded yet?"
-5. **Open questions** — "Anything genuinely undecided that should be flagged rather
-   than guessed?"
+`planning/NNN-name.md`, where `NNN` is the highest existing spec ID + 1 (start at 001)
+and `name` is kebab-case. Sections, in English:
 
-Write `design.md` as:
+- **Goal** — what works when it's done and how to check it, in two or three lines.
+- **Requirements** — `R1:`, `R2:`… one checkable outcome each. Only what the slice needs.
+- **Design** — `D1 (R1):`… one decision each, naming the R it serves. Stack, files or
+  modules, the approach. Mark a guess as `(assumed)` so it's easy to revisit.
+- **Tasks** — `- [ ] NNN/T001 [agent] <one verifiable action> — covers D1`, naming
+  the R or D items it implements (one or more, comma-separated).
+  - One action each (a file, a function, an endpoint, a config change), not "build the
+    feature". Each says how you know it's done if that's not obvious.
+  - `[human]` for anything needing a credential, a payment, an approval or a physical
+    act; `[agent]` for the rest.
+  - Tests: one test task per requirement worth checking, at the lowest level that
+    proves it, and only as many as the slice needs.
+Leave out a section that would be empty (a spec with nothing to decide has no Design).
+There is no Changes section yet; `spectrace-change` adds it with the first change.
 
-```markdown
-# NNN — name — Design
+## Step 4 — Confirm, then write
 
-## Approach
+1. Show the roadmap rows and, per spec, its goal and task list in one message. Ask for
+   yes / changes — and, if the plan came from a file, whether to delete that file once
+   the specs exist (it goes stale as they change). Write nothing before a yes.
+   No git repo and the user agreed → `git init` first.
+2. First time in the repo (no `planning/`):
+   - `planning/product.md`: `# Product`, then `## What this is`, `## Who uses it`,
+     `## Stack` (including how to run and test it, marked `(assumed)` when the plan
+     doesn't say) — from the plan, a few lines each. It describes; it doesn't
+     restrict.
+   - `planning/roadmap.md`: `# Roadmap`, the table from the block, then `## Ideas`.
+3. Add each spec file and its roadmap row with `Status` `todo` (from then on the hook
+   writes it). Append new rows; never renumber.
+4. **Hooks.** Copy `assets/hooks/pre-commit` and `assets/hooks/commit-msg` to
+   `.githooks/` with LF line endings (convert if the copy came out CRLF — `sh` fails on
+   CRLF), add `.githooks/* text eol=lf` to `.gitattributes`, stage both hooks with
+   `git add --chmod=+x .githooks/pre-commit .githooks/commit-msg` (the only reliable
+   executable bit on Windows), and run `git config core.hooksPath .githooks`. If
+   `core.hooksPath` already points elsewhere (husky, another tool), ask before changing
+   it. If the files exist and differ from the assets, show the diff and replace them on
+   a yes. This step also repairs a project whose `.githooks/` went missing.
+5. `AGENTS.md`: if it has no `<!-- spectrace -->` block, append the content of
+   `assets/agents-block.md` in the file's line endings (create the file if missing,
+   with a `# <project>` title). If the block exists and differs from the asset, show
+   the diff and replace it on a yes. Touch nothing outside the markers.
+6. Delete the source plan file if the user said so. Don't commit: the executing agent
+   commits `planning/`, `AGENTS.md` and the hooks before its first task.
 
-- D1@1 (implements R1, R3): <one decision>
+## Step 5 — Report and stop
 
-## Deliverables
-
-## Sequencing
-
-## Open questions
-```
-
-- Each D item is **one** decision and names the R items it serves. Deliverables,
-  sequencing and open questions are context, not items. Omit an empty section.
-- Decisions must comply with the 10 engineering principles and project architecture conventions in `planning/architecture.md` (KISS/YAGNI proportionality, SRP, DRY via composition, Service Layer / Anti-Corruption wrappers for third-party libraries/APIs, pure functions and testable injected dependencies). Verify unfamiliar APIs and patterns against industry standards on the web. Note non-trivial trade-offs (pros/cons) and concrete mitigations.
-- A project-wide decision (answer 4) is appended to `planning/architecture.md` as the
-  next A item under its header, with its operative line in `AGENTS.md` → "Stack &
-  conventions". Append only: if it contradicts an existing A item, propose the change
-  to that item ("A4 forces X; propose Y. Approved?") and, on a yes, run it through the
-  `spectrace-change` skill before continuing.
-- Never invent a decision the user didn't make — it goes under "Open questions".
-
-## Phase 2 — Design gate
-
-1. Run `trace check`. For each `uncovered: NNN/Rn` in this spec, ask how the design
-   addresses it — a new D item, or a task that covers the R directly — until none is
-   left. Fix any `error` in the files this skill wrote.
-2. Ask once: **"What haven't we covered in this design?"** Address anything new, then
-   ask again; stop when a pass returns nothing.
-
-## Phase 3 — Tasks
-
-Draft a numbered list from `requirements.md` and `design.md`:
-
-- **Single-action** (one file, function, asset, decision or config change — not
-  "implement the feature") and **verifiable** (an unambiguous way to tell it's done).
-  Phrase it for the project type.
-- Each task's `covers:` names the D (or R) items it implements. Every task traces to
-  something written in the spec — never invent scope.
-- A task that installs, configures or encodes a project-wide decision (an A item: the
-  runtime, a framework, a convention enforced in code) lists that A item in `covers:`
-  too — otherwise changing the decision later can't find the task.
-- Every R item that states a checkable outcome gets at most one `kind: test` task
-  covering it, at the lowest level that proves it: test observable behavior or explicit
-  failure modes (no vacuous getter/mock tests), with a fake adapter before an integration test.
-  External vendor dependencies must be isolated behind an adapter/interface. Skip code without logic.
-- e2e, smoke or browser-driven test tasks only when the `verification` answer asks for
-  them. Then prefer automated headless scripts (owner `agent`, `kind: test`); reserve
-  owner `human` for manual visual review or scenarios requiring user credentials or
-  physical devices.
-- Owner: `human` for anything needing a credential, an approval, a purchase, a physical
-  act or a live session; `agent` otherwise. Use the ledger's `owner-split` and
-  `automatability` answers; ask when unsure.
-- Order follows the design's sequencing.
-
-Show the list (ID, owner, text, covers) in one message. Ask the user to approve or
-add / remove / reorder, then ask once: **"Anything in this design that no task
-covers?"** Write nothing before confirmation.
-
-Then write `tasks.md` in the format's task grammar, every task `[status:todo]`, IDs
-`T001`, `T002`, …, task lines at column 0, fields indented six spaces.
-
-## Phase 4 — Task gate, report, stop
-
-1. Run `trace status --write`, then `trace check`. No `uncovered` D may remain in this
-   spec and no `error` in the files this skill wrote; fix and re-check.
-2. Report: the spec is at stage `build`; list its `[human]` tasks — they are the
-   user's. Any agent can now execute the rest by following the protocol in
-   `AGENTS.md` (or the user can just say "execute the specs").
-3. **Stop.** Never start executing a task here.
+List what was written, the `[human]` tasks (they are the user's), and the next step:
+"tell any agent to execute the specs". **Stop** — don't start executing tasks here.
 
 ## Style
 
-- Terse and structural; the user's language in conversation, the project's in files.
-- One question at a time, always waiting for the reply.
-- Never edit `Status`/`Stage`, a task's status or a `changes:` line — the trace owns them.
+- Terse. The user's language in the conversation; English in the files.
+- Never invent a fact only the user knows (an account, a budget, a name) — ask, or
+  leave `TBD`.

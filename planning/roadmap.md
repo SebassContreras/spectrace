@@ -1,28 +1,18 @@
 # Roadmap
 
-Index of every spec. `Status` and `Stage` are written only by `trace status --write`
-(and by `trace start`/`done`); everything else by people and skills. Format:
-`skills/spectrace-start/assets/format.md`.
+Specs in order. `Status` is written by the pre-commit hook from each spec's
+checkboxes. Specs 001–020 (the interview, `trace.py` and the code graph) were
+retired by 021; they live in git history.
 
-| ID  | Spec              | Status | Depends on    | Stage | Priority |
-|-----|-------------------|--------|---------------|-------|----------|
-| 001 | format-and-trace  | done        | —             | —     | 1        |
-| 002 | start             | done        | 001           | —      | 2        |
-| 003 | plan              | done        | 001, 002      | —      | 3        |
-| 004 | change            | done        | 001, 003      | —      | 4        |
-| 005 | distribution      | done        | 002, 003, 004 | —      | 5        |
-| 006 | e2e-verification  | done        | 005           | —      | 6        |
-| 007 | agent-loop-and-workflow-optimization | done        | 001, 002, 003, 005 | —     | 7 |
-| 008 | architecture-defaults | done        | 002, 003 | —      | 8 |
-| 009 | testing-policy | done        | 002, 003, 008 | —      | 9 |
-| 010 | upgrade | done        | 002, 005, 009 | —           | 10 |
-| 011 | modular-core | done        | 005, 010 | —     | 11 |
-| 012 | change-records | done        | 011, 016 | —     | 12 |
-| 013 | code-index | done        | 012 | —     | 13 |
-| 014 | locate-packet-fix | done        | 012, 013 | —     | 14 |
-| 015 | e2e-graph | done        | 014 | —     | 15 |
-| 016 | decision-conflicts | done        | 011 | —     | 11 |
-| 017 | rigorous-engineering-policy | done        | 008, 009 | —      | 16 |
-| 018 | consistency-audit | done        | 008, 011, 017 | —      | 17 |
-| 019 | language-adapters | todo        | 011, 015 | design | 18 |
-| 020 | tracing-docs-alignment | todo        | 018, 019 | design | 19 |
+| ID  | Spec    | Status      | Depends on |
+|-----|---------|-------------|------------|
+| 021 | realign | done        | —          |
+| 022 | git-hooks | done        | 021      |
+
+## Ideas
+
+Anything worth doing later. No debate needed to add one; it becomes a spec when we pick
+it.
+
+- Alignment rules: when a task adds a public surface (MCP tool, CLI command, endpoint),
+  the plan adds a task to register it where it must appear (`AGENTS.md`, skills, docs).

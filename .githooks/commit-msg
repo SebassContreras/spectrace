@@ -1,0 +1,35 @@
+#!/bin/sh
+# spectrace commit-msg: every "Spec: NNN/TNNN" trailer must name a task that is
+# ticked [x] in the staged spec, so a task is closed exactly when its commit exists,
+# and an [agent] task other than a Review: must bring changes outside planning/.
+# A commit without a trailer that changes files beyond planning/ and the spectrace
+# install (AGENTS.md, .githooks/, .gitattributes) gets a warning.
+
+msg="$1"
+specs=$(git interpret-trailers --parse < "$msg" | sed -n 's/^Spec: *//p' | tr -d '\r')
+
+if [ -z "$specs" ]; then
+  if git diff --cached --name-only | grep -qvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$)'; then
+    echo "spectrace: no 'Spec: NNN/TNNN' trailer; this change is outside every task." >&2
+  fi
+  exit 0
+fi
+
+work=$(git diff --cached --name-only | grep -cvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$)')
+
+fail=0
+for ref in $specs; do
+  id=${ref%%/*}
+  f=$(git ls-files "planning/$id-*.md" | head -n 1)
+  if [ -z "$f" ]; then
+    echo "spectrace: $ref — no spec file planning/$id-*.md" >&2; fail=1; continue
+  fi
+  line=$(git show ":$f" | tr -d '\r' | grep "^- \[[xX]\] $ref ")
+  if [ -z "$line" ]; then
+    echo "spectrace: $ref is not ticked [x] in $f — tick it in this commit." >&2; fail=1
+  elif [ "$work" -eq 0 ] && echo "$line" | grep -q '\[agent\]' \
+       && ! echo "$line" | grep -q '\] Review:'; then
+    echo "spectrace: $ref is ticked but the commit has no work outside planning/ — add the task's changes." >&2; fail=1
+  fi
+done
+exit $fail

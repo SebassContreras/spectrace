@@ -1,24 +1,15 @@
 # spectrace
 
-**Specs you can change your mind about.**
+**Plans you can change your mind about.**
 
-[![CI](https://github.com/SebassContreras/spectrace/actions/workflows/ci.yml/badge.svg)](https://github.com/SebassContreras/spectrace/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-3776AB.svg?logo=python&logoColor=white)](skills/spectrace-start/assets/trace.py)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-compatible-8A2BE2.svg)](https://agentskills.io)
-[![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](#install)
 
-spectrace turns a plain-language description of a project into specs — requirements,
-design, tasks — where every decision has an ID and a revision, and every task records
-exactly what it changed. When you change your mind, it lists every task, file, line and
-test that implemented the old decision and turns them into cleanup tasks, so nothing
-from the old approach is left behind. Any coding agent can execute the tasks; there is
-no orchestrator to run.
-
-> **Status:** early. The trace is tested on Linux and Windows (Python 3.9 and 3.13),
-> and the full flow was verified end to end with fresh agents under Claude Code and
-> `agy` ([spec 006](planning/specs/006-e2e-verification/requirements.md),
-> [report](e2e/report.md)).
+spectrace turns a plan you already have — made with another agent, or in the chat —
+into small, ordered specs in `planning/`. Any coding agent executes them task by task
+and closes each task with a git commit that names it. When you change direction, find a
+bug or have a new idea, it updates the specs and adds the tasks that clean up what the
+old approach left behind. It's just Markdown and git, plus two short git hooks: no runtime to install.
 
 ## Install
 
@@ -28,154 +19,91 @@ From your project's folder:
 pnpm dlx skills add SebassContreras/spectrace
 ```
 
-The [`skills` CLI](https://github.com/vercel-labs/skills) copies the four skills into
-the folder your agent reads — `.claude/skills/` for Claude Code, `.agents/skills/` for
-OpenCode, Codex, Cursor, GitHub Copilot and most others. Add `-g` to install for every
-project, `--skill '*' -y` to skip the prompts.
+The [`skills` CLI](https://github.com/vercel-labs/skills) copies the two skills into the
+folder your agent reads (`.claude/skills/` for Claude Code, `.agents/skills/` for most
+others). Add `-g` to install for every project.
 
-**Updating** takes two steps. `pnpm dlx skills update` updates the skills, but not the
-files they copied into your project. Then, inside each project, run `spectrace-start`
-or ask "update spectrace in this project". It compares `.spectrace/trace.py` (and its
-`.spectrace/spectrace/` package), `.spectrace/format.md`, the protocol block and the sections in `AGENTS.md` with the new
-versions, shows the differences, and writes only the ones you accept.
-
-Running spectrace needs **git** and **Python 3.9+** in the project. Nothing else.
-
-## How it works
-
-```
- you describe the idea          any agent executes            you change your mind
-          │                             │                              │
-          ▼                             ▼                              ▼
- spectrace-start ──► spectrace-plan ──► trace start / done ──► spectrace-change
- interview → R items  design → D items   exact diff per task      revise / retire →
- roadmap, A items     tasks + covers:    (no commit needed)       manifest → cleanup tasks
-```
+## The two skills
 
 | Skill | What it does |
 |---|---|
-| `spectrace-start` | Interviews you one question at a time (any project type, English or Spanish) and writes `planning/`: product, architecture (A items), roadmap, and each spec's requirements (R items). Installs `.spectrace/trace.py` (with its `spectrace/` package) and the task protocol in `AGENTS.md`. |
-| `spectrace-plan` | Closes a spec's design — D items, each naming the R items it implements — and breaks it into single-action, verifiable tasks, each declaring what it `covers:`. |
-| `spectrace-change` | Revises, rewords, retires or reinstates decisions, records why, and turns everything that implemented the old one into cleanup tasks: redo by default, refactor only with a written reason. |
-| `spectrace-fix` | Takes a bug report to a traced fix: finds the code with `locate`, explains it with `why` and `impact`, and writes a failing regression test task plus a `kind: fix` task under the decision the code violates — or hands over to `spectrace-change` when the decision itself is wrong. |
+| `spectrace-plan` | Takes your plan and writes `planning/product.md`, `planning/roadmap.md` and one `planning/NNN-name.md` per spec — thin slices that each end in something that runs. Adds the spectrace block to `AGENTS.md`. Use it again any time to add specs. |
+| `spectrace-change` | Changes of direction, bugs, new ideas, and conventions that get in the way. Replaces the old item in the spec, finds what it built with `git log --grep` and `git grep`, and adds cleanup tasks. Works after the first version ships too. |
 
-## Executing tasks
+## A spec
 
-Tell your agent to execute the specs. The protocol `spectrace-start` writes into
-`AGENTS.md` has it run:
+```markdown
+# 003 — login
+
+## Goal
+A user can sign in and stay signed in across reloads.
+
+## Requirements
+- R1: A user signs in with email and password.
+
+## Design
+- ~~D1 (R1): Sessions live in localStorage.~~ → D2
+- D2 (R1): Sessions live in an httpOnly cookie.
+
+## Tasks
+- [x] 003/T001 [agent] Login form — covers R1
+- [ ] 003/T002 [agent] Session cookie middleware — covers D2
+- [ ] 003/T003 [agent] Remove the localStorage session code — replaces D1
+- [ ] 003/T004 [human] Create the mail provider account — covers R1
+
+## Changes
+- 2026-10-12: D1 → D2. Why: localStorage is readable by any script. Work: T003.
+```
+
+## Executing
+
+Tell your agent to "execute the specs". The block in `AGENTS.md` makes it take the next
+open task, do only that, verify it, and close it with one commit holding the change, the
+ticked box and a trailer:
+
+```
+feat(login): session cookie middleware
+
+Spec: 003/T002
+```
+
+Two small git hooks, installed to `.githooks/` by `spectrace-plan`, make this hard to
+skip: `commit-msg` refuses a `Spec:` trailer whose task isn't ticked, or a ticked task
+with no work in the commit; `pre-commit` writes each spec's `Status` in the roadmap from
+its checkboxes — nobody types it.
+
+After a change of direction, `spectrace-change` lists what the old approach *assumed*
+(not just its names), turns the reason for the change into a requirement with a test,
+and ends with a `Review:` task — run by a fresh agent when possible — that the hook
+won't let close without a `reviewed:` note saying what was read and found.
+
+What a spec built is then one command away:
 
 ```sh
-python3 .spectrace/trace.py status          # what's next
-python3 .spectrace/trace.py start 002/T004  # snapshot before editing
-python3 .spectrace/trace.py done 002/T004   # record exactly what changed
-python3 .spectrace/trace.py check           # must pass before finishing
+git log --grep "Spec: 003/" --stat
 ```
 
-`start` and `done` snapshot the working tree without committing or touching the
-staging area, so each task's diff is exact even when several tasks share one commit or
-none. The diff is kept in `.spectrace/changes/` and summarized on the task. The roadmap's
-`Status` and `Stage` columns are computed from the files, never typed.
+## Principles
 
-## Changing direction
-
-```
-- ~~D1@1 (implements R1): Sessions live in localStorage.~~ retired 2026-10-12 → D3
-- D3@1 (implements R1): Sessions live in an httpOnly cookie.
-```
-
-```
-$ python3 .spectrace/trace.py impact 001/D1
-- 001/T001 [agent] [done] Session store
-    src/store.ts → src/session/store.ts: 14/14 added lines still present
-```
-
-The spec can't read as done until that work is removed or redone. `trace check`
-reports, and the spec stays open, while any of these hold:
-
-| State | Meaning |
-|---|---|
-| **suspect** | A finished task covers an older revision of an item, or a retired one. |
-| **leftover** | A symbol a retired task added is still there, unchanged, after its cleanup is done (`trace keep` accepts it with a reason). |
-| **decision conflict** | A task was blocked because it could not be done without contradicting a decision; keep, edit or retire it. |
-| **unrecorded change** | An A item, or a built-on item, changed or disappeared with no `changes.md` entry. |
-| **changed** | An item's text changed under finished work without a revision bump (`trace review` accepts a wording-only edit). |
-| **mentions a deleted file** | A file a task deleted is still named somewhere outside history. |
-| **uncovered** | A requirement no design item or task covers; a design item no task covers. |
-| **orphan** | A reference to an item or task that doesn't exist. |
-
-To go back to a retired approach, `trace restore NNN/TNNN` undoes the task that removed
-it, inside a new task, so the restored code is traced too.
-
-## The code map
-
-When a task closes, `trace done` also records which symbols it added, changed or removed
-(`.spectrace/changes/NNN-TNNN.touch.json`): functions, classes, methods and variables in
-Python, sections in Markdown, whole files otherwise. From that ledger and a disposable
-index of the code (`.spectrace/index.db`):
-
-```sh
-python3 .spectrace/trace.py why src/store.py::Store.save   # tasks and decisions behind code
-python3 .spectrace/trace.py impact 001/D3 --deep           # a decision's symbols, dependents, tests
-python3 .spectrace/trace.py impact src/store.py::Store     # what depends on that code
-python3 .spectrace/trace.py locate "session expiry"        # find code and decisions from words
-python3 .spectrace/trace.py packet 001/T005                # review packet of a task
-python3 .spectrace/trace.py index --status                 # coverage and what was not analysed
-```
-
-Every relation says whether it is `exact` or `inferred`; only exact findings hold a spec
-open.
-
-## CI recipe
-
-Gate a pull request on the trace and attach a review packet to the job summary
-(GitHub Actions; any CI with full git history works the same):
-
-```yaml
-- uses: actions/checkout@v7
-  with:
-    fetch-depth: 0   # the packet diffs against the base branch
-- run: python3 .spectrace/trace.py check --strict
-- run: python3 .spectrace/trace.py packet --diff --base origin/${{ github.base_ref }} >> "$GITHUB_STEP_SUMMARY"
-  if: github.event_name == 'pull_request'
-```
-
-`packet --diff` needs no `state.json` and no index file: it builds both in memory.
-
-The whole format is defined once, in
-[`skills/spectrace-start/assets/format.md`](skills/spectrace-start/assets/format.md).
+- **Plan elsewhere, spec here.** No interview; one round of questions at most.
+- **Thin specs first.** Get something running, validate it, then adjust.
+- **Nothing is out of scope.** New ideas go to the roadmap's `## Ideas` and wait their
+  turn.
+- **Conventions describe, they don't bind.** When one blocks the best solution, the
+  agent proposes changing it instead of working around it.
+- **The commit is the record.** No ledger to keep in sync.
 
 ## Limits
 
-- **Meaning in prose.** A sentence that describes an old decision without naming a file
-  is found by `spectrace-change`'s term sweep — an agent's judgement — not by a check.
-- **Agent discipline.** Edits made outside a task are reported (`check`, and `start`
-  refuses until they're adopted or ignored), not prevented.
-- **Work outside the repo** — a CMS, an email, a dashboard setting — leaves no diff to
-  trace; record it as a `[human]` task.
-- **One open task at a time.** Parallel agents in one working tree would mix their diffs.
-- **The code map is static and name-based.** `trace index` reads Python by its AST and
-  Markdown by its headings; every other file is file-level. Relations are `exact` (an
-  import, the same module, `self` through the class) or `inferred` (an attribute name
-  matched across the repo, with its candidate count); only exact findings may hold a spec
-  open. Reflection, `getattr`, registration by string and dynamic imports are invisible,
-  so `impact` never says "no impact" — it says what it could not analyse. Measured on
-  this repo (2026-10-19): 99.7% of 1558 references to repo code resolved; trace coverage
-  66% exact, 33% anchored; `tests/eval_index.py` recall 0/8 co-changed files, because the
-  history mostly pairs `trace.py` with a test that loads it through `importlib` — a
-  dynamic import the index cannot follow.
-
-## Development
-
-```sh
-python3 -m unittest discover -s tests
-python3 skills/spectrace-start/assets/trace.py check
-```
-
-`trace.py` is a launcher; the code is the `spectrace/` package beside it, one module per
-concern (`model`, `gitio`, `state`, `patches`, `commands`, `cli`), each at most 600 lines.
-
-This repository is planned and built with spectrace itself: see
-[`planning/`](planning/roadmap.md) and [`AGENTS.md`](AGENTS.md).
+- The trace is as good as the commits: a task closed without its `Spec:` trailer is
+  invisible to `git log --grep`.
+- A squash merge folds several tasks into one commit; the trailers survive in the
+  message, but per-task diffs don't. Prefer merge or rebase for spec branches.
+- Finding leftovers after a change of direction is the agent's search and reading,
+  not a checker. It is backed by a test of the reason for the change and a recorded
+  review, but code that breaks neither can still slip through.
+- Hooks are local: a fresh clone runs `git config core.hooksPath .githooks` once (the
+  protocol tells agents to). `--no-verify` bypasses them.
 
 ## License
 
