@@ -54,9 +54,14 @@ say which:
      not its names, its habits: "loads the whole collection", "ids are max + 1",
      "filters in memory", "the file is text". For each, a `git grep` pattern or the
      files to read.
-   - Read the files those commits touched. Code that relies on the old approach without
-     naming it (a pattern, an assumption, a test that compares raw output) only shows
-     up by reading.
+   - Read the files those commits touched — docs included: a doc written by a task
+     shows up in `git log --grep` like code. Code that relies on the old approach
+     without naming it (a pattern, an assumption, a test that compares raw output)
+     only shows up by reading.
+   - Read every doc in `product.md` → `## Docs` for sentences that describe the old
+     way without naming it ("four skills", "the agent always…"). `git blame` on a line
+     tells which spec wrote it; a commit with `Spec: none` or no trailer means nobody
+     traced it.
    Show the list: what is still in the code, what's already gone, and docs that
    describe the old way.
 3. **Choose where the work goes.** Small and inside one spec that isn't `done` → tasks
@@ -89,7 +94,8 @@ say which:
      whatever still follows the old way fails a test instead of hiding.
    - **The last task is a review**: `[agent] Review: re-read <the files the old
      commits touched> and the assumptions list; nothing still assumes <old way> —
-     covers <the new items>`. It closes only with a `reviewed:` note naming what was
+     covers <the new items>`, which also re-reads the docs in `## Docs`. It closes
+     only with a `reviewed:` note naming what was
      read and found (the hook refuses it otherwise); anything found becomes a new task
      before it. Best done by an agent that didn't write the change. The assumptions
      list it checks against lives in the `## Changes` entry (step 6).
@@ -125,7 +131,8 @@ say which:
 
 Conventions describe how the project is today; they are not laws.
 
-1. Name the line, what it forces, and the better solution it blocks.
+1. Name the line, what it forces, and the better solution it blocks. `git blame` on
+   it tells which spec put it there, if any.
 2. Propose the simplest change to it: edit, replace or delete the line.
 3. On a yes, edit the file and add a `## Changes` line to the spec that needed it. If
    code already follows the old convention and should change, treat it as Step 3.

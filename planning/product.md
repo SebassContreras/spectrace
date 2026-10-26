@@ -18,3 +18,11 @@ keep changing direction, adding ideas and growing the product after the first ve
 - Plain Markdown and git. A target repo gets the `AGENTS.md` block and two POSIX sh
   hooks in `.githooks/`.
 - Distributed with the `skills` CLI: `pnpm dlx skills add SebassContreras/spectrace`.
+
+## Docs
+
+- `README.md` — what spectrace is, install, quick start, the skills table, the spec
+  format, how tasks close (trailers, hooks), principles, limits.
+- `AGENTS.md` — doc map of this repo and the spectrace block (a copy of
+  `skills/spectrace-plan/assets/agents-block.md`).
+- `skills/*/SKILL.md` — what each skill does, step by step.

@@ -3,14 +3,16 @@
 # ticked [x] in the staged spec, so a task is closed exactly when its commit exists,
 # and an [agent] task other than a Review: must bring changes outside planning/.
 # A commit without a trailer that changes files beyond planning/ and the spectrace
-# install (AGENTS.md, .githooks/, .gitattributes) gets a warning.
+# install (AGENTS.md, .githooks/, .gitattributes) gets a warning; "Spec: none" marks
+# a change that belongs to no spec on purpose (a typo, a chore).
 
 msg="$1"
 specs=$(git interpret-trailers --parse < "$msg" | sed -n 's/^Spec: *//p' | tr -d '\r')
 
 if [ -z "$specs" ]; then
   if git diff --cached --name-only | grep -qvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$)'; then
-    echo "spectrace: no 'Spec: NNN/TNNN' trailer; this change is outside every task." >&2
+    echo "spectrace: no 'Spec: NNN/TNNN' trailer; this change is outside every task" \
+      "(use 'Spec: none' if that is on purpose)." >&2
   fi
   exit 0
 fi
@@ -19,6 +21,7 @@ work=$(git diff --cached --name-only | grep -cvE '^(planning/|\.githooks/|AGENTS
 
 fail=0
 for ref in $specs; do
+  [ "$ref" = none ] && continue
   id=${ref%%/*}
   f=$(git ls-files "planning/$id-*.md" | head -n 1)
   if [ -z "$f" ]; then

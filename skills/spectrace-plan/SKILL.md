@@ -62,6 +62,9 @@ and `name` is kebab-case. Sections, in English:
     act; `[agent]` for the rest.
   - Tests: one test task per requirement worth checking, at the lowest level that
     proves it, and only as many as the slice needs.
+  - Docs: when the spec changes what a doc in `## Docs` describes, add a task for it
+    (`Update README.md: add the export command — covers D2`). A spec that creates a
+    new doc also adds its line to `## Docs`.
 Leave out a section that would be empty (a spec with nothing to decide has no Design).
 There is no Changes section yet; `spectrace-change` adds it with the first change.
 
@@ -74,8 +77,9 @@ There is no Changes section yet; `spectrace-change` adds it with the first chang
 2. First time in the repo (no `planning/`):
    - `planning/product.md`: `# Product`, then `## What this is`, `## Who uses it`,
      `## Stack` (including how to run and test it, marked `(assumed)` when the plan
-     doesn't say) — from the plan, a few lines each. It describes; it doesn't
-     restrict.
+     doesn't say) and `## Docs` — from the plan, a few lines each. It describes; it
+     doesn't restrict. `## Docs` lists each doc the project keeps and what it
+     describes (`README.md — install, usage, commands`); `AGENTS.md` is always one.
    - `planning/roadmap.md`: `# Roadmap`, the table from the block, then `## Ideas`.
 3. Add each spec file and its roadmap row with `Status` `todo` (from then on the hook
    writes it). Append new rows; never renumber.

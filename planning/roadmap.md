@@ -8,6 +8,7 @@ retired by 021; they live in git history.
 |-----|---------|-------------|------------|
 | 021 | realign | done        | —          |
 | 022 | git-hooks | done        | 021      |
+| 023 | docs-tracing | done   | 022      |
 
 ## Ideas
 

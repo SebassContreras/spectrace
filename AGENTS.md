@@ -27,7 +27,7 @@ See `planning/product.md`.
 Work is planned in `planning/`:
 
 ```
-planning/product.md      what this is, who it's for, stack, how to run and test
+planning/product.md      what this is, who it's for, stack, how to run and test, docs
 planning/roadmap.md      specs in order, their status, and a free "Ideas" list
 planning/NNN-name.md     one file per spec
 ```
@@ -65,6 +65,9 @@ What should work when this spec is done, and how we'll know.
   after `→` and in `covers`/`replaces`.
 - `[agent]`: any agent does it. `[human]`: the user does it; agents report and skip it.
 - `## Changes` appears with the first change.
+- **Docs are deliverables.** `product.md` → `## Docs` lists the docs the project keeps
+  and what each describes. A doc changes inside the task whose work it describes, so
+  `git blame` on any doc line leads to a commit, its `Spec:` and the decision behind it.
 - A task whose text starts with `Review:` is closed only with an indented
   `reviewed: <files read> — found <what>` line under it. Anything it finds becomes a
   new task placed before it.
@@ -101,7 +104,8 @@ Never bypass them (`--no-verify`); when one refuses, fix what it says.
 
    The `Spec:` line goes in the message's last paragraph, together with any other
    trailer (`Co-Authored-By:`…) and no blank line between them — git only reads that
-   paragraph as trailers.
+   paragraph as trailers. A change that belongs to no spec on purpose (a typo, a
+   chore) carries `Spec: none` instead.
 
    Two small tasks that only make sense together (a function and its test) may share a
    commit with one `Spec:` line each. A task is closed only when that commit exists —

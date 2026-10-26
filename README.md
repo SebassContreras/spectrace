@@ -99,6 +99,29 @@ What a spec built is then one command away:
 git log --grep "Spec: 003/" --stat
 ```
 
+## Docs follow the specs
+
+`planning/product.md` lists the docs the project keeps and what each describes:
+
+```markdown
+## Docs
+- README.md — install, usage, the commands
+- AGENTS.md — the protocol agents follow
+```
+
+When a spec changes something a listed doc describes, `spectrace-plan` adds a task to
+update it, so the doc changes in a commit with a `Spec:` trailer like any code:
+
+```sh
+git blame README.md          # the line → commit a1b2c3
+git show -s a1b2c3           # → Spec: 003/T002 → the decision behind it
+```
+
+When that decision changes, `git log --grep "Spec: 003/"` lists the doc commits next to
+the code, and `spectrace-change` re-reads every listed doc for sentences that describe
+the old way without naming it. A change that belongs to no spec on purpose — a typo, a
+chore — carries `Spec: none`; a commit with no trailer at all gets a warning.
+
 ## Principles
 
 - **Plan elsewhere, spec here.** No interview; one round of questions at most.
