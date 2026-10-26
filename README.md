@@ -9,7 +9,8 @@ spectrace turns a plan you already have — made with another agent, or in the c
 into small, ordered specs in `planning/`. Any coding agent executes them task by task
 and closes each task with a git commit that names it. When you change direction, find a
 bug or have a new idea, it updates the specs and adds the tasks that clean up what the
-old approach left behind. It's just Markdown and git, plus two short git hooks: no runtime to install.
+old approach left behind. It's just Markdown and git, plus two short git hooks: no
+runtime to install.
 
 ## Install
 
@@ -23,12 +24,23 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) copies the two skills 
 folder your agent reads (`.claude/skills/` for Claude Code, `.agents/skills/` for most
 others). Add `-g` to install for every project.
 
+## Quick start
+
+1. Install the skills (above) in your project's folder.
+2. Paste or point to your plan: *"turn this plan into specs"*. `spectrace-plan` writes
+   `planning/`, the block in `AGENTS.md` and the hooks in `.githooks/` (and runs
+   `git init` if you agree).
+3. *"Execute the specs."* Any agent takes it from there, one commit per task.
+
+Later, anything new — an idea, a change of mind, a bug — goes through
+`spectrace-change`.
+
 ## The two skills
 
 | Skill | What it does |
 |---|---|
-| `spectrace-plan` | Takes your plan and writes `planning/product.md`, `planning/roadmap.md` and one `planning/NNN-name.md` per spec — thin slices that each end in something that runs. Adds the spectrace block to `AGENTS.md`. Use it again any time to add specs. |
-| `spectrace-change` | Changes of direction, bugs, new ideas, and conventions that get in the way. Replaces the old item in the spec, finds what it built with `git log --grep` and `git grep`, and adds cleanup tasks. Works after the first version ships too. |
+| `spectrace-plan` | Takes your plan and writes `planning/product.md`, `planning/roadmap.md` and one `planning/NNN-name.md` per spec — thin slices that each end in something that runs. Adds the spectrace block to `AGENTS.md` and installs the git hooks (also repairs them if missing). Use it again any time to add specs. |
+| `spectrace-change` | Changes of direction, bugs, new ideas, and conventions that get in the way. Replaces the old item, finds what it built (`git log --grep`, `git grep`, and the old approach's assumptions), and adds cleanup tasks ending in a review. A change that spans specs becomes a new spec, so finished specs stay finished. |
 
 ## A spec
 
@@ -67,6 +79,10 @@ feat(login): session cookie middleware
 Spec: 003/T002
 ```
 
+The `Spec:` line must sit in the message's last paragraph, with any other trailer
+(`Co-Authored-By:`…) and no blank line between them — git reads only that paragraph as
+trailers.
+
 Two small git hooks, installed to `.githooks/` by `spectrace-plan`, make this hard to
 skip: `commit-msg` refuses a `Spec:` trailer whose task isn't ticked, or a ticked task
 with no work in the commit; `pre-commit` writes each spec's `Status` in the roadmap from
@@ -104,6 +120,17 @@ git log --grep "Spec: 003/" --stat
   review, but code that breaks neither can still slip through.
 - Hooks are local: a fresh clone runs `git config core.hooksPath .githooks` once (the
   protocol tells agents to). `--no-verify` bypasses them.
+
+## Coming from the old spectrace
+
+Earlier versions had an interview, `trace.py` and `.spectrace/`. They are gone and
+there is no automatic migration: delete `.spectrace/` and the old protocol block in
+`AGENTS.md`, then run `spectrace-plan` on what is still pending.
+
+## This repository
+
+spectrace is planned with itself: see [`planning/`](planning/roadmap.md) and
+[`AGENTS.md`](AGENTS.md). After cloning, run `git config core.hooksPath .githooks`.
 
 ## License
 

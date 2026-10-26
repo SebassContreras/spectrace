@@ -33,6 +33,7 @@ whose `Spec:` task isn't ticked is refused; the roadmap status changes by itself
 - [x] 022/T004 [agent] Install the hooks in this repo and document them in the README — covers D1
 - [x] 022/T005 [agent] Re-run the scratch trial (plan → execute → change → execute) with hooks on — covers R1, R2, R3
 - [x] 022/T006 [agent] `commit-msg` refuses a ticked `[agent]` task with no work outside `planning/`; a `Review:` runs in a fresh agent when possible (`reviewed (self):` otherwise) — covers R2, R3
+- [x] 022/T007 [agent] README.md: quick start, hooks in the plan row, trailer placement, note for old-version users — covers D1, D2
 
 ## Changes
 
