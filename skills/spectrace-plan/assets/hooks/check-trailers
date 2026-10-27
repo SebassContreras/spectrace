@@ -1,0 +1,26 @@
+#!/bin/sh
+# spectrace check-trailers <base> <head>: the commit-msg trailer rule for commits that
+# skipped the hooks (--no-verify, a clone without core.hooksPath), run by CI. Every
+# non-merge commit in base..head that changes files outside planning/ and the spectrace
+# install needs a "Spec:" trailer. Only <head> is checked when <base> is empty, all
+# zeros (a new branch) or unknown (a force push). The install paths come from commit-msg.
+
+base=$1
+head=${2:-HEAD}
+install_re=$(sed -n "s/^install_re='\(.*\)'\$/\1/p" "$(dirname "$0")/commit-msg")
+
+if [ -z "$(echo "$base" | tr -d 0)" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+  commits=$(git rev-list --no-merges -1 "$head")
+else
+  commits=$(git rev-list --no-merges "$base..$head")
+fi
+
+fail=0
+for c in $commits; do
+  git diff-tree --no-commit-id --name-only -r --root "$c" | grep -qvE "$install_re" || continue
+  git log -1 --format=%B "$c" | git interpret-trailers --parse | grep -q '^Spec:' && continue
+  echo "spectrace: $(git log -1 --format='%h %s' "$c") — no 'Spec:' trailer." >&2
+  fail=1
+done
+[ "$fail" -eq 0 ] || echo "spectrace: reword those commits with the task they close, or 'Spec: none'." >&2
+exit $fail

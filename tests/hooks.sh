@@ -17,6 +17,11 @@ commit() {
   GIT_AUTHOR_DATE="@$clock +0000" GIT_COMMITTER_DATE="@$clock +0000" \
     git commit -q -m "$1" >/dev/null 2>&1
 }
+unverified() {
+  clock=$((clock + 60))
+  GIT_AUTHOR_DATE="@$clock +0000" GIT_COMMITTER_DATE="@$clock +0000"     git commit -q --no-verify -m "$1" >/dev/null 2>&1
+}
+check() { sh .githooks/check-trailers "$@" 2>/dev/null; }
 amend() { git commit -q --amend -m "$1" >/dev/null 2>&1; }
 
 new_repo() {
@@ -111,6 +116,24 @@ merge_without_trailer_is_accepted() {
   git merge -q --no-ff -m merge side >/dev/null 2>&1
   expect_accepted merge_without_trailer_is_accepted $?
 }
+ci_refuses_code_commit_that_skipped_the_hooks() {
+  new_repo; base=$(git rev-parse HEAD); echo x > a.txt; git add -A; unverified work
+  check "$base" HEAD; expect_refused ci_refuses_code_commit_that_skipped_the_hooks $?
+}
+ci_accepts_range_with_trailers() {
+  new_repo; base=$(git rev-parse HEAD); echo x > a.txt; git add -A; unverified "$(trailer none)"
+  echo 'More notes.' >> "$spec"; git add -A; unverified work
+  check "$base" HEAD; expect_accepted ci_accepts_range_with_trailers $?
+}
+ci_ignores_commits_before_base() {
+  new_repo; echo x > a.txt; git add -A; unverified work; base=$(git rev-parse HEAD)
+  echo y > b.txt; git add -A; commit "$(trailer none)"
+  check "$base" HEAD; expect_accepted ci_ignores_commits_before_base $?
+}
+ci_checks_head_of_new_branch() {
+  new_repo; echo x > a.txt; git add -A; unverified work
+  check 0000000000000000000000000000000000000000 HEAD; expect_refused ci_checks_head_of_new_branch $?
+}
 roadmap_status_follows_agent_checkboxes() {
   new_repo; tick T001; echo x > a.txt; git add -A; commit "$(trailer 001/T001)"
   grep -q '^| 001 | x | in progress' planning/roadmap.md
@@ -137,6 +160,10 @@ code_without_trailer_is_refused
 code_with_spec_none_is_accepted
 planning_without_trailer_is_accepted
 merge_without_trailer_is_accepted
+ci_refuses_code_commit_that_skipped_the_hooks
+ci_accepts_range_with_trailers
+ci_ignores_commits_before_base
+ci_checks_head_of_new_branch
 roadmap_status_follows_agent_checkboxes
 installed_hooks_match_assets
 exit $failed
