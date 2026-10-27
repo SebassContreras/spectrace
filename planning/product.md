@@ -18,12 +18,9 @@ keep changing direction, adding ideas and growing the product after the first ve
 - Plain Markdown and git. A target repo gets the `AGENTS.md` block and two POSIX sh
   hooks in `.githooks/`.
 - Distributed with the `skills` CLI: `pnpm dlx skills add SebassContreras/spectrace`.
-
-## Test
-
-`sh tests/hooks.sh` — behavior tests for the git hooks: each builds a throwaway repo,
-makes a commit and checks that it is accepted or refused. It also checks that
-`.githooks/` matches `skills/spectrace-plan/assets/hooks/`.
+- Test: `sh tests/hooks.sh` — behavior tests for the git hooks: each builds a
+  throwaway repo, makes a commit and checks that it is accepted or refused. It also
+  checks that `.githooks/` matches `skills/spectrace-plan/assets/hooks/`.
 
 ## Docs
 

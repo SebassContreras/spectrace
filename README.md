@@ -144,6 +144,9 @@ chore — carries `Spec: none`; a commit with no trailer at all gets a warning.
   review, but code that breaks neither can still slip through.
 - Hooks are local: a fresh clone runs `git config core.hooksPath .githooks` once (the
   protocol tells agents to). `--no-verify` bypasses them.
+- The hook tells `--amend` from a new commit by the author date git hands it; a new
+  commit in the same second as the last one, or `git commit -C HEAD`, is judged as an
+  amend.
 
 ## Coming from the old spectrace
 

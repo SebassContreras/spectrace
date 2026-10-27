@@ -25,13 +25,15 @@ each one got wrong.
   `<!-- /spectrace -->` follows.
 - D3 (R4): `install_re` names the paths once, used by the warning and the work count.
 - D4 (R1): `tests/hooks.sh`, POSIX sh, no dependencies; `HOOKS=<dir>` runs it on
-  another copy of the hooks. `product.md` → `## Test` names it.
+  another copy of the hooks. `product.md` → `## Stack` names it; the doc map, the
+  conventions, `spectrace-plan` (`Verify:` tasks) and README `## Limits` follow.
 
 ## Tasks
 - [x] 026/T001 [agent] `commit-msg`: amend by author date, unclosed block kept, `install_re` (assets and this repo) — covers D1, D2, D3; replaces 025/D3
-- [x] 026/T002 [agent] `tests/hooks.sh` and `product.md` → `## Test`; block says `--amend` is judged as a whole — covers D4, R1
+- [x] 026/T002 [agent] `tests/hooks.sh` and `product.md` → `## Stack`; block says `--amend` is judged as a whole — covers D4, R1
 - [x] 026/T003 [agent] Verify: suite passes on the new hooks; fails on the 025 and pre-025 hooks for what each got wrong — covers R1, R2, R3
       verified: `sh tests/hooks.sh` (14 ok); `HOOKS=<025 hooks>` fails unclosed-block, amend-without-trailer and reused-task; `HOOKS=<pre-025 hooks>` fails conventions-change, verify-with-note, unclosed-block and amend — found nothing else
+- [x] 026/T004 [agent] Docs: doc map and hook convention in `AGENTS.md`, `Verify:` in `spectrace-plan`, amend limit in README — covers D4
 
 ## Changes
 - 2026-10-27: 025/D3 → D1. Why: the trailer heuristic let a new commit for an already

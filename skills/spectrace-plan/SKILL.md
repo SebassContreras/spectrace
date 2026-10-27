@@ -63,6 +63,8 @@ and `name` is kebab-case. Sections, in English:
     act; `[agent]` for the rest.
   - Tests: one test task per requirement worth checking, at the lowest level that
     proves it, and only as many as the slice needs.
+  - A check that changes no files (a build, a manual run in the browser) is a
+    `Verify: <what>` task; it closes with a `verified:` note instead of a change.
   - Docs: when the spec changes what a doc in `## Docs` describes, add a task for it
     (`Update README.md: add the export command — covers D2`). A spec that creates a
     new doc also adds its line to `## Docs`.

@@ -12,6 +12,8 @@ See `planning/product.md`.
 - `skills/spectrace-change/SKILL.md` — changes of direction, bugs, ideas, conventions.
 - `skills/spectrace-plan/assets/agents-block.md` — the format and protocol. The block
   below is a copy; edit the asset first, then copy it here.
+- `skills/spectrace-plan/assets/hooks/` — the git hooks; `.githooks/` is a copy.
+- `tests/hooks.sh` — behavior tests for the hooks (`sh tests/hooks.sh`).
 
 ## Conventions
 
@@ -19,6 +21,9 @@ See `planning/product.md`.
   frontmatter `name` (equal to its folder) and `description` (at most 1024 characters);
   paths relative to the skill root.
 - Never guess a CLI flag or file format — verify it before writing it into a skill.
+- A hook changes in `skills/spectrace-plan/assets/hooks/` first, is copied to
+  `.githooks/`, and ships with a case in `tests/hooks.sh`; the suite passes before the
+  commit.
 - No push to `origin` until the maintainer asks.
 
 <!-- spectrace -->
