@@ -6,17 +6,20 @@
 # outside its <!-- spectrace --> block change. On --amend the commit is compared
 # with its parent, not with the commit being rewritten.
 # A commit without a trailer that changes files beyond planning/ and the spectrace
-# install (AGENTS.md, .githooks/, .gitattributes) gets a warning; "Spec: none" marks
-# a change that belongs to no spec on purpose (a typo, a chore).
+# install (AGENTS.md, .githooks/, .gitattributes, the CI workflow) is refused;
+# "Spec: none" marks a change that belongs to no spec on purpose (a typo, a chore).
+# A merge commit is not judged: its changes were judged on their own commits.
 
 msg="$1"
-install_re='^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$|$)'
+install_re='^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$|\.github/workflows/spectrace\.yml$|$)'
 specs=$(git interpret-trailers --parse < "$msg" | sed -n 's/^Spec: *//p' | tr -d '\r')
 
+git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
 if [ -z "$specs" ]; then
   if git diff --cached --name-only | grep -qvE "$install_re"; then
-    echo "spectrace: no 'Spec: NNN/TNNN' trailer; this change is outside every task" \
-      "(use 'Spec: none' if that is on purpose)." >&2
+    echo "spectrace: no 'Spec: NNN/TNNN' trailer — add the task this commit closes," \
+      "or 'Spec: none' in the last paragraph if it belongs to no spec on purpose." >&2
+    exit 1
   fi
   exit 0
 fi

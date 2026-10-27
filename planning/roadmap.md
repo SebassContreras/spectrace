@@ -12,7 +12,7 @@ retired by 021; they live in git history.
 | 024 | specs-folder | done | 023 |
 | 025 | task-evidence | done | 024 |
 | 026 | hook-tests | done | 025 |
-| 027 | required-trailer | todo | 026 |
+| 027 | required-trailer | in progress | 026 |
 
 ## Ideas
 

@@ -93,6 +93,24 @@ new_commit_for_closed_task_does_not_count_previous_work() {
   echo 'More notes.' >> "$spec"; git add -A
   commit "$(trailer 001/T001)"; expect_refused new_commit_for_closed_task_does_not_count_previous_work $?
 }
+code_without_trailer_is_refused() {
+  new_repo; echo x > a.txt; git add -A
+  commit work; expect_refused code_without_trailer_is_refused $?
+}
+code_with_spec_none_is_accepted() {
+  new_repo; echo x > a.txt; git add -A
+  commit "$(trailer none)"; expect_accepted code_with_spec_none_is_accepted $?
+}
+planning_without_trailer_is_accepted() {
+  new_repo; echo 'More notes.' >> "$spec"; git add -A
+  commit work; expect_accepted planning_without_trailer_is_accepted $?
+}
+merge_without_trailer_is_accepted() {
+  new_repo; git checkout -q -b side; echo x > a.txt; git add -A; commit "$(trailer none)"
+  git checkout -q -; echo y > b.txt; git add -A; commit "$(trailer none)"
+  git merge -q --no-ff -m merge side >/dev/null 2>&1
+  expect_accepted merge_without_trailer_is_accepted $?
+}
 roadmap_status_follows_agent_checkboxes() {
   new_repo; tick T001; echo x > a.txt; git add -A; commit "$(trailer 001/T001)"
   grep -q '^| 001 | x | in progress' planning/roadmap.md
@@ -115,6 +133,10 @@ verify_with_reviewed_note_is_refused
 review_without_note_is_refused
 amend_that_ticks_task_counts_amended_work
 new_commit_for_closed_task_does_not_count_previous_work
+code_without_trailer_is_refused
+code_with_spec_none_is_accepted
+planning_without_trailer_is_accepted
+merge_without_trailer_is_accepted
 roadmap_status_follows_agent_checkboxes
 installed_hooks_match_assets
 exit $failed
