@@ -84,10 +84,11 @@ The `Spec:` line must sit in the message's last paragraph, with any other traile
 trailers.
 
 Two small git hooks, installed to `.githooks/` by `spectrace-plan`, make this hard to
-skip: `commit-msg` refuses a `Spec:` trailer whose task isn't ticked, or a ticked task
-with no work in the commit (a `Verify:` task closes with a `verified:` note instead);
-`pre-commit` writes each spec's `Status` in the roadmap from
-its checkboxes — nobody types it.
+skip: `commit-msg` refuses a code commit with no `Spec:` trailer, a trailer whose task
+isn't ticked, or a ticked task with no work in the commit (a `Verify:` task closes with
+a `verified:` note instead); `pre-commit` writes each spec's `Status` in the roadmap
+from its checkboxes — nobody types it. On GitHub, a workflow runs the same trailer
+check on every push and pull request, for commits made with `--no-verify`.
 
 After a change of direction, `spectrace-change` lists what the old approach *assumed*
 (not just its names), turns the reason for the change into a requirement with a test,
@@ -121,7 +122,7 @@ git show -s a1b2c3           # → Spec: 003/T002 → the decision behind it
 When that decision changes, `git log --grep "Spec: 003/"` lists the doc commits next to
 the code, and `spectrace-change` re-reads every listed doc for sentences that describe
 the old way without naming it. A change that belongs to no spec on purpose — a typo, a
-chore — carries `Spec: none`; a commit with no trailer at all gets a warning.
+chore — carries `Spec: none`; a code commit with no trailer at all is refused.
 
 ## Principles
 
@@ -143,7 +144,10 @@ chore — carries `Spec: none`; a commit with no trailer at all gets a warning.
   not a checker. It is backed by a test of the reason for the change and a recorded
   review, but code that breaks neither can still slip through.
 - Hooks are local: a fresh clone runs `git config core.hooksPath .githooks` once (the
-  protocol tells agents to). `--no-verify` bypasses them.
+  protocol tells agents to). `--no-verify` bypasses them; on GitHub the
+  `.github/workflows/spectrace.yml` check still refuses the push or pull request, but
+  the commit already exists and has to be reworded. Elsewhere, run
+  `sh .githooks/check-trailers <base> <head>` in your CI.
 - The hook tells `--amend` from a new commit by the author date git hands it; a new
   commit in the same second as the last one, or `git commit -C HEAD`, is judged as an
   amend.

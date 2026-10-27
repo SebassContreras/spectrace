@@ -88,7 +88,8 @@ Never bypass them (`--no-verify`); when one refuses, fix what it says.
    The `Spec:` line goes in the message's last paragraph, together with any other
    trailer (`Co-Authored-By:`…) and no blank line between them — git only reads that
    paragraph as trailers. A change that belongs to no spec on purpose (a typo, a
-   chore) carries `Spec: none` instead.
+   chore) carries `Spec: none` instead; a code commit with neither is refused, and
+   CI refuses one that skipped the hook with `--no-verify`.
 
    Two small tasks that only make sense together (a function and its test) may share a
    commit with one `Spec:` line each. To fold a task into the previous commit,
