@@ -6,7 +6,7 @@
 roadmap=planning/roadmap.md
 git cat-file -e ":$roadmap" 2>/dev/null || exit 0
 
-specs=$(git ls-files 'planning/[0-9][0-9][0-9]-*.md')
+specs=$(git ls-files 'planning/specs/[0-9][0-9][0-9]-*.md')
 [ -n "$specs" ] || exit 0
 
 statuses=""

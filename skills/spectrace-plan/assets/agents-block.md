@@ -6,7 +6,7 @@ Work is planned in `planning/`:
 ```
 planning/product.md      what this is, who it's for, stack, how to run and test, docs
 planning/roadmap.md      specs in order, their status, and a free "Ideas" list
-planning/NNN-name.md     one file per spec
+planning/specs/NNN-name.md  one file per spec
 ```
 
 A spec file:

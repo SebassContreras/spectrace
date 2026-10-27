@@ -3,7 +3,7 @@ name: spectrace-plan
 description: >-
   Turns a plan that already exists — written with another agent, pasted in the chat,
   or in a file — into small ordered specs in planning/ (product.md, roadmap.md, one
-  NNN-name.md per spec with goal, requirements, design and tasks), and writes the
+  specs/NNN-name.md per spec with goal, requirements, design and tasks), and writes the
   spectrace block into AGENTS.md so any agent executes the tasks and closes each one
   with a git commit carrying a `Spec: NNN/TNNN` trailer. No interview. Also adds new
   specs to an existing project at any time, including after the first version ships.
@@ -22,8 +22,9 @@ reference. Read it before writing anything.
 1. The plan is in the conversation, or in a file the user names. If neither, ask for it
    in one sentence — don't interview. A rough plan is enough.
 2. Read what exists: `planning/product.md`, `planning/roadmap.md`, every
-   `planning/NNN-*.md`, `AGENTS.md`, the code layout if there is code (top-level
-   files, the manifest, the test command), and whether this is a git repo. An existing
+   `planning/specs/NNN-*.md` (spec files found directly in `planning/` come from an
+   earlier layout: `git mv` them into `planning/specs/`), `AGENTS.md`, the code layout
+   if there is code (top-level files, the manifest, the test command), and whether this is a git repo. An existing
    `planning/` means you are **adding** specs.
 3. Ask **one round** of questions, only about what blocks writing the specs (a stack
    choice the plan leaves open, an account only the user has, `git init` when there is
@@ -47,7 +48,7 @@ reference. Read it before writing anything.
 
 ## Step 3 — Write each spec
 
-`planning/NNN-name.md`, where `NNN` is the highest existing spec ID + 1 (start at 001)
+`planning/specs/NNN-name.md`, where `NNN` is the highest existing spec ID + 1 (start at 001)
 and `name` is kebab-case. Sections, in English:
 
 - **Goal** — what works when it's done and how to check it, in two or three lines.

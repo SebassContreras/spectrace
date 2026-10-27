@@ -39,7 +39,7 @@ Later, anything new — an idea, a change of mind, a bug — goes through
 
 | Skill | What it does |
 |---|---|
-| `spectrace-plan` | Takes your plan and writes `planning/product.md`, `planning/roadmap.md` and one `planning/NNN-name.md` per spec — thin slices that each end in something that runs. Adds the spectrace block to `AGENTS.md` and installs the git hooks (also repairs them if missing). Use it again any time to add specs. |
+| `spectrace-plan` | Takes your plan and writes `planning/product.md`, `planning/roadmap.md` and one `planning/specs/NNN-name.md` per spec — thin slices that each end in something that runs. Adds the spectrace block to `AGENTS.md` and installs the git hooks (also repairs them if missing). Use it again any time to add specs. |
 | `spectrace-change` | Changes of direction, bugs, new ideas, and conventions that get in the way. Replaces the old item, finds what it built (`git log --grep`, `git grep`, and the old approach's assumptions), and adds cleanup tasks ending in a review. A change that spans specs becomes a new spec, so finished specs stay finished. |
 
 ## A spec
@@ -148,7 +148,8 @@ chore — carries `Spec: none`; a commit with no trailer at all gets a warning.
 
 Earlier versions had an interview, `trace.py` and `.spectrace/`. They are gone and
 there is no automatic migration: delete `.spectrace/` and the old protocol block in
-`AGENTS.md`, then run `spectrace-plan` on what is still pending.
+`AGENTS.md`, then run `spectrace-plan` on what is still pending. Spec files written directly
+in `planning/` by an earlier version are moved to `planning/specs/` by `spectrace-plan`.
 
 ## This repository
 

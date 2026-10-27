@@ -23,9 +23,9 @@ fail=0
 for ref in $specs; do
   [ "$ref" = none ] && continue
   id=${ref%%/*}
-  f=$(git ls-files "planning/$id-*.md" | head -n 1)
+  f=$(git ls-files "planning/specs/$id-*.md" | head -n 1)
   if [ -z "$f" ]; then
-    echo "spectrace: $ref — no spec file planning/$id-*.md" >&2; fail=1; continue
+    echo "spectrace: $ref — no spec file planning/specs/$id-*.md" >&2; fail=1; continue
   fi
   line=$(git show ":$f" | tr -d '\r' | grep "^- \[[xX]\] $ref ")
   if [ -z "$line" ]; then

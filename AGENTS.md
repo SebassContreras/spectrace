@@ -7,7 +7,7 @@ See `planning/product.md`.
 
 - `planning/product.md` — what this is, who it's for, stack.
 - `planning/roadmap.md` — specs, order, status, ideas.
-- `planning/NNN-name.md` — one spec per file.
+- `planning/specs/NNN-name.md` — one spec per file.
 - `skills/spectrace-plan/SKILL.md` — plan → specs, and new specs later.
 - `skills/spectrace-change/SKILL.md` — changes of direction, bugs, ideas, conventions.
 - `skills/spectrace-plan/assets/agents-block.md` — the format and protocol. The block
@@ -29,7 +29,7 @@ Work is planned in `planning/`:
 ```
 planning/product.md      what this is, who it's for, stack, how to run and test, docs
 planning/roadmap.md      specs in order, their status, and a free "Ideas" list
-planning/NNN-name.md     one file per spec
+planning/specs/NNN-name.md  one file per spec
 ```
 
 A spec file:
