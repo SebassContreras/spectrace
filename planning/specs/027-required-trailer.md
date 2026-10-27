@@ -33,4 +33,5 @@ in without a trailer after a warning; with this spec both would have been refuse
 - [x] 027/T002 [agent] `check-trailers` and the CI workflow asset; tests — covers D2, D3, R2, R3
 - [x] 027/T003 [agent] `spectrace-plan` installs `check-trailers` and the workflow; installed in this repo — covers D3
 - [x] 027/T004 [agent] Docs: README (closing tasks, limits), agents block and its copy, `product.md` — covers D1, D2, D3
-- [ ] 027/T005 [agent] Verify: suite passes; the 026 hooks fail the new tests — covers R1, R2
+- [x] 027/T005 [agent] Verify: suite passes; the 026 hooks fail the new tests — covers R1, R2
+      verified: `sh tests/hooks.sh` (22 ok); `HOOKS=<026 hooks + check-trailers>` fails code_without_trailer_is_refused only; `check-trailers 93e3e90 origin/main` in lienzo names 17ba32e and 9292fd4 and nothing else — found nothing else
