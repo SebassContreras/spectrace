@@ -10,34 +10,37 @@
 # a change that belongs to no spec on purpose (a typo, a chore).
 
 msg="$1"
-trailers() { git interpret-trailers --parse | sed -n 's/^Spec: *//p' | tr -d '\r'; }
-specs=$(trailers < "$msg")
+install_re='^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$|$)'
+specs=$(git interpret-trailers --parse < "$msg" | sed -n 's/^Spec: *//p' | tr -d '\r')
 
 if [ -z "$specs" ]; then
-  if git diff --cached --name-only | grep -qvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$)'; then
+  if git diff --cached --name-only | grep -qvE "$install_re"; then
     echo "spectrace: no 'Spec: NNN/TNNN' trailer; this change is outside every task" \
       "(use 'Spec: none' if that is on purpose)." >&2
   fi
   exit 0
 fi
 
-# An amend is seen as HEAD already carrying one of this message's task trailers.
+# An amend keeps the author date of HEAD, and git exports it to hooks as
+# GIT_AUTHOR_DATE; a new commit gets the current time.
+empty=$(git hash-object -t tree /dev/null)
 base=HEAD
-if git rev-parse -q --verify HEAD >/dev/null; then
-  head_specs=$(git log -1 --format=%B HEAD | trailers)
-  for ref in $specs; do
-    [ "$ref" = none ] && continue
-    if echo "$head_specs" | grep -qxF "$ref"; then
-      base=$(git rev-parse -q --verify HEAD^ || git hash-object -t tree /dev/null); break
-    fi
-  done
-else
-  base=$(git hash-object -t tree /dev/null)
+if ! git rev-parse -q --verify HEAD >/dev/null; then
+  base=$empty
+elif [ "${GIT_AUTHOR_DATE%% *}" = "@$(git log -1 --format=%at HEAD)" ]; then
+  base=$(git rev-parse -q --verify HEAD^ || echo "$empty")
 fi
 
-outside_block() { tr -d '\r' | sed '/^<!-- spectrace -->$/,/^<!-- \/spectrace -->$/d'; }
+# Drops the spectrace block; an unclosed block is kept, so nothing after it is lost.
+outside_block() {
+  tr -d '\r' | awk '
+    $0 == "<!-- spectrace -->" { held = $0; next }
+    held != "" { held = held "\n" $0; if ($0 == "<!-- /spectrace -->") held = ""; next }
+    { print }
+    END { if (held != "") print held }'
+}
 changed=$(git diff --cached --name-only "$base")
-work=$(echo "$changed" | grep -cvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$|$)')
+work=$(echo "$changed" | grep -cvE "$install_re")
 if echo "$changed" | grep -qx 'AGENTS.md' &&
    [ "$(git show "$base:AGENTS.md" 2>/dev/null | outside_block)" != "$(git show :AGENTS.md 2>/dev/null | outside_block)" ]; then
   work=$((work + 1))

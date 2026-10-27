@@ -114,10 +114,10 @@ Never bypass them (`--no-verify`); when one refuses, fix what it says.
    chore) carries `Spec: none` instead.
 
    Two small tasks that only make sense together (a function and its test) may share a
-   commit with one `Spec:` line each. To fold a task into an earlier commit, use
-   `git reset --soft HEAD~1` and commit again: the hook compares an `--amend` with its
-   parent only when the commit being amended already names one of the tasks. A task is closed only when that commit exists —
-   never leave a ticked box uncommitted or a commit without its trailer.
+   commit with one `Spec:` line each. To fold a task into the previous commit,
+   `git commit --amend` works: the hook judges the whole amended commit against its
+   parent. A task is closed only when that commit exists — never leave a ticked box
+   uncommitted or a commit without its trailer.
 4. **A `Review:` task** needs eyes that didn't write the code: hand it to a fresh
    agent (a subagent given only the task text and the spec) when your harness can;
    otherwise do it yourself and write `reviewed (self):`. Read the files, don't skim.

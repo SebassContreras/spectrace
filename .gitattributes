@@ -1,2 +1,3 @@
 .githooks/* text eol=lf
 skills/*/assets/hooks/* text eol=lf
+tests/*.sh text eol=lf

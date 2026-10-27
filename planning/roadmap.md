@@ -11,6 +11,7 @@ retired by 021; they live in git history.
 | 023 | docs-tracing | done   | 022      |
 | 024 | specs-folder | done | 023 |
 | 025 | task-evidence | done | 024 |
+| 026 | hook-tests | done | 025 |
 
 ## Ideas
 

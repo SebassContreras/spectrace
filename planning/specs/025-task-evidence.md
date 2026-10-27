@@ -20,9 +20,9 @@ note, and accepts an amend of a task's commit.
   base once the `<!-- spectrace -->` block is stripped from both.
 - D2 (R2): `commit-msg` exempts `Verify:` like `Review:`; `pre-commit` requires
   `verified:` under a ticked `Verify:`.
-- D3 (R3): When HEAD's trailers share a `Spec:` with the message, the base is `HEAD^`
+- ~~D3 (R3): When HEAD's trailers share a `Spec:` with the message, the base is `HEAD^`
   (the empty tree for a root commit). Other amends can't be told apart; the block says
-  to use `git reset --soft HEAD~1` to fold a task into an earlier commit.
+  to use `git reset --soft HEAD~1` to fold a task into an earlier commit.~~ → 026/D1
 
 ## Tasks
 - [x] 025/T001 [agent] `commit-msg` counts `AGENTS.md` outside the block and diffs an amend against its parent (assets and this repo) — covers D1, D3
