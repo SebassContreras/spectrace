@@ -86,20 +86,23 @@ There is no Changes section yet; `spectrace-change` adds it with the first chang
    - `planning/roadmap.md`: `# Roadmap`, the table from the block, then `## Ideas`.
 3. Add each spec file and its roadmap row with `Status` `todo` (from then on the hook
    writes it). Append new rows; never renumber.
-4. **Hooks.** Copy `assets/hooks/pre-commit` and `assets/hooks/commit-msg` to
-   `.githooks/` with LF line endings (convert if the copy came out CRLF — `sh` fails on
-   CRLF), add `.githooks/* text eol=lf` to `.gitattributes`, stage both hooks with
-   `git add --chmod=+x .githooks/pre-commit .githooks/commit-msg` (the only reliable
-   executable bit on Windows), and run `git config core.hooksPath .githooks`. If
-   `core.hooksPath` already points elsewhere (husky, another tool), ask before changing
-   it. If the files exist and differ from the assets, show the diff and replace them on
+4. **Hooks.** Copy `assets/hooks/pre-commit`, `assets/hooks/commit-msg` and
+   `assets/hooks/check-trailers` to `.githooks/` with LF line endings (convert if the
+   copy came out CRLF — `sh` fails on CRLF), add `.githooks/* text eol=lf` to
+   `.gitattributes`, stage them with `git add --chmod=+x .githooks/pre-commit
+   .githooks/commit-msg .githooks/check-trailers` (the only reliable executable bit on
+   Windows), and run `git config core.hooksPath .githooks`. When the `origin` remote is
+   on GitHub, also copy `assets/ci/spectrace.yml` to `.github/workflows/spectrace.yml`:
+   it runs `check-trailers` on push and pull request, so a commit that skipped the
+   hooks is still refused. If `core.hooksPath` already points elsewhere (husky, another
+   tool), ask before changing it. If the files exist and differ from the assets, show the diff and replace them on
    a yes. This step also repairs a project whose `.githooks/` went missing.
 5. `AGENTS.md`: if it has no `<!-- spectrace -->` block, append the content of
    `assets/agents-block.md` in the file's line endings (create the file if missing,
    with a `# <project>` title). If the block exists and differs from the asset, show
    the diff and replace it on a yes. Touch nothing outside the markers.
 6. Delete the source plan file if the user said so. Don't commit: the executing agent
-   commits `planning/`, `AGENTS.md` and the hooks before its first task.
+   commits `planning/`, `AGENTS.md`, the hooks and the workflow before its first task.
 
 ## Step 5 — Report and stop
 
