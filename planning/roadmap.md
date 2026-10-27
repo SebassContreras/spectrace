@@ -10,6 +10,7 @@ retired by 021; they live in git history.
 | 022 | git-hooks | done        | 021      |
 | 023 | docs-tracing | done   | 022      |
 | 024 | specs-folder | done | 023 |
+| 025 | task-evidence | done | 024 |
 
 ## Ideas
 

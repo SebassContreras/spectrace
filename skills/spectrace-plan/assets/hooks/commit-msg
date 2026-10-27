@@ -1,13 +1,17 @@
 #!/bin/sh
 # spectrace commit-msg: every "Spec: NNN/TNNN" trailer must name a task that is
 # ticked [x] in the staged spec, so a task is closed exactly when its commit exists,
-# and an [agent] task other than a Review: must bring changes outside planning/.
+# and an [agent] task other than a Review: or a Verify: must bring work: a change
+# outside planning/ and the spectrace install. AGENTS.md counts as work when lines
+# outside its <!-- spectrace --> block change. On --amend the commit is compared
+# with its parent, not with the commit being rewritten.
 # A commit without a trailer that changes files beyond planning/ and the spectrace
 # install (AGENTS.md, .githooks/, .gitattributes) gets a warning; "Spec: none" marks
 # a change that belongs to no spec on purpose (a typo, a chore).
 
 msg="$1"
-specs=$(git interpret-trailers --parse < "$msg" | sed -n 's/^Spec: *//p' | tr -d '\r')
+trailers() { git interpret-trailers --parse | sed -n 's/^Spec: *//p' | tr -d '\r'; }
+specs=$(trailers < "$msg")
 
 if [ -z "$specs" ]; then
   if git diff --cached --name-only | grep -qvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$)'; then
@@ -17,7 +21,27 @@ if [ -z "$specs" ]; then
   exit 0
 fi
 
-work=$(git diff --cached --name-only | grep -cvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$)')
+# An amend is seen as HEAD already carrying one of this message's task trailers.
+base=HEAD
+if git rev-parse -q --verify HEAD >/dev/null; then
+  head_specs=$(git log -1 --format=%B HEAD | trailers)
+  for ref in $specs; do
+    [ "$ref" = none ] && continue
+    if echo "$head_specs" | grep -qxF "$ref"; then
+      base=$(git rev-parse -q --verify HEAD^ || git hash-object -t tree /dev/null); break
+    fi
+  done
+else
+  base=$(git hash-object -t tree /dev/null)
+fi
+
+outside_block() { tr -d '\r' | sed '/^<!-- spectrace -->$/,/^<!-- \/spectrace -->$/d'; }
+changed=$(git diff --cached --name-only "$base")
+work=$(echo "$changed" | grep -cvE '^(planning/|\.githooks/|AGENTS\.md$|\.gitattributes$|$)')
+if echo "$changed" | grep -qx 'AGENTS.md' &&
+   [ "$(git show "$base:AGENTS.md" 2>/dev/null | outside_block)" != "$(git show :AGENTS.md 2>/dev/null | outside_block)" ]; then
+  work=$((work + 1))
+fi
 
 fail=0
 for ref in $specs; do
@@ -31,8 +55,9 @@ for ref in $specs; do
   if [ -z "$line" ]; then
     echo "spectrace: $ref is not ticked [x] in $f — tick it in this commit." >&2; fail=1
   elif [ "$work" -eq 0 ] && echo "$line" | grep -q '\[agent\]' \
-       && ! echo "$line" | grep -q '\] Review:'; then
-    echo "spectrace: $ref is ticked but the commit has no work outside planning/ — add the task's changes." >&2; fail=1
+       && ! echo "$line" | grep -qE '\] (Review|Verify):'; then
+    echo "spectrace: $ref is ticked but the commit has no work outside planning/ and the spectrace" \
+      "install — add the task's changes, or make it a 'Verify:' task with a 'verified:' note." >&2; fail=1
   fi
 done
 exit $fail

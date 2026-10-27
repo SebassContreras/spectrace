@@ -85,7 +85,8 @@ trailers.
 
 Two small git hooks, installed to `.githooks/` by `spectrace-plan`, make this hard to
 skip: `commit-msg` refuses a `Spec:` trailer whose task isn't ticked, or a ticked task
-with no work in the commit; `pre-commit` writes each spec's `Status` in the roadmap from
+with no work in the commit (a `Verify:` task closes with a `verified:` note instead);
+`pre-commit` writes each spec's `Status` in the roadmap from
 its checkboxes — nobody types it.
 
 After a change of direction, `spectrace-change` lists what the old approach *assumed*

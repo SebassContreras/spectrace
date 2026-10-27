@@ -71,6 +71,9 @@ What should work when this spec is done, and how we'll know.
 - A task whose text starts with `Review:` is closed only with an indented
   `reviewed: <files read> — found <what>` line under it. Anything it finds becomes a
   new task placed before it.
+- A task whose text starts with `Verify:` checks something (tests, a build, the app
+  in a browser) without changing files; it is closed only with an indented
+  `verified: <commands run, what was checked> — found <what>` line under it.
 - Roadmap table: `| ID | Spec | Status | Depends on |`. `Spec` is the name after
   `NNN-`; `Depends on` is `—` or spec IDs separated by commas. `Status` (`todo`,
   `in progress`, `done`) is written by the git hook from the `[agent]` checkboxes —
@@ -79,8 +82,11 @@ What should work when this spec is done, and how we'll know.
 ## Working on tasks
 
 Git hooks in `.githooks/` keep this honest: they write the roadmap `Status`, refuse a
-commit whose `Spec:` task isn't ticked or that ticks an `[agent]` task without any work
-outside `planning/`, and refuse a ticked `Review:` task without its `reviewed:` note.
+commit whose `Spec:` task isn't ticked or that ticks an `[agent]` task without any work,
+and refuse a ticked `Review:` or `Verify:` task without its `reviewed:`/`verified:` note.
+Work is any change outside `planning/`, `.githooks/` and `.gitattributes`, including
+`AGENTS.md` lines outside the spectrace block (the project's own conventions are docs);
+a `Review:` or `Verify:` task needs none.
 Never bypass them (`--no-verify`); when one refuses, fix what it says.
 
 1. `git pull` and `git status`. If `git config core.hooksPath` isn't `.githooks`, run
@@ -108,7 +114,9 @@ Never bypass them (`--no-verify`); when one refuses, fix what it says.
    chore) carries `Spec: none` instead.
 
    Two small tasks that only make sense together (a function and its test) may share a
-   commit with one `Spec:` line each. A task is closed only when that commit exists —
+   commit with one `Spec:` line each. To fold a task into an earlier commit, use
+   `git reset --soft HEAD~1` and commit again: the hook compares an `--amend` with its
+   parent only when the commit being amended already names one of the tasks. A task is closed only when that commit exists —
    never leave a ticked box uncommitted or a commit without its trailer.
 4. **A `Review:` task** needs eyes that didn't write the code: hand it to a fresh
    agent (a subagent given only the task text and the spec) when your harness can;

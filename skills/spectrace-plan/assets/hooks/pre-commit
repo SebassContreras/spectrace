@@ -1,7 +1,7 @@
 #!/bin/sh
 # spectrace pre-commit: writes each spec's Status in planning/roadmap.md from its
 # [agent] task checkboxes, and refuses a ticked "Review:" task without a
-# "reviewed:" note under it. Reads the staged version of every file.
+# "reviewed:" note under it, or a ticked "Verify:" task without a "verified:" note. Reads the staged version of every file.
 
 roadmap=planning/roadmap.md
 git cat-file -e ":$roadmap" 2>/dev/null || exit 0
@@ -28,16 +28,20 @@ for f in $specs; do
     /^- \[[ xX]\] / {
       flush()
       if ($0 ~ /^- \[[xX]\] [0-9][0-9][0-9]\/T[0-9]+ \[(agent|human)\] Review:/) {
-        task = $3; noted = 0
+        task = $3; note = "reviewed"; noted = 0
+      } else if ($0 ~ /^- \[[xX]\] [0-9][0-9][0-9]\/T[0-9]+ \[(agent|human)\] Verify:/) {
+        task = $3; note = "verified"; noted = 0
       }
       next
     }
-    /^[ \t]+reviewed( \(self\))?:/ { noted = 1 }
+    note == "reviewed" && /^[ \t]+reviewed( \(self\))?:/ { noted = 1 }
+    note == "verified" && /^[ \t]+verified:/ { noted = 1 }
     /^#/ { flush() }
     END { flush() }')
   if [ -n "$bad" ]; then
-    echo "spectrace: review task ticked without a 'reviewed:' note in $f:" $bad >&2
-    echo "  Add an indented line under it: reviewed: <files read> — found <what>." >&2
+    echo "spectrace: Review:/Verify: task ticked without its note in $f:" $bad >&2
+    echo "  Add an indented line under it: reviewed: <files read> — found <what>," >&2
+    echo "  or verified: <commands run, what was checked> — found <what>." >&2
     exit 1
   fi
 done
