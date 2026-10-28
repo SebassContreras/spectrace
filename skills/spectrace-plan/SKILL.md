@@ -45,10 +45,11 @@ Write `planning/specs/NNN-name.md`, where `NNN` is the highest existing spec ID 
 1. Present the roadmap rows and per-spec goals/tasks to the user. Ask for confirmation before writing files. If there is no git repo, run `git init` upon confirmation.
 2. **First-time setup (when root decision files or `planning/` are absent):**
    - **`AGENTS.md`**: Create or update with the contents of `assets/agents-block.md`. Keep it lean (< 150 lines) with operational instructions and pointers.
-   - **`PRODUCT.md`**: Outline product vision, target audience, core problems solved, and scope boundaries.
+   - **`PRODUCT.md`**: Initialize from `assets/product-template.md`. Outline product vision, target audience, core problems solved, and scope boundaries.
    - **`ARCHITECTURE.md`**: Outline system overview, stack, layer boundaries, directory map, and initial Mermaid diagram.
-   - **`DESIGN.md`**: Define visual tokens, UI hierarchy, accessibility rules, and code conventions.
-   - **`CHANGES.md`**: Initialize the change protocol and log table.
+   - **`DESIGN.md`**: Initialize from `assets/design-template.md`. Define visual tokens, UI hierarchy, accessibility rules, and preserve the 10 Core Engineering & Testing Principles.
+   - **`CHANGES.md`**: Initialize from `assets/changes-template.md` with the change protocol and empty log table.
+   - **`.agentignore`**: Copy `assets/agentignore-template` to `.agentignore` to prevent context pollution in AI coding tools.
    - **`planning/roadmap.md`**: Create `# Roadmap` table with columns `| ID | Spec | Status | Depends on |` and `## Ideas`.
 3. Add each spec file into `planning/specs/NNN-name.md` and add its corresponding row in `planning/roadmap.md` with status `todo`.
 4. Delete the initial plan file if requested by the user.

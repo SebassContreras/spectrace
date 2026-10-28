@@ -1,0 +1,47 @@
+# .agentignore
+# Patterns and files excluded from AI agent context indexing and scanning
+
+# Secrets and environment configurations
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.pfx
+*credentials*
+*secret*
+
+# Dependencies
+node_modules/
+vendor/
+.pnpm-store/
+
+# Build artifacts and compilation caches
+dist/
+build/
+out/
+target/
+.next/
+.cache/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+
+# Test and coverage artifacts
+coverage/
+.nyc_output/
+.pytest_cache/
+
+# Logs, diagnostics, and local state
+*.log
+logs/
+*.sqlite
+*.db
+*.dump
+
+# Operating system and editor temporary files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

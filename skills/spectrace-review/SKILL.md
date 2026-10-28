@@ -4,9 +4,9 @@ description: >-
   Audits code changes, pull requests, or completed spec tasks against the repository's
   10 core engineering and testing principles (KISS/YAGNI, SRP, Anti-Corruption Layer,
   Invariant Testing, Input Partitioning, Clean Table-Driven Test Bodies) defined in
-  DESIGN.md. Generates an actionable findings report without modifying code. Use when:
-  "review this code", "audit this spec", "check code quality", "run review", "review tasks",
-  "audit PR", "verify engineering standards".
+  DESIGN.md, plus surface alignment with ARCHITECTURE.md. Generates an actionable findings
+  report without modifying code. Use when: "review this code", "audit this spec",
+  "check code quality", "run review", "review tasks", "audit PR", "verify engineering standards".
 ---
 
 # spectrace-review
@@ -22,12 +22,12 @@ Run **inside the target repo**. This skill performs an objective, read-only arch
    - For recent commits: `git diff HEAD~1` (or the branch divergence `git diff main...HEAD`).
 2. Read the governing documents:
    - [DESIGN.md](../../DESIGN.md) (the 10 engineering and testing principles).
-   - [ARCHITECTURE.md](../../ARCHITECTURE.md) (layer boundaries and dependencies).
+   - [ARCHITECTURE.md](../../ARCHITECTURE.md) (layer boundaries, public surfaces, and dependencies).
    - The active spec in `planning/specs/NNN-name.md` (verifying requirement coverage).
 
 ---
 
-## Step 2 — Execute the 10-Point Audit
+## Step 2 — Execute the Audit Checklist
 
 Audit the diff systematically against each principle. For each violation, cite the exact file and line number.
 
@@ -76,6 +76,10 @@ Audit the diff systematically against each principle. For each violation, cite t
 
 ### 10. Documented Trade-offs
 - [ ] **Trade-off Notes:** If a complex design choice was made, are pros, cons, and mitigations documented in comments or spec notes?
+
+### 11. Surface Alignment & Spec Traceability
+- [ ] **Public Surface Documentation:** If a public API, endpoint, CLI command, tool, or domain model was introduced or changed, is it documented in `ARCHITECTURE.md` or `DESIGN.md`?
+- [ ] **Strict Spec Coverage:** Does the diff align with the active task scope (`— covers R/D` or `— replaces D`) without undocumented side-effects?
 
 ---
 
