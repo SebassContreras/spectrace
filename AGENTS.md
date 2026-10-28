@@ -48,3 +48,5 @@ Agents execute work incrementally using the specs in `planning/`:
 2. **Never Break Working Specs:** If an existing requirement needs to change, follow the protocol in [CHANGES.md](./CHANGES.md) instead of silently breaking old assumptions.
 3. **Keep `planning/` Clean:** Only actionable specs and the roadmap belong in `planning/`. Broad system design belongs in `ARCHITECTURE.md`.
 4. **When Blocked:** Add an indented `blocked: <reason>` line below the task, commit the note, inform the user, and move to unblocked work.
+5. **Enforce Engineering & Testing Invariants:** Adhere strictly to the 10 Engineering & Testing Principles in [DESIGN.md](./DESIGN.md) (KISS/YAGNI, Anti-Corruption Layer, Table-Driven Testing, Input Partitioning, Clean Test Bodies).
+6. **No Speculative Abstractions:** Never introduce premature interfaces, adapters, or base classes for single-use cases. Abstract only for 2+ concrete consumers or vendors.

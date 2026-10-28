@@ -53,7 +53,8 @@ The repository strictly isolates **governance/decision contracts** at the projec
 │
 └── skills/                 # Agent Skills (agentskills.io specification)
     ├── spectrace-plan/     # Skill to generate specs, roadmap, and foundational docs
-    └── spectrace-change/   # Skill to manage architectural pivots and refactor cleanup
+    ├── spectrace-change/   # Skill to manage architectural pivots and refactor cleanup
+    └── spectrace-review/   # Skill to audit code against 10 engineering & testing principles
 ```
 
 ---

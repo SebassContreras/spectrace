@@ -34,7 +34,10 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
 3. **Execute:** Tell any agent:
    > *"Execute the specs."*
    The agent picks the next open task, checks the architecture/design rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
-4. **Pivots & Changes:** When plans change, tell your agent:
+4. **Audit & Review:** Tell your agent:
+   > *"Review this code against our engineering standards."*
+   `spectrace-review` audits the implementation against the 10 core principles (KISS/YAGNI, Anti-Corruption Layer, Table-Driven Testing, Input Partitioning) without altering code.
+5. **Pivots & Changes:** When plans change, tell your agent:
    > *"We changed our mind about X, now we want Y instead."*
    `spectrace-change` logs the pivot in `CHANGES.md`, strikes obsolete design items (`~~D1~~ → D2`), and adds safe cleanup tasks.
 
@@ -59,7 +62,8 @@ Spectrace separates **governance contracts** at the project root from **action p
 │
 └── skills/                 # Agent Skills
     ├── spectrace-plan/     # Generates specs and foundational contracts
-    └── spectrace-change/   # Handles pivots, refactors, and deprecation tasks
+    ├── spectrace-change/   # Handles pivots, refactors, and deprecation tasks
+    └── spectrace-review/   # Audits code against 10 engineering & testing principles
 ```
 
 ### Why Root Decision Files?
@@ -99,12 +103,13 @@ A user can sign in and stay signed in across browser reloads.
 
 ---
 
-## 🛠️ The Two Skills
+## 🛠️ The Three Skills
 
 | Skill | Purpose |
 |---|---|
-| **`spectrace-plan`** | Takes any plan, design, or transcript and generates root decision documents (`AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`), `planning/roadmap.md`, and ordered specs in `planning/specs/`. |
+| **`spectrace-plan`** | Takes any plan, design, or transcript and generates root decision documents (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`), `planning/roadmap.md`, and ordered specs in `planning/specs/`. |
 | **`spectrace-change`** | Handles pivots, bugs, and new requirements. Identifies affected code, strikes obsolete spec decisions, updates `CHANGES.md`, and sequences cleanup tasks so old code is cleanly eliminated. |
+| **`spectrace-review`** | Audits code against the 10 core engineering and testing principles (KISS/YAGNI, SRP, Anti-Corruption Layer, Invariant Testing, Input Partitioning, Clean Table Tests) defined in `DESIGN.md`. |
 
 ---
 
