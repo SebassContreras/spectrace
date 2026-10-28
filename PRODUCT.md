@@ -26,6 +26,7 @@ Unlike traditional planning tools or rigid git-enforcement mechanisms, Spectrace
 |---|---|
 | **Context Loss & Agent Hallucinations** | Establishes durable root contracts (`PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`) discovered instantly by AI tools through progressive disclosure. |
 | **Execution Blockers & Hook Failures** | Eliminates shell git hooks, trailer checkers, and CI scripts that break on cross-platform environments (Windows CRLF, missing sh permissions). |
+| **Code Rot & Premature Over-Engineering** | Enforces the 10 core engineering and testing principles in `DESIGN.md` and provides automated read-only audits via `spectrace-review`. |
 | **Stale Code from Pivots** | When a decision changes, the change protocol strikes obsolete requirements (`~~D1~~ → D2`), records rationale in `CHANGES.md`, and schedules explicit cleanup tasks to eliminate dead code. |
 | **Monolithic, Unverifiable Specs** | Slices features into thin, demonstrable increments ending in running software, verified via simple Markdown checkboxes (`[ ]` / `[x]`). |
 
@@ -38,7 +39,9 @@ Unlike traditional planning tools or rigid git-enforcement mechanisms, Spectrace
 2. **Adaptive Change Management (`spectrace-change`):**
    - Classifies pivots, bugs, and new requirements.
    - Updates `CHANGES.md`, strikes deprecated decisions, and generates regression and cleanup tasks.
-3. **Progressive Disclosure Execution Protocol:**
+3. **Architectural & Quality Auditing (`spectrace-review`):**
+   - Conducts objective, read-only audits against the 10 core engineering and testing principles in `DESIGN.md` (KISS/YAGNI, SRP, Anti-Corruption Layer, Invariant Testing, Input Partitioning, Clean Table Tests) before closing specs or merging PRs.
+4. **Progressive Disclosure Execution Protocol:**
    - Provides a streamlined `< 150` line operational guide in `AGENTS.md` guiding agents to read only the specific context they need for a given task.
 
 ---

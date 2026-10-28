@@ -4,6 +4,11 @@
 
 Spectrace provides a lightweight, spec-driven development methodology tailored for autonomous and semi-autonomous AI coding agents. It transforms unstructured plans and ideas into verifiable thin-slice specifications while maintaining living architectural and design contracts at the repository root.
 
+The framework operates through three core Agent Skills:
+- **`spectrace-plan`**: Ingests plans and creates root contracts and spec slices.
+- **`spectrace-change`**: Handles pivots, refactors, and clean deprecations.
+- **`spectrace-review`**: Audits changes against 10 core engineering and testing principles.
+
 ```mermaid
 graph TD
     A[Human / High-Level Plan] -->|spectrace-plan| B[Root Directives & planning/]
@@ -24,10 +29,11 @@ graph TD
     end
 
     D2 -->|Agent executes task| E[Codebase Changes]
-    E -->|Verify & Test| F[Check task box [x]]
-    F -->|All tasks done| G[Update roadmap.md to done]
+    E -->|spectrace-review| R[Audit 10 Principles]
+    R -->|Pass| F[Verify & Test]
+    F -->|Check task box [x]| G[Update roadmap.md to done]
     
-    H[Pivot or New Requirement] -->|spectrace-change| C4
+    H[Pivot or New Requirement] -->|spectrace-change| C5
     H -->|spectrace-change| D2
 ```
 

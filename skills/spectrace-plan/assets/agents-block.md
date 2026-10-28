@@ -46,9 +46,9 @@ A user signs in and stays signed in across reloads.
 
 ### Working on Tasks
 
-1. **Find Next Task:** Open `planning/roadmap.md`. Take the active spec (`todo` or `in progress`) whose dependencies are done. Open its spec file in `planning/specs/` and find the first open `[agent]` task.
-2. **Execute & Consult Context:** Read [ARCHITECTURE.md](./ARCHITECTURE.md) and [DESIGN.md](./DESIGN.md) for project constraints. Implement only the task scope.
-3. **Verify:** Run the project's tests or verification command. Never mark a task done without verifying.
+1. **Find Next Task:** Open `planning/roadmap.md`. Take the active spec (`todo` or `in progress`) whose dependencies are done. Open its spec file in `planning/specs/` and find the first open `[agent]` task. Skip `[human]` tasks and inform the user if blocked.
+2. **Execute & Consult Context:** Read [ARCHITECTURE.md](./ARCHITECTURE.md) and [DESIGN.md](./DESIGN.md) for project constraints. Implement only the task scope. No speculative abstractions: abstract only for 2+ concrete uses.
+3. **Verify:** Run the project's tests or verification command. Adhere strictly to the 10 Engineering & Testing Principles in [DESIGN.md](./DESIGN.md) (auditable via `spectrace-review`). Never mark a task done without verifying.
 4. **Mark Done & Commit:** Mark the task `[x]`. If all tasks in the spec are complete, update the roadmap status to `done`. Stage changed files and commit using Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`).
 5. **Stuck:** Add an indented `blocked: <reason>` line under the task, commit the note, inform the user, and move on.
 6. **Contradictions or Changes:** Propose changes directly to the user (the `spectrace-change` skill applies them to `CHANGES.md` and specs).

@@ -2,7 +2,7 @@
 
 Specs in execution order. `Status` (`todo`, `in progress`, `done`) is maintained directly by agents and humans as specs progress.
 
-> Historical note: Specs 001–020 and 022–027 (hook and trailer enforcement machinery) have been retired; see [CHANGES.md](../CHANGES.md).
+> Historical note: Specs 001–027 (including hook and trailer enforcement machinery) have been retired; see [CHANGES.md](../CHANGES.md).
 
 | ID  | Spec | Status | Depends on |
 |-----|------|--------|------------|

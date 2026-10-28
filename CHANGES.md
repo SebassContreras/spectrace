@@ -12,11 +12,22 @@ When an existing architectural design or requirement needs to change:
 2. **Update the Spec:** In the affected spec (`planning/specs/NNN-name.md`):
    - Strike through the obsolete item and point to the replacement (e.g., `- ~~D1: Sessions in localStorage~~ → D2`).
    - Add explicit cleanup tasks to remove obsolete code, tests, and documentation.
-3. **Update Root Context:** If the change modifies system boundaries or visual guidelines, update [ARCHITECTURE.md](./ARCHITECTURE.md) or [DESIGN.md](./DESIGN.md) accordingly.
+3. **Update Root Context:** If the change modifies system boundaries or visual guidelines, update [PRODUCT.md](./PRODUCT.md), [ARCHITECTURE.md](./ARCHITECTURE.md), or [DESIGN.md](./DESIGN.md) accordingly.
 
 ---
 
 ## 📜 Change Log
+
+### 2026-10-28 — Engineering Standards & spectrace-review Skill Integration
+
+- **Scope:** Code quality governance and testing discipline.
+- **What Changed:**
+  - Codified the 10 Core Engineering & Testing Principles in `DESIGN.md` (KISS/YAGNI, SRP, Anti-Corruption Layer/DIP, Invariant Testing, Input Partitioning, Clean Table-Driven Tests).
+  - Created the read-only audit skill `spectrace-review` to evaluate code changes and task completions against these 10 principles without modifying code.
+  - Added engineering constraints and anti-abstraction rules directly into `AGENTS.md`.
+- **Why:**
+  - Autonomous agents frequently introduce premature abstractions (single-use interfaces/factories) or shallow, anecdotal happy-path tests that fail to catch boundary regressions.
+  - Providing explicit invariant standards and an auditing tool ensures code cleanliness without manual human micromanagement.
 
 ### 2026-10-28 — Foundation Realignment: Pure Markdown & Root Architecture
 
@@ -24,12 +35,13 @@ When an existing architectural design or requirement needs to change:
 - **What Changed:**
   - Removed all POSIX Git hooks (`.githooks/`), trailer verification scripts (`check-trailers`), and CI trailer enforcement workflows.
   - Eliminated the mandatory `Spec: NNN/TNNN` commit trailer requirement in favor of standard Conventional Commits.
-  - Relocated core decision contracts to the repository root: `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `CHANGES.md`.
-  - Focused `planning/` strictly on actionable execution (`roadmap.md` and `specs/NNN-*.md`), deprecating `planning/product.md`.
+  - Relocated core decision contracts to the repository root: `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `CHANGES.md`.
+  - Established `PRODUCT.md` at root to cleanly isolate vision, personas, and product scope boundaries from structural architecture, deprecating `planning/product.md`.
+  - Focused `planning/` strictly on actionable execution (`roadmap.md` and `specs/NNN-*.md`).
   - Updated skills (`spectrace-plan` and `spectrace-change`) to generate and manage this streamlined structure.
 - **Why:**
   - Shell-based Git hooks caused persistent friction and blocking errors across cross-platform environments (notably Windows path/CRLF discrepancies).
   - Enforcing rigid trailers on every micro-commit interrupted natural agent workflows and created friction without improving code quality.
   - Moving architecture and design contracts to the root maximizes immediate discovery for modern AI agents (Cursor, Claude Code, Copilot, Antigravity) via progressive disclosure.
 - **Replaced Items:**
-  - `~~Specs 022–027~~`: Git hooks, trailer checkers, and CI trailer validations retired.
+  - `~~Specs 021–027~~`: Git hooks, trailer checkers, and CI trailer validations retired.

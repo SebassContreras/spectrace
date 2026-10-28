@@ -1,1 +1,25 @@
+# Dependencies and environment
+.env
+.env.*
+!.env.example
+
+# Caches and builds
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+dist/
+build/
+
+# Testing and diagnostics
+coverage/
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tools
 .muxel/
