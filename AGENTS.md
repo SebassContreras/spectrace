@@ -9,6 +9,7 @@ Instructions and operational constraints for AI coding agents.
 
 ## 🧭 Repository Blueprint & Pointers
 This codebase uses a two-tier progressive disclosure model:
+- **[PRODUCT.md](./PRODUCT.md):** Product vision, target audience, core user problems, and functional boundaries. Read before proposing scope changes or features.
 - **[ARCHITECTURE.md](./ARCHITECTURE.md):** System architecture, directory layout, core dependencies, and technical patterns. Read before modifying structural code.
 - **[DESIGN.md](./DESIGN.md):** UI/UX principles, design tokens, visual hierarchy, and code style standards. Read before writing user interfaces or new modules.
 - **[CHANGES.md](./CHANGES.md):** Historical log of architecture pivots, deprecated decisions, and migration reasons. Consult when altering existing behavior.

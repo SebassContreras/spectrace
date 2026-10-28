@@ -5,6 +5,7 @@ The repository separates durable architecture/design decisions at the root from 
 
 ```text
 AGENTS.md                   operational manual and commands for agents
+PRODUCT.md                  product vision, target audience, and scope boundaries
 ARCHITECTURE.md             system architecture, layers, boundaries, and patterns
 DESIGN.md                   visual UI/UX tokens, component standards, and code style
 CHANGES.md                  historical ledger of pivots, replacements, and deprecations

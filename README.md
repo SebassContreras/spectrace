@@ -30,7 +30,7 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
 1. **Install the skills** in your repository.
 2. **Generate the foundation:** Tell your agent:
    > *"Turn this plan into specs."*
-   `spectrace-plan` initializes root contracts (`AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`) and generates `planning/roadmap.md` with ordered specs in `planning/specs/`.
+   `spectrace-plan` initializes root contracts (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`) and generates `planning/roadmap.md` with ordered specs in `planning/specs/`.
 3. **Execute:** Tell any agent:
    > *"Execute the specs."*
    The agent picks the next open task, checks the architecture/design rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
@@ -46,6 +46,7 @@ Spectrace separates **governance contracts** at the project root from **action p
 
 ```text
 ├── AGENTS.md               # Quick operational manual & pointers for AI agents (< 150 lines)
+├── PRODUCT.md              # Vision, target users, problem statement, and scope boundaries
 ├── ARCHITECTURE.md         # System overview, tech stack, layers, and Mermaid diagrams
 ├── DESIGN.md               # Visual UI/UX tokens, accessibility, and code conventions
 ├── CHANGES.md              # Historical ledger of pivots, replacements, and deprecations
@@ -62,7 +63,7 @@ Spectrace separates **governance contracts** at the project root from **action p
 ```
 
 ### Why Root Decision Files?
-Modern AI coding agents (Claude Code, Cursor, Copilot, Antigravity, Windsurf) immediately scan the repository root on startup. Placing `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `CHANGES.md` at the root guarantees immediate context discovery without wasting tokens searching nested folders.
+Modern AI coding agents (Claude Code, Cursor, Copilot, Antigravity, Windsurf) immediately scan the repository root on startup. Placing `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `CHANGES.md` at the root guarantees immediate context discovery without wasting tokens searching nested folders.
 
 ---
 

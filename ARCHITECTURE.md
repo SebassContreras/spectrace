@@ -12,9 +12,10 @@ graph TD
     
     subgraph "Root Decision Layer (Context Contracts)"
         C1[AGENTS.md - Operational manual]
-        C2[ARCHITECTURE.md - Structural blueprints]
-        C3[DESIGN.md - UI/UX & Code standards]
-        C4[CHANGES.md - Pivot & deprecation ledger]
+        C2[PRODUCT.md - Scope & vision]
+        C3[ARCHITECTURE.md - Structural blueprints]
+        C4[DESIGN.md - UI/UX & Code standards]
+        C5[CHANGES.md - Pivot & deprecation ledger]
     end
 
     subgraph "planning/ Execution Layer (Action Plan)"
@@ -38,6 +39,7 @@ The repository strictly isolates **governance/decision contracts** at the projec
 
 ```text
 ├── AGENTS.md               # Primary agent entrypoint (< 150 lines, pointers & DoD)
+├── PRODUCT.md              # Vision, target users, problem statement, and scope boundaries
 ├── ARCHITECTURE.md         # Structural patterns, boundaries, and system topology
 ├── DESIGN.md               # Visual system tokens, UI components, and code conventions
 ├── CHANGES.md              # Historical ledger of pivots, replacements, and deprecations

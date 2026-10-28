@@ -3,7 +3,7 @@ name: spectrace-plan
 description: >-
   Turns a plan that already exists into small ordered specs in planning/ (roadmap.md,
   specs/NNN-name.md with goal, requirements, design, tasks) and establishes root-level
-  decision documents (AGENTS.md, ARCHITECTURE.md, DESIGN.md, CHANGES.md) so any agent
+  decision documents (AGENTS.md, PRODUCT.md, ARCHITECTURE.md, DESIGN.md, CHANGES.md) so any agent
   can execute tasks smoothly. Pure Markdown and Git, zero runtime and zero hooks. Use when:
   "turn this plan into specs", "plan this project", "add a spec for X", "new feature: Y",
   "create specs from plan", "generate roadmap", "new spec for Z".
@@ -16,7 +16,7 @@ Run **inside the target repo**. The execution protocol is defined in `assets/age
 ## Step 1 — Find the plan
 
 1. The plan is in the conversation, or in a file named by the user. If neither, ask for it in one sentence — do not interview. A rough plan is enough.
-2. Inspect what already exists: `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`, `planning/roadmap.md`, `planning/specs/`, and existing codebase layout. An existing `planning/` means you are **adding** specs.
+2. Inspect what already exists: `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`, `planning/roadmap.md`, `planning/specs/`, and existing codebase layout. An existing `planning/` means you are **adding** specs.
 3. Ask **one round** of questions strictly about blockers (stack choices left open, credentials). Everything else: choose the simplest standard pattern and record it in the spec's Design.
 
 ## Step 2 — Cut it into specs
@@ -45,6 +45,7 @@ Write `planning/specs/NNN-name.md`, where `NNN` is the highest existing spec ID 
 1. Present the roadmap rows and per-spec goals/tasks to the user. Ask for confirmation before writing files. If there is no git repo, run `git init` upon confirmation.
 2. **First-time setup (when root decision files or `planning/` are absent):**
    - **`AGENTS.md`**: Create or update with the contents of `assets/agents-block.md`. Keep it lean (< 150 lines) with operational instructions and pointers.
+   - **`PRODUCT.md`**: Outline product vision, target audience, core problems solved, and scope boundaries.
    - **`ARCHITECTURE.md`**: Outline system overview, stack, layer boundaries, directory map, and initial Mermaid diagram.
    - **`DESIGN.md`**: Define visual tokens, UI hierarchy, accessibility rules, and code conventions.
    - **`CHANGES.md`**: Initialize the change protocol and log table.
