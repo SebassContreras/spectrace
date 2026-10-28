@@ -1,140 +1,49 @@
-# spectrace
+# AGENTS.md
 
-A plan → small specs in `planning/` → any agent executes them, one commit per task.
-See `planning/product.md`.
+Instructions and operational constraints for AI coding agents.
 
-## Doc map
+## 🚀 Quick Reference & Commands
+- **Environment:** Pure Markdown and Git. No runtime or custom binary needed.
+- **Verification:** Always verify changes locally before marking any task as complete.
+- **Clean Commits:** Use standard Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`). No rigid hook trailers or custom formats required.
 
-- `planning/product.md` — what this is, who it's for, stack.
-- `planning/roadmap.md` — specs, order, status, ideas.
-- `planning/specs/NNN-name.md` — one spec per file.
-- `skills/spectrace-plan/SKILL.md` — plan → specs, and new specs later.
-- `skills/spectrace-change/SKILL.md` — changes of direction, bugs, ideas, conventions.
-- `skills/spectrace-plan/assets/agents-block.md` — the format and protocol. The block
-  below is a copy; edit the asset first, then copy it here.
-- `skills/spectrace-plan/assets/hooks/` — the git hooks; `.githooks/` is a copy.
-- `tests/hooks.sh` — behavior tests for the hooks (`sh tests/hooks.sh`).
+## 🧭 Repository Blueprint & Pointers
+This codebase uses a two-tier progressive disclosure model:
+- **[ARCHITECTURE.md](./ARCHITECTURE.md):** System architecture, directory layout, core dependencies, and technical patterns. Read before modifying structural code.
+- **[DESIGN.md](./DESIGN.md):** UI/UX principles, design tokens, visual hierarchy, and code style standards. Read before writing user interfaces or new modules.
+- **[CHANGES.md](./CHANGES.md):** Historical log of architecture pivots, deprecated decisions, and migration reasons. Consult when altering existing behavior.
+- **[planning/roadmap.md](./planning/roadmap.md):** Ordered roadmap of specs, dependencies, current statuses, and backlog ideas.
 
-## Conventions
+---
 
-- Every `SKILL.md` follows the Agent Skills spec (agentskills.io/specification):
-  frontmatter `name` (equal to its folder) and `description` (at most 1024 characters);
-  paths relative to the skill root.
-- Never guess a CLI flag or file format — verify it before writing it into a skill.
-- A hook changes in `skills/spectrace-plan/assets/hooks/` first, is copied to
-  `.githooks/`, and ships with a case in `tests/hooks.sh`; the suite passes before the
-  commit.
-- No push to `origin` until the maintainer asks.
+## 📋 Task Execution Workflow
 
-<!-- spectrace -->
-## Planning
+Agents execute work incrementally using the specs in `planning/`:
 
-Work is planned in `planning/`:
+1. **Find Next Task:**
+   - Open `planning/roadmap.md`. Find the first spec with status `todo` or `in progress` whose dependencies are `done`.
+   - Open the corresponding spec file in `planning/specs/NNN-name.md`.
+   - Take the first uncompleted agent task: `- [ ] NNN/TNNN [agent] ...`.
+   - Note: Skip `[human]` tasks and notify the user if one blocks execution.
 
-```
-planning/product.md      what this is, who it's for, stack, how to run and test, docs
-planning/roadmap.md      specs in order, their status, and a free "Ideas" list
-planning/specs/NNN-name.md  one file per spec
-```
+2. **Execute & Follow Constraints:**
+   - Implement only the scope described by the task.
+   - Respect boundaries defined in `ARCHITECTURE.md` and `DESIGN.md`.
+   - Maintain documentation integrity: do not delete or alter comments/docstrings unrelated to your changes.
 
-A spec file:
+3. **Verify:**
+   - Run the relevant test suite, build, or type check.
+   - For `Verify:` tasks, perform the explicit check and record results under the task (e.g., `verified: <summary>`).
 
-```markdown
-# 003 — login
+4. **Close Task & Commit:**
+   - Mark the checkbox as completed: `- [x] NNN/TNNN [agent] ...`.
+   - If all tasks in the spec are complete, update the spec's status to `done` in `planning/roadmap.md`.
+   - Stage touched files by name and commit with a clear Conventional Commit message.
 
-## Goal
-What should work when this spec is done, and how we'll know.
+---
 
-## Requirements
-- R1: A user signs in with email and password.
-
-## Design
-- ~~D1 (R1): Sessions live in localStorage.~~ → D2
-- D2 (R1): Sessions live in an httpOnly cookie.
-
-## Tasks
-- [x] 003/T001 [agent] Login form — covers R1
-- [ ] 003/T002 [agent] Session cookie middleware — covers D2
-- [ ] 003/T003 [agent] Remove the localStorage session code — replaces D1
-- [ ] 003/T004 [human] Create the mail provider account — covers R1
-      blocked: waiting for billing approval
-
-## Changes
-- 2026-10-12: D1 → D2. Why: localStorage is readable by any script. Work: T003.
-```
-
-- `R`/`D` labels are never reused; a replaced item stays, struck through, with `→`.
-- A task ends with `— covers` and the R or D items it implements, comma-separated
-  (`covers R2, D3`); a cleanup task ends with `— replaces D1` (or
-  `— covers D3; replaces D1`). Items of another spec are written `006/D1`, both
-  after `→` and in `covers`/`replaces`.
-- `[agent]`: any agent does it. `[human]`: the user does it; agents report and skip it.
-- `## Changes` appears with the first change.
-- **Docs are deliverables.** `product.md` → `## Docs` lists the docs the project keeps
-  and what each describes. A doc changes inside the task whose work it describes, so
-  `git blame` on any doc line leads to a commit, its `Spec:` and the decision behind it.
-- A task whose text starts with `Review:` is closed only with an indented
-  `reviewed: <files read> — found <what>` line under it. Anything it finds becomes a
-  new task placed before it.
-- A task whose text starts with `Verify:` checks something (tests, a build, the app
-  in a browser) without changing files; it is closed only with an indented
-  `verified: <commands run, what was checked> — found <what>` line under it.
-- Roadmap table: `| ID | Spec | Status | Depends on |`. `Spec` is the name after
-  `NNN-`; `Depends on` is `—` or spec IDs separated by commas. `Status` (`todo`,
-  `in progress`, `done`) is written by the git hook from the `[agent]` checkboxes —
-  never by hand.
-
-## Working on tasks
-
-Git hooks in `.githooks/` keep this honest: they write the roadmap `Status`, refuse a
-commit whose `Spec:` task isn't ticked or that ticks an `[agent]` task without any work,
-and refuse a ticked `Review:` or `Verify:` task without its `reviewed:`/`verified:` note.
-Work is any change outside `planning/`, `.githooks/` and `.gitattributes`, including
-`AGENTS.md` lines outside the spectrace block (the project's own conventions are docs);
-a `Review:` or `Verify:` task needs none.
-Never bypass them (`--no-verify`); when one refuses, fix what it says.
-
-1. `git pull` and `git status`. If `git config core.hooksPath` isn't `.githooks`, run
-   `git config core.hooksPath .githooks`; if `.githooks/` itself is missing, tell the
-   user to run the `spectrace-plan` skill, which reinstalls it. Uncommitted changes in
-   `planning/`,
-   `AGENTS.md`, `.githooks/` or `.gitattributes` (fresh specs, a spectrace install) →
-   commit them first as `docs(planning): <what>`. Leave other untracked files
-   alone. Open `planning/roadmap.md` and take the first `[ ]` `[agent]` task of the
-   first spec not `done` whose dependencies are done (or the task you were asked for).
-2. Read the spec. Do only that task, then verify it: run the project's tests, or run
-   the thing itself when there are no tests yet.
-3. **Close it with one commit**: the change, the task's `[x]`, and a trailer. Stage
-   the files you touched by name, never `git add -A`.
-
-   ```
-   feat(login): session cookie middleware
-
-   Spec: 003/T002
-   ```
-
-   The `Spec:` line goes in the message's last paragraph, together with any other
-   trailer (`Co-Authored-By:`…) and no blank line between them — git only reads that
-   paragraph as trailers. A change that belongs to no spec on purpose (a typo, a
-   chore) carries `Spec: none` instead; a code commit with neither is refused, and
-   CI refuses one that skipped the hook with `--no-verify`.
-
-   Two small tasks that only make sense together (a function and its test) may share a
-   commit with one `Spec:` line each. To fold a task into the previous commit,
-   `git commit --amend` works: the hook judges the whole amended commit against its
-   parent. A task is closed only when that commit exists — never leave a ticked box
-   uncommitted or a commit without its trailer.
-4. **A `Review:` task** needs eyes that didn't write the code: hand it to a fresh
-   agent (a subagent given only the task text and the spec) when your harness can;
-   otherwise do it yourself and write `reviewed (self):`. Read the files, don't skim.
-5. Stuck: add `blocked: <reason>` under the task, commit it, tell the user, move on.
-6. **A convention or decision in the way** — or two items of a spec that contradict
-   each other: these files describe the current state, not laws. Don't work around one
-   and don't pick a side silently. Propose the simplest change to the user (the
-   `spectrace-change` skill applies it). If the user isn't there to answer, mark the
-   task `blocked: conflicts D2: <why>; propose: <change>`, commit, and move on.
-7. **A new idea or a bug found mid-task**: add a line to the roadmap's `## Ideas` (or
-   a task to the right spec) and keep going. Nothing is out of scope; it's just later.
-
-What a spec built: `git log --grep "Spec: 003/" --stat`.
-<!-- /spectrace -->
+## ⚠️ Critical Rules & Boundary Conditions
+1. **Never Bypass Checks:** Never use `--no-verify` or bypass lint/test checks.
+2. **Never Break Working Specs:** If an existing requirement needs to change, follow the protocol in [CHANGES.md](./CHANGES.md) instead of silently breaking old assumptions.
+3. **Keep `planning/` Clean:** Only actionable specs and the roadmap belong in `planning/`. Broad system design belongs in `ARCHITECTURE.md`.
+4. **When Blocked:** Add an indented `blocked: <reason>` line below the task, commit the note, inform the user, and move to unblocked work.

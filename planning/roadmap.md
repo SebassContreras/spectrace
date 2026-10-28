@@ -1,23 +1,16 @@
 # Roadmap
 
-Specs in order. `Status` is written by the pre-commit hook from each spec's
-checkboxes. Specs 001–020 (the interview, `trace.py` and the code graph) were
-retired by 021; they live in git history.
+Specs in execution order. `Status` (`todo`, `in progress`, `done`) is maintained directly by agents and humans as specs progress.
 
-| ID  | Spec    | Status      | Depends on |
-|-----|---------|-------------|------------|
-| 021 | realign | done        | —          |
-| 022 | git-hooks | done        | 021      |
-| 023 | docs-tracing | done   | 022      |
-| 024 | specs-folder | done | 023 |
-| 025 | task-evidence | done | 024 |
-| 026 | hook-tests | done | 025 |
-| 027 | required-trailer | done        | 026 |
+> Historical note: Specs 001–020 and 022–027 (hook and trailer enforcement machinery) have been retired; see [CHANGES.md](../CHANGES.md).
+
+| ID  | Spec | Status | Depends on |
+|-----|------|--------|------------|
+| 028 | streamlined-foundation | done | — |
 
 ## Ideas
 
-Anything worth doing later. No debate needed to add one; it becomes a spec when we pick
-it.
+Anything worth doing later. Ideas can be added freely without debate; they are converted into specs when prioritized.
 
-- Alignment rules: when a task adds a public surface (MCP tool, CLI command, endpoint),
-  the plan adds a task to register it where it must appear (`AGENTS.md`, skills, docs).
+- **Automated Spec Linting:** A lightweight command or linter to verify that specs follow thin-slice principles without enforcing git commit hooks.
+- **Surface Alignment Rules:** When a task adds a public surface (CLI command, tool, API endpoint), the spec automatically includes a task to document it in `ARCHITECTURE.md` or `DESIGN.md`.

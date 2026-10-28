@@ -1,54 +1,78 @@
 # spectrace
 
-**Plans you can change your mind about.**
+**Spec-driven development for AI coding agents — with durable root contracts and zero runtime friction.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-compatible-8A2BE2.svg)](https://agentskills.io)
 
-spectrace turns a plan you already have — made with another agent, or in the chat —
-into small, ordered specs in `planning/`. Any coding agent executes them task by task
-and closes each task with a git commit that names it. When you change direction, find a
-bug or have a new idea, it updates the specs and adds the tasks that clean up what the
-old approach left behind. It's just Markdown and git, plus two short git hooks: no
-runtime to install.
+spectrace transforms any high-level plan or idea into structured, thin-slice specifications in `planning/` while keeping architectural and design contracts directly at the repository root. Any coding agent executes tasks step by step and marks progress with simple Markdown checkboxes.
 
-## Install
+When you pivot, discover a bug, or change your mind, spectrace records the rationale in `CHANGES.md` and schedules explicit cleanup tasks so obsolete code is never left behind.
 
-From your project's folder:
+**Pure Markdown and Git. No runtime, no daemons, and no fragile shell hooks.**
+
+---
+
+## 📦 Install
+
+From your project folder:
 
 ```sh
 pnpm dlx skills add SebassContreras/spectrace
 ```
 
-The [`skills` CLI](https://github.com/vercel-labs/skills) copies the two skills into the
-folder your agent reads (`.claude/skills/` for Claude Code, `.agents/skills/` for most
-others). Add `-g` to install for every project.
+The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills into your agent's skills directory (`.claude/skills/`, `.agents/skills/`, or global with `-g`).
 
-## Quick start
+---
 
-1. Install the skills (above) in your project's folder.
-2. Paste or point to your plan: *"turn this plan into specs"*. `spectrace-plan` writes
-   `planning/`, the block in `AGENTS.md` and the hooks in `.githooks/` (and runs
-   `git init` if you agree).
-3. *"Execute the specs."* Any agent takes it from there, one commit per task.
+## ⚡ Quick Start
 
-Later, anything new — an idea, a change of mind, a bug — goes through
-`spectrace-change`.
+1. **Install the skills** in your repository.
+2. **Generate the foundation:** Tell your agent:
+   > *"Turn this plan into specs."*
+   `spectrace-plan` initializes root contracts (`AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`) and generates `planning/roadmap.md` with ordered specs in `planning/specs/`.
+3. **Execute:** Tell any agent:
+   > *"Execute the specs."*
+   The agent picks the next open task, checks the architecture/design rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
+4. **Pivots & Changes:** When plans change, tell your agent:
+   > *"We changed our mind about X, now we want Y instead."*
+   `spectrace-change` logs the pivot in `CHANGES.md`, strikes obsolete design items (`~~D1~~ → D2`), and adds safe cleanup tasks.
 
-## The two skills
+---
 
-| Skill | What it does |
-|---|---|
-| `spectrace-plan` | Takes your plan and writes `planning/product.md`, `planning/roadmap.md` and one `planning/specs/NNN-name.md` per spec — thin slices that each end in something that runs. Adds the spectrace block to `AGENTS.md` and installs the git hooks (also repairs them if missing). Use it again any time to add specs. |
-| `spectrace-change` | Changes of direction, bugs, new ideas, and conventions that get in the way. Replaces the old item, finds what it built (`git log --grep`, `git grep`, and the old approach's assumptions), and adds cleanup tasks ending in a review. A change that spans specs becomes a new spec, so finished specs stay finished. |
+## 🏛️ Two-Tier Architecture
 
-## A spec
+Spectrace separates **governance contracts** at the project root from **action plans** in `planning/`:
+
+```text
+├── AGENTS.md               # Quick operational manual & pointers for AI agents (< 150 lines)
+├── ARCHITECTURE.md         # System overview, tech stack, layers, and Mermaid diagrams
+├── DESIGN.md               # Visual UI/UX tokens, accessibility, and code conventions
+├── CHANGES.md              # Historical ledger of pivots, replacements, and deprecations
+├── README.md               # Human-oriented overview and setup guide
+│
+├── planning/               # Pure execution plan
+│   ├── roadmap.md          # Specs sequence, dependencies, and idea backlog
+│   └── specs/              # Atomic specification slices
+│       └── NNN-name.md     # Goal, Requirements, Design, and Checkbox Tasks
+│
+└── skills/                 # Agent Skills
+    ├── spectrace-plan/     # Generates specs and foundational contracts
+    └── spectrace-change/   # Handles pivots, refactors, and deprecation tasks
+```
+
+### Why Root Decision Files?
+Modern AI coding agents (Claude Code, Cursor, Copilot, Antigravity, Windsurf) immediately scan the repository root on startup. Placing `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `CHANGES.md` at the root guarantees immediate context discovery without wasting tokens searching nested folders.
+
+---
+
+## 📝 A Spec File
 
 ```markdown
 # 003 — login
 
 ## Goal
-A user can sign in and stay signed in across reloads.
+A user can sign in and stay signed in across browser reloads.
 
 ## Requirements
 - R1: A user signs in with email and password.
@@ -58,111 +82,30 @@ A user can sign in and stay signed in across reloads.
 - D2 (R1): Sessions live in an httpOnly cookie.
 
 ## Tasks
-- [x] 003/T001 [agent] Login form — covers R1
+- [x] 003/T001 [agent] Login form component — covers R1
 - [ ] 003/T002 [agent] Session cookie middleware — covers D2
-- [ ] 003/T003 [agent] Remove the localStorage session code — replaces D1
-- [ ] 003/T004 [human] Create the mail provider account — covers R1
+- [ ] 003/T003 [agent] Remove localStorage session code — replaces D1
+- [ ] 003/T004 [human] Provision email provider credentials — covers R1
+      blocked: waiting for billing approval
 
 ## Changes
-- 2026-10-12: D1 → D2. Why: localStorage is readable by any script. Work: T003.
+- 2026-10-12: D1 → D2. Why: localStorage is vulnerable to script injection. Work: T003.
 ```
 
-## Executing
+- **`R` (Requirements) & `D` (Design):** Immutable labels. Struck through (`~~D1~~ → D2`) when replaced.
+- **Tasks:** `- [ ] NNN/TNNN [agent] ... — covers D2` or `— replaces D1`.
+- **`[agent]` vs `[human]`:** Distinguishes autonomous coding tasks from human-only actions (billing, physical actions, private API keys).
 
-Tell your agent to "execute the specs". The block in `AGENTS.md` makes it take the next
-open task, do only that, verify it, and close it with one commit holding the change, the
-ticked box and a trailer:
+---
 
-```
-feat(login): session cookie middleware
+## 🛠️ The Two Skills
 
-Spec: 003/T002
-```
+| Skill | Purpose |
+|---|---|
+| **`spectrace-plan`** | Takes any plan, design, or transcript and generates root decision documents (`AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`), `planning/roadmap.md`, and ordered specs in `planning/specs/`. |
+| **`spectrace-change`** | Handles pivots, bugs, and new requirements. Identifies affected code, strikes obsolete spec decisions, updates `CHANGES.md`, and sequences cleanup tasks so old code is cleanly eliminated. |
 
-The `Spec:` line must sit in the message's last paragraph, with any other trailer
-(`Co-Authored-By:`…) and no blank line between them — git reads only that paragraph as
-trailers.
-
-Two small git hooks, installed to `.githooks/` by `spectrace-plan`, make this hard to
-skip: `commit-msg` refuses a code commit with no `Spec:` trailer, a trailer whose task
-isn't ticked, or a ticked task with no work in the commit (a `Verify:` task closes with
-a `verified:` note instead); `pre-commit` writes each spec's `Status` in the roadmap
-from its checkboxes — nobody types it. On GitHub, a workflow runs the same trailer
-check on every push and pull request, for commits made with `--no-verify`.
-
-After a change of direction, `spectrace-change` lists what the old approach *assumed*
-(not just its names), turns the reason for the change into a requirement with a test,
-and ends with a `Review:` task — run by a fresh agent when possible — that the hook
-won't let close without a `reviewed:` note saying what was read and found.
-
-What a spec built is then one command away:
-
-```sh
-git log --grep "Spec: 003/" --stat
-```
-
-## Docs follow the specs
-
-`planning/product.md` lists the docs the project keeps and what each describes:
-
-```markdown
-## Docs
-- README.md — install, usage, the commands
-- AGENTS.md — the protocol agents follow
-```
-
-When a spec changes something a listed doc describes, `spectrace-plan` adds a task to
-update it, so the doc changes in a commit with a `Spec:` trailer like any code:
-
-```sh
-git blame README.md          # the line → commit a1b2c3
-git show -s a1b2c3           # → Spec: 003/T002 → the decision behind it
-```
-
-When that decision changes, `git log --grep "Spec: 003/"` lists the doc commits next to
-the code, and `spectrace-change` re-reads every listed doc for sentences that describe
-the old way without naming it. A change that belongs to no spec on purpose — a typo, a
-chore — carries `Spec: none`; a code commit with no trailer at all is refused.
-
-## Principles
-
-- **Plan elsewhere, spec here.** No interview; one round of questions at most.
-- **Thin specs first.** Get something running, validate it, then adjust.
-- **Nothing is out of scope.** New ideas go to the roadmap's `## Ideas` and wait their
-  turn.
-- **Conventions describe, they don't bind.** When one blocks the best solution, the
-  agent proposes changing it instead of working around it.
-- **The commit is the record.** No ledger to keep in sync.
-
-## Limits
-
-- The trace is as good as the commits: a task closed without its `Spec:` trailer is
-  invisible to `git log --grep`.
-- A squash merge folds several tasks into one commit; the trailers survive in the
-  message, but per-task diffs don't. Prefer merge or rebase for spec branches.
-- Finding leftovers after a change of direction is the agent's search and reading,
-  not a checker. It is backed by a test of the reason for the change and a recorded
-  review, but code that breaks neither can still slip through.
-- Hooks are local: a fresh clone runs `git config core.hooksPath .githooks` once (the
-  protocol tells agents to). `--no-verify` bypasses them; on GitHub the
-  `.github/workflows/spectrace.yml` check still refuses the push or pull request, but
-  the commit already exists and has to be reworded. Elsewhere, run
-  `sh .githooks/check-trailers <base> <head>` in your CI.
-- The hook tells `--amend` from a new commit by the author date git hands it; a new
-  commit in the same second as the last one, or `git commit -C HEAD`, is judged as an
-  amend.
-
-## Coming from the old spectrace
-
-Earlier versions had an interview, `trace.py` and `.spectrace/`. They are gone and
-there is no automatic migration: delete `.spectrace/` and the old protocol block in
-`AGENTS.md`, then run `spectrace-plan` on what is still pending. Spec files written directly
-in `planning/` by an earlier version are moved to `planning/specs/` by `spectrace-plan`.
-
-## This repository
-
-spectrace is planned with itself: see [`planning/`](planning/roadmap.md) and
-[`AGENTS.md`](AGENTS.md). After cloning, run `git config core.hooksPath .githooks`.
+---
 
 ## License
 
