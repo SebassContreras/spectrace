@@ -8,6 +8,7 @@ Specs in execution order. `Status` (`todo`, `in progress`, `done`) is maintained
 |-----|------|--------|------------|
 | 028 | streamlined-foundation | done | — |
 | 029 | scaffold-assets-and-surface-audit | done | 028 |
+| 030 | separation-of-concerns-and-context-aware-design | done | 029 |
 
 ## Ideas
 

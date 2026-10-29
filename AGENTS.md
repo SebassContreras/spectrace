@@ -8,10 +8,11 @@ Instructions and operational constraints for AI coding agents.
 - **Clean Commits:** Use standard Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`). No rigid hook trailers or custom formats required.
 
 ## 🧭 Repository Blueprint & Pointers
-This codebase uses a two-tier progressive disclosure model:
+This codebase uses a progressive disclosure model with clear separation of concerns:
 - **[PRODUCT.md](./PRODUCT.md):** Product vision, target audience, core user problems, and functional boundaries. Read before proposing scope changes or features.
-- **[ARCHITECTURE.md](./ARCHITECTURE.md):** System architecture, directory layout, core dependencies, and technical patterns. Read before modifying structural code.
-- **[DESIGN.md](./DESIGN.md):** UI/UX principles, design tokens, visual hierarchy, and code style standards. Read before writing user interfaces or new modules.
+- **[ARCHITECTURE.md](./ARCHITECTURE.md):** System architecture, directory layout, core dependencies, and Core Engineering Principles. Read before modifying structural code.
+- **[DESIGN.md](./DESIGN.md):** UI/UX principles, design tokens, or content/documentation design guidelines. Read before writing user interfaces or documentation.
+- **[TESTING.md](./TESTING.md):** Testing standards, contract invariants, input partitioning, table-driven tests, and test hygiene. Read before writing or auditing tests.
 - **[CHANGES.md](./CHANGES.md):** Historical log of architecture pivots, deprecated decisions, and migration reasons. Consult when altering existing behavior.
 - **[planning/roadmap.md](./planning/roadmap.md):** Ordered roadmap of specs, dependencies, current statuses, and backlog ideas.
 
@@ -29,7 +30,7 @@ Agents execute work incrementally using the specs in `planning/`:
 
 2. **Execute & Follow Constraints:**
    - Implement only the scope described by the task.
-   - Respect boundaries defined in `ARCHITECTURE.md` and `DESIGN.md`.
+   - Respect boundaries defined in `ARCHITECTURE.md`, `DESIGN.md`, and `TESTING.md`.
    - Maintain documentation integrity: do not delete or alter comments/docstrings unrelated to your changes.
 
 3. **Verify:**
@@ -48,5 +49,5 @@ Agents execute work incrementally using the specs in `planning/`:
 2. **Never Break Working Specs:** If an existing requirement needs to change, follow the protocol in [CHANGES.md](./CHANGES.md) instead of silently breaking old assumptions.
 3. **Keep `planning/` Clean:** Only actionable specs and the roadmap belong in `planning/`. Broad system design belongs in `ARCHITECTURE.md`.
 4. **When Blocked:** Add an indented `blocked: <reason>` line below the task, commit the note, inform the user, and move to unblocked work.
-5. **Enforce Engineering & Testing Invariants:** Adhere strictly to the 10 Engineering & Testing Principles in [DESIGN.md](./DESIGN.md) (KISS/YAGNI, Anti-Corruption Layer, Table-Driven Testing, Input Partitioning, Clean Test Bodies).
+5. **Enforce Engineering & Testing Invariants:** Adhere strictly to the Core Engineering Principles in [ARCHITECTURE.md](./ARCHITECTURE.md) (KISS/YAGNI, Anti-Corruption Layer, SRP) and the Testing Standards in [TESTING.md](./TESTING.md) (Table-Driven Testing, Input Partitioning, Clean Test Bodies).
 6. **No Speculative Abstractions:** Never introduce premature interfaces, adapters, or base classes for single-use cases. Abstract only for 2+ concrete consumers or vendors.

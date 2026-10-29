@@ -2,16 +2,15 @@
 name: spectrace-review
 description: >-
   Audits code changes, pull requests, or completed spec tasks against the repository's
-  10 core engineering and testing principles (KISS/YAGNI, SRP, Anti-Corruption Layer,
-  Invariant Testing, Input Partitioning, Clean Table-Driven Test Bodies) defined in
-  DESIGN.md, plus surface alignment with ARCHITECTURE.md. Generates an actionable findings
+  Core Engineering Principles in ARCHITECTURE.md, Testing Standards in TESTING.md,
+  and Visual/Content standards in DESIGN.md. Generates an actionable findings
   report without modifying code. Use when: "review this code", "audit this spec",
   "check code quality", "run review", "review tasks", "audit PR", "verify engineering standards".
 ---
 
 # spectrace-review
 
-Run **inside the target repo**. This skill performs an objective, read-only architectural and testing audit of recent changes or completed tasks before a spec is finalized.
+Run **inside the target repo**. This skill performs an objective, read-only architectural, testing, and design audit of recent changes or completed tasks before a spec is finalized.
 
 ---
 
@@ -21,8 +20,9 @@ Run **inside the target repo**. This skill performs an objective, read-only arch
    - For working tree changes: `git diff` and `git diff --cached`.
    - For recent commits: `git diff HEAD~1` (or the branch divergence `git diff main...HEAD`).
 2. Read the governing documents:
-   - [DESIGN.md](../../DESIGN.md) (the 10 engineering and testing principles).
-   - [ARCHITECTURE.md](../../ARCHITECTURE.md) (layer boundaries, public surfaces, and dependencies).
+   - [ARCHITECTURE.md](../../ARCHITECTURE.md) (layer boundaries, public surfaces, and Core Engineering Principles).
+   - [TESTING.md](../../TESTING.md) (testing invariants, input partitioning, table tests, and mocking boundaries).
+   - [DESIGN.md](../../DESIGN.md) (UI tokens/a11y for frontend apps; content/editorial conventions for docs repos).
    - The active spec in `planning/specs/NNN-name.md` (verifying requirement coverage).
 
 ---
@@ -31,28 +31,38 @@ Run **inside the target repo**. This skill performs an objective, read-only arch
 
 Audit the diff systematically against each principle. For each violation, cite the exact file and line number.
 
-### 1. KISS / YAGNI — Proportionality
+### 🏛️ Engineering Principles (Governed by ARCHITECTURE.md)
+
+#### 1. KISS / YAGNI — Proportionality
 - [ ] **No Premature Abstractions:** Are there interfaces, adapters, or factory classes created for a single consumer or vendor?
 - [ ] **No Speculative Flexibility:** Is there code written for hypothetical future requirements?
 - [ ] **Simple > Clever:** Is the implementation direct and readable without unnecessary metaprogramming?
 
-### 2. SRP / Separation of Concerns
+#### 2. SRP / Separation of Concerns
 - [ ] **Single Responsibility:** Does each new or modified file have a single, well-defined purpose?
 - [ ] **Layer Isolation:** Is domain logic cleanly separated from persistence, external APIs, and presentation?
 
-### 3. Composition over Inheritance
+#### 3. Composition over Inheritance
 - [ ] **Composition First:** Is shared logic extracted into injectable utilities, services, or functions?
 - [ ] **No Deep Inheritance:** Are class hierarchies shallow? (Inheritance allowed only for genuine is-a or Template Method).
 
-### 4. Service Layer & Anti-Corruption (DIP)
+#### 4. Service Layer & Anti-Corruption (DIP)
 - [ ] **Vendor Isolation:** Are third-party SDKs, libraries, or APIs called directly from business logic? (Must be wrapped in `services/` or `adapters/`).
 - [ ] **Swappable Interface:** Does the domain depend on project-owned interfaces rather than external vendor types?
 
-### 5. Design Simplicity
+#### 5. Design Simplicity & Stack Conventions
 - [ ] **Minimal Seams:** Are newly introduced interfaces minimal and focused?
 - [ ] **Pure Functions:** Are state transformations pure and deterministic where feasible?
+- [ ] **Official Conventions:** Does the code strictly follow the idiomatic style, naming conventions, and lint standards of the language/framework?
 
-### 6. Testing Invariants, Contracts & Input Space
+#### 6. Documented Trade-offs
+- [ ] **Trade-off Notes:** If a complex design choice was made, are pros, cons, and mitigations documented in comments, `CHANGES.md`, or spec notes?
+
+---
+
+### 🧪 Testing Standards (Governed by TESTING.md)
+
+#### 7. Testing Invariants, Contracts & Input Space
 - [ ] **Systematic Input Partitioning:**
   - Are valid nominal cases covered?
   - Are boundary values explicitly tested (min, max, off-by-one)?
@@ -62,22 +72,30 @@ Audit the diff systematically against each principle. For each violation, cite t
 - [ ] **Root-Cause Regressions:** If fixing a bug, does the test cover the general equivalence class across all entry points rather than just the exact reported payload?
 - [ ] **State Machine & Lifecycle Transitions:** Are state transitions (idempotency, uniqueness, serialization round-trips) asserted?
 
-### 7. Testing Hygiene & Parameterization
+#### 8. Testing Hygiene & Parameterization
 - [ ] **AAA Structure:** Are tests structured as Arrange-Act-Assert with descriptive behavioral names?
-- [ ] **Parameterized / Table-Driven Tests:** Are matrices of inputs and boundaries expressed via data tables (`test.each`, `@pytest.mark.parametrize`) rather than copy-pasted test functions?
+- [ ] **Parameterized / Table-Driven Tests:** Are matrices of inputs and boundaries expressed via data tables (`test.each`, `@pytest.mark.parametrize`, Go tables) rather than copy-pasted test functions?
 - [ ] **Clean Test Bodies:** Are test bodies free of `if`/`else` branches, ternary operators, and manual loops?
 - [ ] **Boundary Mocking Only:** Is the unit under test completely unmocked? Are only external boundaries (I/O, network) mocked?
 
-### 8. Stack Standards & Idioms
-- [ ] **Official Conventions:** Does the code strictly follow the idiomatic style, naming conventions, and lint standards of the language/framework?
+---
 
-### 9. Validation Evidence
-- [ ] **Verification:** Are test suite runs or verification commands recorded with passing evidence?
+### 🎨 Design & Content Alignment (Governed by DESIGN.md)
 
-### 10. Documented Trade-offs
-- [ ] **Trade-off Notes:** If a complex design choice was made, are pros, cons, and mitigations documented in comments or spec notes?
+#### 9. Context-Aware Design Compliance
+- [ ] **UI Projects (Frontend / Web / Mobile):**
+  - **Tokens over Raw Values:** Are colors, spacing, and font sizes using semantic tokens (no hardcoded hex/px)?
+  - **Component States:** Do interactive controls support hover, focus, active, disabled, loading?
+  - **Accessibility (A11y):** Are WCAG AA contrast, keyboard navigation, and `aria-label` attributes respected?
+- [ ] **Documentation / Governance Repos:**
+  - **Hierarchy & Format:** Is frontmatter metadata complete? Are standard alert callouts (`> [!NOTE]`) and Mermaid syntax valid?
+  - **No UI Fluff:** Confirm that no inappropriate CSS tokens or HTML component styles have been injected.
 
-### 11. Surface Alignment & Spec Traceability
+---
+
+### 🔍 Surface Alignment & Spec Traceability
+
+#### 10. Public Surface Documentation & Scope Integrity
 - [ ] **Public Surface Documentation:** If a public API, endpoint, CLI command, tool, or domain model was introduced or changed, is it documented in `ARCHITECTURE.md` or `DESIGN.md`?
 - [ ] **Strict Spec Coverage:** Does the diff align with the active task scope (`— covers R/D` or `— replaces D`) without undocumented side-effects?
 
