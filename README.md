@@ -1,11 +1,11 @@
 # spectrace
 
-**Spec-driven development for AI coding agents — with durable root contracts and zero runtime friction.**
+**Spec-driven development for AI coding agents — with decoupled root contracts and zero runtime friction.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-compatible-8A2BE2.svg)](https://agentskills.io)
 
-spectrace transforms any high-level plan or idea into structured, thin-slice specifications in `planning/` while keeping architectural and design contracts directly at the repository root. Any coding agent executes tasks step by step and marks progress with simple Markdown checkboxes.
+spectrace transforms any high-level plan or idea into structured, thin-slice specifications in `planning/` while establishing decoupled architectural, engineering, design, and testing contracts directly at the repository root. Any coding agent executes tasks step by step and marks progress with simple Markdown checkboxes.
 
 When you pivot, discover a bug, or change your mind, spectrace records the rationale in `CHANGES.md` and schedules explicit cleanup tasks so obsolete code is never left behind.
 
@@ -30,28 +30,30 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
 1. **Install the skills** in your repository.
 2. **Generate the foundation:** Tell your agent:
    > *"Turn this plan into specs."*
-   `spectrace-plan` initializes root contracts (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`) and generates `planning/roadmap.md` with ordered specs in `planning/specs/`.
+   `spectrace-plan` initializes decoupled root contracts (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`) using **context-aware design** and generates `planning/roadmap.md` with ordered specs in `planning/specs/`.
 3. **Execute:** Tell any agent:
    > *"Execute the specs."*
-   The agent picks the next open task, checks the architecture/design rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
+   The agent picks the next open task, checks the architecture, engineering, and test rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
 4. **Audit & Review:** Tell your agent:
    > *"Review this code against our engineering standards."*
-   `spectrace-review` audits the implementation against the 10 core principles (KISS/YAGNI, Anti-Corruption Layer, Table-Driven Testing, Input Partitioning) without altering code.
+   `spectrace-review` audits the implementation against `ENGINEERING.md` (KISS/YAGNI, SRP, DIP), `TESTING.md` (invariants, table tests), and `ARCHITECTURE.md` (layer boundaries) without altering code.
 5. **Pivots & Changes:** When plans change, tell your agent:
    > *"We changed our mind about X, now we want Y instead."*
    `spectrace-change` logs the pivot in `CHANGES.md`, strikes obsolete design items (`~~D1~~ → D2`), and adds safe cleanup tasks.
 
 ---
 
-## 🏛️ Two-Tier Architecture
+## 🏛️ Two-Tier Architecture & Separation of Concerns
 
-Spectrace separates **governance contracts** at the project root from **action plans** in `planning/`:
+Spectrace isolates **durable governance contracts** at the project root from **transient action plans** in `planning/`, following a progressive disclosure model:
 
 ```text
 ├── AGENTS.md               # Quick operational manual & pointers for AI agents (< 150 lines)
-├── PRODUCT.md              # Vision, target users, problem statement, and scope boundaries
-├── ARCHITECTURE.md         # System overview, tech stack, layers, and Mermaid diagrams
-├── DESIGN.md               # Visual UI/UX tokens, accessibility, and code conventions
+├── PRODUCT.md              # Vision, target users, problem statement, and scope boundaries (non-goals)
+├── ARCHITECTURE.md         # System topology, directory map, layer boundaries, and Mermaid diagrams
+├── ENGINEERING.md          # Code quality principles: KISS/YAGNI, SRP, DRY, DIP/ACL, casing
+├── DESIGN.md               # Context-aware design: UI/UX tokens or content/editorial standards
+├── TESTING.md              # Testing standards, contract invariants, input partitioning, and test hygiene
 ├── CHANGES.md              # Historical ledger of pivots, replacements, and deprecations
 ├── README.md               # Human-oriented overview and setup guide
 │
@@ -60,14 +62,20 @@ Spectrace separates **governance contracts** at the project root from **action p
 │   └── specs/              # Atomic specification slices
 │       └── NNN-name.md     # Goal, Requirements, Design, and Checkbox Tasks
 │
-└── skills/                 # Agent Skills
-    ├── spectrace-plan/     # Generates specs and foundational contracts
+└── skills/                 # Agent Skills (agentskills.io compatible)
+    ├── spectrace-plan/     # Generates specs and decoupled foundational contracts
     ├── spectrace-change/   # Handles pivots, refactors, and deprecation tasks
-    └── spectrace-review/   # Audits code against 10 engineering & testing principles
+    └── spectrace-review/   # Audits code against engineering, testing, and design standards
 ```
 
-### Why Root Decision Files?
-Modern AI coding agents (Claude Code, Cursor, Copilot, Antigravity, Windsurf) immediately scan the repository root on startup. Placing `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `CHANGES.md` at the root guarantees immediate context discovery without wasting tokens searching nested folders.
+### Why Decoupled Root Decision Files?
+Modern AI coding agents (Claude Code, Cursor, Copilot, Antigravity, Windsurf) immediately scan the repository root on startup. Placing clear, single-responsibility files at the root guarantees immediate context discovery without wasting tokens searching nested folders:
+- **`PRODUCT.md`**: Prevents scope creep by declaring explicit boundaries.
+- **`ARCHITECTURE.md`**: Tells the agent *where code lives* and *how components wire together*.
+- **`ENGINEERING.md`**: Tells the agent *how to write clean, decoupled code* (KISS, SRP, DIP).
+- **`DESIGN.md`**: Governs visual tokens for UI apps, or document/editorial conventions for documentation repos (**Context-Aware Design** prevents injecting CSS tokens into non-UI repos).
+- **`TESTING.md`**: Enforces invariant testing, input partitioning, and clean AAA table tests.
+- **`CHANGES.md`**: Provides historical memory so obsolete patterns are not re-introduced.
 
 ---
 
@@ -107,9 +115,9 @@ A user can sign in and stay signed in across browser reloads.
 
 | Skill | Purpose |
 |---|---|
-| **`spectrace-plan`** | Takes any plan, design, or transcript and generates root decision documents (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`), `planning/roadmap.md`, and ordered specs in `planning/specs/`. |
+| **`spectrace-plan`** | Takes any plan, design, or transcript and generates decoupled root decision documents (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`) using context-aware design, plus `planning/roadmap.md` and ordered specs in `planning/specs/`. |
 | **`spectrace-change`** | Handles pivots, bugs, and new requirements. Identifies affected code, strikes obsolete spec decisions, updates `CHANGES.md`, and sequences cleanup tasks so old code is cleanly eliminated. |
-| **`spectrace-review`** | Audits code against the 10 core engineering and testing principles (KISS/YAGNI, SRP, Anti-Corruption Layer, Invariant Testing, Input Partitioning, Clean Table Tests) defined in `DESIGN.md`. |
+| **`spectrace-review`** | Audits code against Core Engineering Principles in `ENGINEERING.md`, Testing Standards in `TESTING.md`, Structural Boundaries in `ARCHITECTURE.md`, and Design Compliance in `DESIGN.md`. |
 
 ---
 
