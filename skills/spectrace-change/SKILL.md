@@ -3,9 +3,9 @@ name: spectrace-change
 description: >-
   Handles architectural pivots, bugs, new features, and convention updates without
   leaving stale code behind. Updates root context documents (CHANGES.md, PRODUCT.md,
-  ARCHITECTURE.md, DESIGN.md, TESTING.md), strikes obsolete spec decisions (~~D1~~ → D2),
-  and adds verifiable cleanup and test tasks to specs in planning/. Pure Markdown and Git, zero
-  runtime and zero hooks.
+  ARCHITECTURE.md, ENGINEERING.md, DESIGN.md, TESTING.md), strikes obsolete spec decisions
+  (~~D1~~ → D2), and adds verifiable cleanup and test tasks to specs in planning/. Pure Markdown
+  and Git, zero runtime and zero hooks.
   Use when: "we changed our mind about X", "now we want Y instead", "this decision was wrong",
   "X is broken", "add this to the plan", "pivot architecture", "deprecate X", "fix bug in Y",
   "this rule is in the way".
@@ -26,7 +26,7 @@ Ask what changed and why if not specified. Classify into one of four categories:
 1. **New idea or feature** → Step 2
 2. **Change of direction / Pivot** — an existing requirement, design, or architecture must change → Step 3
 3. **Bug** — code does not conform to current specs or requirements → Step 4
-4. **Convention in the way** — a rule in `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, or `TESTING.md` impedes the best solution → Step 5
+4. **Convention in the way** — a rule in `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, or `TESTING.md` impedes the best solution → Step 5
 
 ---
 
@@ -40,14 +40,14 @@ Ask what changed and why if not specified. Classify into one of four categories:
 
 ## Step 3 — Change of Direction / Pivot
 
-1. **Identify Affected Decisions:** Read `ARCHITECTURE.md`, `TESTING.md`, and the relevant specs. Identify which requirements (`R`) or design decisions (`D`) must change.
+1. **Identify Affected Decisions:** Read `ARCHITECTURE.md`, `ENGINEERING.md`, `TESTING.md`, and the relevant specs. Identify which requirements (`R`) or design decisions (`D`) must change.
 2. **Trace Existing Impact:**
    - Run `git grep -n` for affected identifiers (functions, classes, endpoints, configuration keys, file paths).
    - Identify underlying assumptions (e.g., "loads entire file in memory", "uses synchronous HTTP").
-   - Review docs: verify whether `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, or `TESTING.md` describe the obsolete approach.
+   - Review docs: verify whether `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, or `TESTING.md` describe the obsolete approach.
 3. **Record in Root Decision Ledger:**
    - Add an entry to `CHANGES.md` documenting: date, scope, what changed, why, and replaced items.
-   - If the pivot alters product scope, architecture, test conventions, or design guidelines, update `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, or `TESTING.md`.
+   - If the pivot alters product scope, architecture, engineering standards, test conventions, or design guidelines, update `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, or `TESTING.md`.
 4. **Update the Spec:**
    - Strike through obsolete items: `- ~~D1 (R1): In-memory store~~ → D2` (or `→ 005/D1` if in a new spec).
    - If an entire requirement is abandoned: `- ~~R3: PDF export~~ dropped`.
@@ -74,7 +74,7 @@ Ask what changed and why if not specified. Classify into one of four categories:
 
 Rules describe current patterns, not immutable laws.
 
-1. Identify the blocking convention in `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, or `TESTING.md`.
+1. Identify the blocking convention in `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, or `TESTING.md`.
 2. Propose the simplest update to the user (edit, replace, or remove).
 3. Upon approval: update the document, record the rationale in `CHANGES.md`, and add necessary refactoring tasks to active specs.
 

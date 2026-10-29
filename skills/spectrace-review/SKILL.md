@@ -2,15 +2,16 @@
 name: spectrace-review
 description: >-
   Audits code changes, pull requests, or completed spec tasks against the repository's
-  Core Engineering Principles in ARCHITECTURE.md, Testing Standards in TESTING.md,
-  and Visual/Content standards in DESIGN.md. Generates an actionable findings
-  report without modifying code. Use when: "review this code", "audit this spec",
-  "check code quality", "run review", "review tasks", "audit PR", "verify engineering standards".
+  Core Engineering Principles in ENGINEERING.md, Testing Standards in TESTING.md,
+  Structural Boundaries in ARCHITECTURE.md, and Visual/Content standards in DESIGN.md.
+  Generates an actionable findings report without modifying code. Use when:
+  "review this code", "audit this spec", "check code quality", "run review",
+  "review tasks", "audit PR", "verify engineering standards".
 ---
 
 # spectrace-review
 
-Run **inside the target repo**. This skill performs an objective, read-only architectural, testing, and design audit of recent changes or completed tasks before a spec is finalized.
+Run **inside the target repo**. This skill performs an objective, read-only architectural, engineering, testing, and design audit of recent changes or completed tasks before a spec is finalized.
 
 ---
 
@@ -20,7 +21,8 @@ Run **inside the target repo**. This skill performs an objective, read-only arch
    - For working tree changes: `git diff` and `git diff --cached`.
    - For recent commits: `git diff HEAD~1` (or the branch divergence `git diff main...HEAD`).
 2. Read the governing documents:
-   - [ARCHITECTURE.md](../../ARCHITECTURE.md) (layer boundaries, public surfaces, and Core Engineering Principles).
+   - [ENGINEERING.md](../../ENGINEERING.md) (Core Engineering Principles: KISS/YAGNI, SRP, DRY, DIP/ACL, stack casing).
+   - [ARCHITECTURE.md](../../ARCHITECTURE.md) (system topology, layer boundaries, and public surfaces).
    - [TESTING.md](../../TESTING.md) (testing invariants, input partitioning, table tests, and mocking boundaries).
    - [DESIGN.md](../../DESIGN.md) (UI tokens/a11y for frontend apps; content/editorial conventions for docs repos).
    - The active spec in `planning/specs/NNN-name.md` (verifying requirement coverage).
@@ -29,9 +31,9 @@ Run **inside the target repo**. This skill performs an objective, read-only arch
 
 ## Step 2 — Execute the Audit Checklist
 
-Audit the diff systematically against each principle. For each violation, cite the exact file and line number.
+Audit the diff systematically against each document. For each violation, cite the exact file and line number.
 
-### 🏛️ Engineering Principles (Governed by ARCHITECTURE.md)
+### ⚙️ Engineering Principles (Governed by ENGINEERING.md)
 
 #### 1. KISS / YAGNI — Proportionality
 - [ ] **No Premature Abstractions:** Are there interfaces, adapters, or factory classes created for a single consumer or vendor?
@@ -60,9 +62,17 @@ Audit the diff systematically against each principle. For each violation, cite t
 
 ---
 
+### 🏛️ Structural & Layer Boundaries (Governed by ARCHITECTURE.md)
+
+#### 7. Architecture & Dependency Flow
+- [ ] **Dependency Inversion:** Do dependencies point inward toward domain models? Are adapters prohibited from leaking into domain code?
+- [ ] **Directory Integrity:** Are new files placed strictly within the declared directory map?
+
+---
+
 ### 🧪 Testing Standards (Governed by TESTING.md)
 
-#### 7. Testing Invariants, Contracts & Input Space
+#### 8. Testing Invariants, Contracts & Input Space
 - [ ] **Systematic Input Partitioning:**
   - Are valid nominal cases covered?
   - Are boundary values explicitly tested (min, max, off-by-one)?
@@ -72,7 +82,7 @@ Audit the diff systematically against each principle. For each violation, cite t
 - [ ] **Root-Cause Regressions:** If fixing a bug, does the test cover the general equivalence class across all entry points rather than just the exact reported payload?
 - [ ] **State Machine & Lifecycle Transitions:** Are state transitions (idempotency, uniqueness, serialization round-trips) asserted?
 
-#### 8. Testing Hygiene & Parameterization
+#### 9. Testing Hygiene & Parameterization
 - [ ] **AAA Structure:** Are tests structured as Arrange-Act-Assert with descriptive behavioral names?
 - [ ] **Parameterized / Table-Driven Tests:** Are matrices of inputs and boundaries expressed via data tables (`test.each`, `@pytest.mark.parametrize`, Go tables) rather than copy-pasted test functions?
 - [ ] **Clean Test Bodies:** Are test bodies free of `if`/`else` branches, ternary operators, and manual loops?
@@ -82,7 +92,7 @@ Audit the diff systematically against each principle. For each violation, cite t
 
 ### 🎨 Design & Content Alignment (Governed by DESIGN.md)
 
-#### 9. Context-Aware Design Compliance
+#### 10. Context-Aware Design Compliance
 - [ ] **UI Projects (Frontend / Web / Mobile):**
   - **Tokens over Raw Values:** Are colors, spacing, and font sizes using semantic tokens (no hardcoded hex/px)?
   - **Component States:** Do interactive controls support hover, focus, active, disabled, loading?
@@ -95,8 +105,8 @@ Audit the diff systematically against each principle. For each violation, cite t
 
 ### 🔍 Surface Alignment & Spec Traceability
 
-#### 10. Public Surface Documentation & Scope Integrity
-- [ ] **Public Surface Documentation:** If a public API, endpoint, CLI command, tool, or domain model was introduced or changed, is it documented in `ARCHITECTURE.md` or `DESIGN.md`?
+#### 11. Public Surface Documentation & Scope Integrity
+- [ ] **Public Surface Documentation:** If a public API, endpoint, CLI command, tool, or domain model was introduced or changed, is it documented in `ARCHITECTURE.md`, `ENGINEERING.md`, or `DESIGN.md`?
 - [ ] **Strict Spec Coverage:** Does the diff align with the active task scope (`— covers R/D` or `— replaces D`) without undocumented side-effects?
 
 ---
