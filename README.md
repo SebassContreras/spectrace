@@ -40,10 +40,10 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
 4. **Execute:** Tell any agent:
    > *"Execute the specs."*
    The agent picks the next open task, checks the architecture, engineering, and test rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
-4. **Audit & Review:** Tell your agent:
+5. **Audit & Review:** Tell your agent:
    > *"Review this code against our engineering standards."*
    `spectrace-review` audits the implementation against `ENGINEERING.md` (KISS/YAGNI, SRP, DIP), `TESTING.md` (invariants, table tests), and `ARCHITECTURE.md` (layer boundaries) without altering code.
-5. **Pivots & Changes:** When plans change, tell your agent:
+6. **Pivots & Changes:** When plans change, tell your agent:
    > *"We changed our mind about X, now we want Y instead."*
    `spectrace-change` logs the pivot in `CHANGES.md`, strikes obsolete design items (`~~D1~~ → D2`), and adds safe cleanup tasks.
 
@@ -118,10 +118,11 @@ A user can sign in and stay signed in across browser reloads.
 
 ---
 
-## 🛠️ The Three Skills
+## 🛠️ The Four Skills
 
 | Skill | Purpose |
 |---|---|
+| **`spectrace-init`** | Initializes Spectrace in a new repository (with context-aware scaffolding) or safely upgrades a legacy Spectrace repository to the 7-contract progressive disclosure suite without clobbering history. |
 | **`spectrace-plan`** | Takes any plan, design, or transcript and generates decoupled root decision documents (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`) using context-aware design, plus `planning/roadmap.md` and ordered specs in `planning/specs/`. |
 | **`spectrace-change`** | Handles pivots, bugs, and new requirements. Identifies affected code, strikes obsolete spec decisions, updates `CHANGES.md`, and sequences cleanup tasks so old code is cleanly eliminated. |
 | **`spectrace-review`** | Audits code against Core Engineering Principles in `ENGINEERING.md`, Testing Standards in `TESTING.md`, Structural Boundaries in `ARCHITECTURE.md`, and Design Compliance in `DESIGN.md`. |
