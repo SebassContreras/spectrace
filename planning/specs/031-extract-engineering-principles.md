@@ -19,12 +19,20 @@ Extract code quality and craftsmanship rules from `ARCHITECTURE.md` into a dedic
 - D3 (R4): In `skills/spectrace-plan/SKILL.md`, add `ENGINEERING.md` to the File Responsibilities table and first-time setup scaffold. In `skills/spectrace-review/SKILL.md`, retarget principles 1-6 to `ENGINEERING.md`. In `skills/spectrace-change/SKILL.md`, include `ENGINEERING.md` in pivot reviews.
 - D4 (R5): Update `spectrace/AGENTS.md` blueprint and rules to cite `ENGINEERING.md`.
 
+### Trade-offs & Mitigations (P10)
+- Choice: Extracting a dedicated `ENGINEERING.md` vs. retaining principles inside `ARCHITECTURE.md`.
+  - Pros: Strict separation of concerns (code craftsmanship vs. system topology); prevents architecture documents from becoming bloated; enables targeted context loading for AI coding agents.
+  - Cons: Increases the root contract file count to 7.
+  - Mitigation: Maintain a clear progressive disclosure table in `AGENTS.md` that directs agents exactly to the contract relevant to their active task.
+
 ## Tasks
 
-- [x] 031/T001 [agent] Create `skills/spectrace-plan/assets/engineering-template.md`, clean `architecture-template.md`, and update `agents-block.md` — covers R3, D2
-- [x] 031/T002 [agent] Create root `ENGINEERING.md` and purify `ARCHITECTURE.md` in `spectrace` — covers R1, R2, D1
+- [x] 031/T001a [agent] Create `skills/spectrace-plan/assets/engineering-template.md` containing the core engineering principles — covers R3, D2
+- [x] 031/T001b [agent] Purify `skills/spectrace-plan/assets/architecture-template.md` and update `agents-block.md` — covers R3, D2
+- [x] 031/T002a [agent] Create root `ENGINEERING.md` with core engineering principles — covers R1, D1
+- [x] 031/T002b [agent] Purify root `ARCHITECTURE.md` to structural and topology concerns — covers R2, D1
 - [x] 031/T003 [agent] Update `skills/spectrace-plan/SKILL.md` to scaffold `ENGINEERING.md` and explain its specific role — covers R4, D3
 - [x] 031/T004 [agent] Update `skills/spectrace-review/SKILL.md` and `skills/spectrace-change/SKILL.md` to audit and track `ENGINEERING.md` — covers R4, D3
 - [x] 031/T005 [agent] Update `spectrace/AGENTS.md` and `planning/roadmap.md` to integrate `ENGINEERING.md` — covers R5, D4
-- [x] 031/T006 Verify: verify all skills, templates, and root markdown documents for consistency, valid frontmatter, and non-overlapping responsibilities — covers R1, R2, R3, R4, R5
+- [x] 031/T006 Verify: Assert contract decoupling across 3 input partitions: (P1) `ARCHITECTURE.md` contains zero duplicate code craftsmanship rules; (P2) `ENGINEERING.md` cleanly defines the core engineering principles; (P3) all 3 skills (`spectrace-plan`, `spectrace-review`, `spectrace-change`) correctly resolve and link to `ENGINEERING.md` — covers R1, R2, R3, R4, R5
       verified: all 3 skills validated with valid frontmatter; all assets verified in skills/spectrace-plan/assets; ARCHITECTURE.md, ENGINEERING.md, DESIGN.md, TESTING.md, AGENTS.md aligned.

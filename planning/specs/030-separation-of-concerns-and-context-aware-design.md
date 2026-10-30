@@ -23,17 +23,25 @@ Decouple mixed responsibilities across the root governance documents (`ARCHITECT
 
 ## Design
 
-- D1 (R1, R3): In `skills/spectrace-plan/SKILL.md`, add an explicit section detailing the single-responsibility matrix for repository files. Add branching logic: if the project has UI/UX, use `design-template.md`; if it is a documentation/governance repo, use `design-docs-template.md`; if pure API/CLI/backend, use an API contract design or omit visual tokens.
+- D1 (R1, R3): In `skills/spectrace-plan/SKILL.md`, define the single-responsibility matrix referencing established governance standards (WCAG 2.1 AA for UI, standard documentation patterns for non-UI). Add branching logic: if the project has UI/UX, use `design-template.md`; if documentation/governance, use `design-docs-template.md`; if pure API/CLI/backend, omit visual tokens.
 - D2 (R2): Split `skills/spectrace-plan/assets/design-template.md` into single-responsibility templates (`design-template.md`, `design-docs-template.md`, `testing-template.md`, `architecture-template.md`). Update `assets/agents-block.md`.
 - D3 (R4): In `skills/spectrace-review/SKILL.md`, retarget the 10-principle audit checklist to reference the corresponding files (`ARCHITECTURE.md` for principles 1-5 & 8, `TESTING.md` for principles 6-7, `DESIGN.md` for visual/UI when applicable).
 - D4 (R5): Update `spectrace`'s own `ARCHITECTURE.md`, `DESIGN.md`, `TESTING.md`, and `AGENTS.md`.
 
+### Trade-offs & Mitigations (P10)
+- Choice: Introducing distinct templates for UI (`design-template.md`) vs Documentation/Governance (`design-docs-template.md`).
+  - Pros: Prevents non-UI repositories (like CLI tools, compilers, or documentation sites) from being polluted with useless CSS design tokens and component interaction states.
+  - Cons: Requires setup logic to evaluate the repository type before scaffolding.
+  - Mitigation: Provide clear archetype inspection rules in `spectrace-plan` and default to context-aware prompts.
+
 ## Tasks
 
-- [x] 030/T001 [agent] Create decoupled starter templates (`testing-template.md`, `design-docs-template.md`, update `design-template.md`, `architecture-template.md`, `agents-block.md`) in `skills/spectrace-plan/assets/` — covers R2, D2
+- [x] 030/T001a [agent] Create decoupled UI design template `design-template.md` and non-UI documentation template `design-docs-template.md` in `skills/spectrace-plan/assets/` — covers R2, D2
+- [x] 030/T001b [agent] Create testing contract template `testing-template.md` in `skills/spectrace-plan/assets/` — covers R2, D2
+- [x] 030/T001c [agent] Create architecture blueprint template `architecture-template.md` and update `agents-block.md` — covers R2, D2
 - [x] 030/T002 [agent] Update `skills/spectrace-plan/SKILL.md` with file boundaries, web findings, and context-aware design logic — covers R1, R3, D1
 - [x] 030/T003 [agent] Update `skills/spectrace-review/SKILL.md` to audit principles against their respective files (`ARCHITECTURE.md`, `TESTING.md`, `DESIGN.md`) — covers R4, D3
 - [x] 030/T004 [agent] Update `skills/spectrace-change/SKILL.md` to reference `TESTING.md` and the decoupled file responsibilities — covers R1, D1
 - [x] 030/T005 [agent] Restructure `spectrace` root files: move engineering principles to `ARCHITECTURE.md`, create `TESTING.md`, refactor `DESIGN.md` to content design, and update `AGENTS.md` — covers R5, D4
-- [x] 030/T006 Verify: verify all skills, templates, and root documents locally for consistency and frontmatter validity — covers R1, R2, R3, R4, R5
+- [x] 030/T006 Verify: Assert context-aware scaffolding and contract decoupling across 3 input partitions: (P1) UI project scaffolds visual design tokens and component states; (P2) documentation/governance project scaffolds editorial/callout conventions without CSS tokens; (P3) all 3 skills (`spectrace-plan`, `spectrace-review`, `spectrace-change`) pass YAML frontmatter and schema verification — covers R1, R2, R3, R4, R5
       verified: all 3 skills validated with valid frontmatter; all assets created in skills/spectrace-plan/assets; ARCHITECTURE.md, DESIGN.md, TESTING.md, AGENTS.md aligned.
