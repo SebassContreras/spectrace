@@ -12,6 +12,7 @@ description: >-
 # spectrace-review
 
 Run **inside the target repo**. This skill performs an objective, read-only architectural, engineering, testing, and design audit of recent changes or completed tasks before a spec is finalized.
+If the repository lacks the 7 root contracts (`PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`, `AGENTS.md`), run `spectrace-init` first.
 
 ---
 

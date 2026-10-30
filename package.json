@@ -1,0 +1,23 @@
+{
+  "name": "spectrace",
+  "version": "0.32.0",
+  "description": "Spec-driven development for AI coding agents with decoupled root contracts and zero runtime friction.",
+  "type": "module",
+  "bin": {
+    "spectrace-init": "./bin/spectrace-init.mjs"
+  },
+  "scripts": {
+    "init": "node ./bin/spectrace-init.mjs"
+  },
+  "keywords": [
+    "agentskills",
+    "ai",
+    "specs",
+    "governance",
+    "sdd",
+    "claude",
+    "cursor"
+  ],
+  "author": "SebassContreras",
+  "license": "MIT"
+}

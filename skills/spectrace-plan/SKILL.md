@@ -11,7 +11,7 @@ description: >-
 
 # spectrace-plan
 
-Run **inside the target repo**. The execution protocol is defined in `assets/agents-block.md` and installed into the repository's `AGENTS.md`.
+Run **inside the target repo**. The execution protocol is defined in `assets/agents-block.md` and installed into the repository's `AGENTS.md`. If the target repository has not been initialized or is using an older Spectrace version, run `spectrace-init` first.
 
 ---
 

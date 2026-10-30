@@ -27,11 +27,17 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
 
 ## ⚡ Quick Start
 
-1. **Install the skills** in your repository.
-2. **Generate the foundation:** Tell your agent:
+1. **Install the skills** in your repository:
+   ```sh
+   pnpm dlx skills add SebassContreras/spectrace
+   ```
+2. **Initialize or Upgrade:** Tell your agent:
+   > *"Initialize spectrace in this repo"* or *"Upgrade spectrace to the latest version"*
+   `spectrace-init` sets up the 7 decoupled contracts (`PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`, `AGENTS.md`) and `planning/`, or migrates legacy spectrace setups without losing historical decisions. Alternatively, run via CLI: `node bin/spectrace-init.mjs .` (or `--upgrade`).
+3. **Generate the foundation:** Tell your agent:
    > *"Turn this plan into specs."*
-   `spectrace-plan` initializes decoupled root contracts (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`) using **context-aware design** and generates `planning/roadmap.md` with ordered specs in `planning/specs/`.
-3. **Execute:** Tell any agent:
+   `spectrace-plan` initializes or builds out specs in `planning/roadmap.md` and `planning/specs/` using **context-aware design**.
+4. **Execute:** Tell any agent:
    > *"Execute the specs."*
    The agent picks the next open task, checks the architecture, engineering, and test rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
 4. **Audit & Review:** Tell your agent:
@@ -63,6 +69,7 @@ Spectrace isolates **durable governance contracts** at the project root from **t
 │       └── NNN-name.md     # Goal, Requirements, Design, and Checkbox Tasks
 │
 └── skills/                 # Agent Skills (agentskills.io compatible)
+    ├── spectrace-init/     # Initializes Spectrace in new repos or upgrades legacy repos
     ├── spectrace-plan/     # Generates specs and decoupled foundational contracts
     ├── spectrace-change/   # Handles pivots, refactors, and deprecation tasks
     └── spectrace-review/   # Audits code against engineering, testing, and design standards

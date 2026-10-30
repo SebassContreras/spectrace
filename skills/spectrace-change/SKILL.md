@@ -13,7 +13,7 @@ description: >-
 
 # spectrace-change
 
-Run **inside the target repo**. The execution protocol is in `AGENTS.md`. If the repository lacks `AGENTS.md` or `planning/`, run `spectrace-plan` first.
+Run **inside the target repo**. The execution protocol is in `AGENTS.md`. If the repository lacks `AGENTS.md` or `planning/`, run `spectrace-init` or `spectrace-plan` first.
 
 Changes and pivots are expected. Never refuse a change because a spec is marked `done` or software has shipped. Confirm all proposed changes with the user before writing files.
 
