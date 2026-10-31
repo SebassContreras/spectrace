@@ -55,4 +55,12 @@ A user signs in and stays signed in across reloads.
 5. **Stuck:** Add an indented `blocked: <reason>` line under the task, commit the note, inform the user, and move on.
 6. **Contradictions or Changes:** Propose changes directly to the user (the `spectrace-change` skill applies them to `CHANGES.md` and specs).
 7. **New Ideas:** Add them to `planning/roadmap.md` under `## Ideas`.
+
+### Small Fixes
+
+Never create a spec just to hold a fix, and keep no separate fix list — git is the record.
+
+- **Trivial correction** (breaks no `R`/`D`, fits in one commit — typo, stale doc, wrong message, small defect): commit it directly as `fix:` or `docs:`, with a regression test if behavior changes. Not doing it now? One bullet under `## Ideas`.
+- **Bug against a requirement:** add a regression test task and a fix task to the spec that owns it. If that spec is `done`, set it back to `in progress` and note the reopening under its `## Changes`.
+- **The fix needs a different `R` or `D`:** it is a change of direction — use `spectrace-change`.
 <!-- /spectrace -->

@@ -43,6 +43,14 @@ Agents execute work incrementally using the specs in `planning/`:
    - If all tasks in the spec are complete, update the spec's status to `done` in `planning/roadmap.md`.
    - Stage touched files by name and commit with a clear Conventional Commit message.
 
+### Small Fixes
+
+Never create a spec just to hold a fix, and keep no separate fix list — git is the record (see [CHANGES.md](./CHANGES.md), 2026-10-31).
+
+- **Trivial correction** (breaks no `R`/`D`, fits in one commit — typo, stale doc, wrong message, small defect): commit it directly as `fix:` or `docs:`, with a regression test if behavior changes. Not doing it now? One bullet under `## Ideas` in [planning/roadmap.md](./planning/roadmap.md).
+- **Bug against a requirement:** add a regression test task and a fix task to the spec that owns it. If that spec is `done`, set it back to `in progress` and note the reopening under its `## Changes`.
+- **The fix needs a different `R` or `D`:** it is a change of direction — use `spectrace-change`.
+
 ---
 
 ## ⚠️ Critical Rules & Boundary Conditions

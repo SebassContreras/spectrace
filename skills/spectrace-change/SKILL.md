@@ -1,14 +1,15 @@
 ---
 name: spectrace-change
 description: >-
-  Handles architectural pivots, bugs, new features, and convention updates without
+  Handles architectural pivots, bugs, small fixes, new features, and convention updates without
   leaving stale code behind. Updates root context documents (CHANGES.md, PRODUCT.md,
   ARCHITECTURE.md, ENGINEERING.md, DESIGN.md, TESTING.md), strikes obsolete spec decisions
-  (~~D1~~ → D2), and adds verifiable cleanup and test tasks to specs in planning/. Pure Markdown
-  and Git, zero runtime and zero hooks.
+  (~~D1~~ → D2), and adds verifiable cleanup and test tasks to specs in planning/. Small
+  corrections that break no requirement skip planning/ entirely: the commit is the record.
+  Pure Markdown and Git, zero runtime and zero hooks.
   Use when: "we changed our mind about X", "now we want Y instead", "this decision was wrong",
   "X is broken", "add this to the plan", "pivot architecture", "deprecate X", "fix bug in Y",
-  "this rule is in the way".
+  "small fix", "typo in X", "quick correction", "this rule is in the way".
 ---
 
 # spectrace-change
@@ -25,7 +26,7 @@ Ask what changed and why if not specified. Classify into one of four categories:
 
 1. **New idea or feature** → Step 2
 2. **Change of direction / Pivot** — an existing requirement, design, or architecture must change → Step 3
-3. **Bug** — code does not conform to current specs or requirements → Step 4
+3. **Bug or small correction** — code or docs are wrong under the current specs and contracts (broken behavior, typo, stale doc, confusing message) → Step 4
 4. **Convention in the way** — a rule in `AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, or `TESTING.md` impedes the best solution → Step 5
 
 ---
@@ -58,14 +59,31 @@ Ask what changed and why if not specified. Classify into one of four categories:
 
 ---
 
-## Step 4 — Bug
+## Step 4 — Bug or Small Correction
 
 1. **Analyze Symptom:** Document exact steps, actual outcome, and expected outcome.
-2. **Locate Code:** Inspect code with `git grep` and identify which requirement is violated.
-3. **Add Regression Test & Fix:**
-   - Add a regression test task: `- [ ] NNN/TNNN [agent] Regression test: <failing check> — covers R1`.
-   - Add a fix task: `- [ ] NNN/TNNN [agent] Fix <component>: <resolution> — covers R1`.
-   - If a design decision caused the bug, replace the decision item and note `— replaces D1`.
+2. **Locate Code:** Inspect code with `git grep` and identify which requirement (`R`) or design decision (`D`), if any, is violated.
+3. **Pick the smallest route that fits** — never create a spec just to hold a fix:
+
+   | Situation | Route |
+   |:---|:---|
+   | **Trivial correction** — violates no `R`/`D` and fits in one commit (typo, stale doc, wrong message, small defect) | **4a** — no `planning/` entry |
+   | **Bug against a requirement** — breaks an `R` or `D` of an existing spec, fixable without changing it | **4b** — tasks in the owning spec |
+   | **The fix requires changing an `R` or `D`** | **Step 3** — change of direction |
+
+### 4a — Trivial Correction
+
+- Do not add a spec, roadmap row, or tracking list. The Conventional Commit (`fix:`, `docs:`) is the record; `git log --grep "^fix"` recovers the history.
+- If it changes code behavior, add a regression test in the same commit (per `TESTING.md`).
+- If the user asked for the fix, apply it in this turn after confirming it (the only exception to Step 6). If it will not be done now, append one bullet to `## Ideas` in `planning/roadmap.md`.
+
+### 4b — Bug Against a Requirement
+
+1. Add tasks to the spec that owns the violated item — even if it is `done`:
+   - Regression test task: `- [ ] NNN/TNNN [agent] Regression test: <failing check> — covers R1`.
+   - Fix task: `- [ ] NNN/TNNN [agent] Fix <component>: <resolution> — covers R1`.
+2. If the spec was `done`, set its roadmap status back to `in progress` and add a `## Changes` line: `- YYYY-MM-DD: Reopened for bug <summary>. Work: T00N–T00M.` A bug reopens its spec; only changes of direction across specs become a new spec.
+3. If a design decision caused the bug, the decision itself must change → go to Step 3.
 4. If the bug was listed in `## Ideas`, remove it from the backlog.
 
 ---
@@ -82,4 +100,4 @@ Rules describe current patterns, not immutable laws.
 
 ## Step 6 — Report and Stop
 
-Summarize what was changed, list newly added tasks in `planning/`, and stop. Any coding agent can execute the tasks following `AGENTS.md`. **Do not execute tasks in this turn.**
+Summarize what was changed, list newly added tasks in `planning/`, and stop. Any coding agent can execute the tasks following `AGENTS.md`. **Do not execute tasks in this turn** — except a trivial correction (Step 4a) the user asked to fix.

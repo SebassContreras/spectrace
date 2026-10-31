@@ -37,7 +37,8 @@ Unlike traditional planning tools or rigid git-enforcement mechanisms, Spectrace
 1. **Foundational Spec Generation (`spectrace-plan`):**
    - Ingests high-level plans or conversational briefs and automatically outputs root contracts, `planning/roadmap.md`, and thin-slice specs in `planning/specs/`.
 2. **Adaptive Change Management (`spectrace-change`):**
-   - Classifies pivots, bugs, and new requirements.
+   - Classifies pivots, bugs, small fixes, and new requirements.
+   - Routes trivial corrections straight to a Conventional Commit (no spec, no fix list) and bugs into the spec that owns the broken requirement.
    - Updates `CHANGES.md`, strikes deprecated decisions, and generates regression and cleanup tasks.
 3. **Architectural & Quality Auditing (`spectrace-review`):**
    - Conducts objective, read-only audits against the 10 core engineering and testing principles in `DESIGN.md` (KISS/YAGNI, SRP, Anti-Corruption Layer, Invariant Testing, Input Partitioning, Clean Table Tests) before closing specs or merging PRs.

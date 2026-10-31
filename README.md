@@ -46,6 +46,9 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
 6. **Pivots & Changes:** When plans change, tell your agent:
    > *"We changed our mind about X, now we want Y instead."*
    `spectrace-change` logs the pivot in `CHANGES.md`, strikes obsolete design items (`~~D1~~ → D2`), and adds safe cleanup tasks.
+7. **Bugs & Small Fixes:** Tell your agent:
+   > *"Fix the typo in X"* or *"Y is broken."*
+   A trivial correction is committed directly as `fix:`/`docs:` — no spec, no fix list; git is the record. A bug that breaks a requirement gets regression and fix tasks in the spec that owns it, reopening it if it was `done`.
 
 ---
 
@@ -124,7 +127,7 @@ A user can sign in and stay signed in across browser reloads.
 |---|---|
 | **`spectrace-init`** | Initializes Spectrace in a new repository (with context-aware scaffolding) or safely upgrades a legacy Spectrace repository to the 7-contract progressive disclosure suite without clobbering history. |
 | **`spectrace-plan`** | Takes any plan, design, or transcript and generates decoupled root decision documents (`AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `DESIGN.md`, `TESTING.md`, `CHANGES.md`) using context-aware design, plus `planning/roadmap.md` and ordered specs in `planning/specs/`. |
-| **`spectrace-change`** | Handles pivots, bugs, and new requirements. Identifies affected code, strikes obsolete spec decisions, updates `CHANGES.md`, and sequences cleanup tasks so old code is cleanly eliminated. |
+| **`spectrace-change`** | Handles pivots, bugs, small fixes, and new requirements. Routes trivial corrections straight to a commit and bugs into the spec that owns them. Identifies affected code, strikes obsolete spec decisions, updates `CHANGES.md`, and sequences cleanup tasks so old code is cleanly eliminated. |
 | **`spectrace-review`** | Audits code against Core Engineering Principles in `ENGINEERING.md`, Testing Standards in `TESTING.md`, Structural Boundaries in `ARCHITECTURE.md`, and Design Compliance in `DESIGN.md`. |
 
 ---

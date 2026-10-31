@@ -166,7 +166,7 @@ Specs in execution order. \`Status\` (\`todo\`, \`in progress\`, \`done\`) is ma
 
 ## Ideas
 
-Anything worth doing later. Ideas can be added freely without debate; they are converted into specs when prioritized.
+Anything worth doing later, including small fixes not done right away. Ideas can be added freely without debate; they are converted into specs (or fixed directly, if trivial) when prioritized.
 `;
     safeWrite('planning/roadmap.md', roadmapTemplate);
   }

@@ -14,6 +14,6 @@ Specs in execution order. `Status` (`todo`, `in progress`, `done`) is maintained
 
 ## Ideas
 
-Anything worth doing later. Ideas can be added freely without debate; they are converted into specs when prioritized.
+Anything worth doing later, including small fixes not done right away. Ideas can be added freely without debate; they are converted into specs (or fixed directly, if trivial) when prioritized.
 
 - **Automated Spec Linting:** A lightweight command or linter to verify that specs follow thin-slice principles without enforcing git commit hooks.

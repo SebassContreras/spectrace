@@ -18,6 +18,19 @@ When an existing architectural design or requirement needs to change:
 
 ## 📜 Change Log
 
+### 2026-10-31 — Small Fixes Tracked by Git, Not by a Fix List
+
+- **Scope:** Bug and correction routing (`spectrace-change`, `AGENTS.md` block).
+- **What Changed:**
+  - `spectrace-change` Step 4 now routes by size: a **trivial correction** (breaks no `R`/`D`, one commit) gets no `planning/` entry — the `fix:`/`docs:` commit is the record; a **bug against a requirement** adds regression and fix tasks to the owning spec, reopening it (`done` → `in progress`) when needed; a fix that needs a different `R`/`D` goes through the change-of-direction protocol.
+  - Added a `Small Fixes` section to the `AGENTS.md` block and to this repo's `AGENTS.md`.
+  - `## Ideas` explicitly accepts small fixes that won't be done right away.
+- **Why:**
+  - The bug route told agents to add tasks to a spec, but "done specs stay done" (spec 021) left no place for bugs in finished specs, so agents either inflated fixes into new specs or recorded nothing.
+  - Corrections that violate no requirement (typos, stale docs) did not fit any category.
+- **Rejected Alternative — do not reintroduce:** A `## Fixes` checklist in `planning/roadmap.md` (or a `planning/fixes.md` file, or a `spectrace-fix` skill). It duplicates what `git log` already records, needs manual cleanup, and turns spectrace into an issue tracker, which `PRODUCT.md` lists as a non-goal. Spec 021 already removed `spectrace-fix` and moved tracking to git for the same reason.
+- **Replaced Items:** "Done specs stay done" now applies only to changes of direction; bugs reopen their spec.
+
 ### 2026-10-28 — Engineering Standards & spectrace-review Skill Integration
 
 - **Scope:** Code quality governance and testing discipline.
