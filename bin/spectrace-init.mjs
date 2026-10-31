@@ -14,6 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT_DIR = resolve(__dirname, '..');
 const ASSETS_DIR = resolve(ROOT_DIR, 'skills/spectrace-plan/assets');
+const ENGINEERING_TEMPLATE = join(ASSETS_DIR, 'engineering-template.md');
 
 const CONTRACT_FILES = [
   'PRODUCT.md',
@@ -133,6 +134,54 @@ function run() {
     }
   }
 
+  // In UPGRADE mode an existing ENGINEERING.md is reconciled with the template: the
+  // principle sections it lacks are appended and nothing it already says is rewritten.
+  // Matching by heading (number and wording stripped) keeps a second run idempotent.
+  function splitPrincipleSections(markdown) {
+    const sections = [];
+    let current = null;
+    for (const line of markdown.split('\n')) {
+      if (line.startsWith('### ')) {
+        if (current) sections.push(current);
+        current = { heading: line, lines: [line] };
+      } else if (current) {
+        current.lines.push(line);
+      }
+    }
+    if (current) sections.push(current);
+    return sections.map(({ heading, lines }) => ({ heading, body: lines.join('\n').trimEnd() }));
+  }
+
+  function principleKey(heading) {
+    return heading.replace(/^###\s+/, '').replace(/^\d+\.\s*/, '').trim().toLowerCase();
+  }
+
+  function reconcileEngineering() {
+    const targetPath = join(targetDir, 'ENGINEERING.md');
+    if (!existsSync(ENGINEERING_TEMPLATE) || !existsSync(targetPath)) return [];
+
+    const current = readFileSync(targetPath, 'utf8');
+    const present = new Set(
+      current
+        .split('\n')
+        .filter((line) => line.startsWith('### '))
+        .map(principleKey),
+    );
+    const missing = splitPrincipleSections(readFileSync(ENGINEERING_TEMPLATE, 'utf8')).filter(
+      (section) => !present.has(principleKey(section.heading)),
+    );
+    if (missing.length === 0) return [];
+
+    if (!isDryRun) {
+      writeFileSync(
+        targetPath,
+        `${current.trimEnd()}\n\n${missing.map((section) => section.body).join('\n\n')}\n`,
+        'utf8',
+      );
+    }
+    return missing.map((section) => section.heading.replace(/^###\s+/, ''));
+  }
+
   // 1. Scaffold missing root contracts
   const templates = {
     'PRODUCT.md': join(ASSETS_DIR, 'product-template.md'),
@@ -151,6 +200,14 @@ function run() {
     if (existsSync(templatePath)) {
       const content = readFileSync(templatePath, 'utf8');
       safeWrite(file, content);
+    }
+  }
+
+  // 1b. Reconcile an existing ENGINEERING.md with the principle sections it lacks
+  if (mode === 'UPGRADE') {
+    const appended = reconcileEngineering();
+    if (appended.length > 0) {
+      updated.push(`ENGINEERING.md (appended: ${appended.join('; ')})`);
     }
   }
 
