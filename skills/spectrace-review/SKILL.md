@@ -22,7 +22,7 @@ If the repository lacks the 7 root contracts (`PRODUCT.md`, `ARCHITECTURE.md`, `
    - For working tree changes: `git diff` and `git diff --cached`.
    - For recent commits: `git diff HEAD~1` (or the branch divergence `git diff main...HEAD`).
 2. Read the governing documents:
-   - [ENGINEERING.md](../../ENGINEERING.md) (Core Engineering Principles: KISS/YAGNI, SRP, DRY, DIP/ACL, stack casing).
+   - [ENGINEERING.md](../../ENGINEERING.md) (Core Engineering Principles: KISS/YAGNI, SRP, DRY, DIP/ACL, stack casing, research when it pays, trade-offs).
    - [ARCHITECTURE.md](../../ARCHITECTURE.md) (system topology, layer boundaries, and public surfaces).
    - [TESTING.md](../../TESTING.md) (testing invariants, input partitioning, table tests, and mocking boundaries).
    - [DESIGN.md](../../DESIGN.md) (UI tokens/a11y for frontend apps; content/editorial conventions for docs repos).
@@ -60,6 +60,7 @@ Audit the diff systematically against each document. For each violation, cite th
 
 #### 6. Documented Trade-offs
 - [ ] **Trade-off Notes:** If a complex design choice was made, are pros, cons, and mitigations documented in comments, `CHANGES.md`, or spec notes?
+- [ ] **Research-Backed Choices:** Does each hard-to-reverse or externally-fact-dependent choice cite a primary source (`Source: <url> (accessed YYYY-MM-DD)`)? A local, reversible choice with no citation is not a finding.
 
 ---
 
@@ -109,6 +110,7 @@ Audit the diff systematically against each document. For each violation, cite th
 #### 11. Public Surface Documentation & Scope Integrity
 - [ ] **Public Surface Documentation:** If a public API, endpoint, CLI command, tool, or domain model was introduced or changed, is it documented in `ARCHITECTURE.md`, `ENGINEERING.md`, or `DESIGN.md`?
 - [ ] **Strict Spec Coverage:** Does the diff align with the active task scope (`— covers R/D` or `— replaces D`) without undocumented side-effects?
+- [ ] **Contract Drift:** Does `ENGINEERING.md` name every core principle this skill lists (KISS/YAGNI, SRP, DRY, DIP/ACL, stack casing, research, trade-offs)? An omission is a finding unless `CHANGES.md` records why that principle was left out.
 
 ---
 

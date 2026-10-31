@@ -42,7 +42,7 @@ The [`skills` CLI](https://github.com/vercel-labs/skills) installs the skills in
    The agent picks the next open task, checks the architecture, engineering, and test rules, implements the change, verifies it, marks `[x]`, and makes a standard commit.
 5. **Audit & Review:** Tell your agent:
    > *"Review this code against our engineering standards."*
-   `spectrace-review` audits the implementation against `ENGINEERING.md` (KISS/YAGNI, SRP, DIP), `TESTING.md` (invariants, table tests), and `ARCHITECTURE.md` (layer boundaries) without altering code.
+   `spectrace-review` audits the implementation against `ENGINEERING.md` (KISS/YAGNI, SRP, DIP, research when it pays, trade-offs), `TESTING.md` (invariants, table tests), and `ARCHITECTURE.md` (layer boundaries) without altering code.
 6. **Pivots & Changes:** When plans change, tell your agent:
    > *"We changed our mind about X, now we want Y instead."*
    `spectrace-change` logs the pivot in `CHANGES.md`, strikes obsolete design items (`~~D1~~ → D2`), and adds safe cleanup tasks.
@@ -60,7 +60,7 @@ Spectrace isolates **durable governance contracts** at the project root from **t
 ├── AGENTS.md               # Quick operational manual & pointers for AI agents (< 150 lines)
 ├── PRODUCT.md              # Vision, target users, problem statement, and scope boundaries (non-goals)
 ├── ARCHITECTURE.md         # System topology, directory map, layer boundaries, and Mermaid diagrams
-├── ENGINEERING.md          # Code quality principles: KISS/YAGNI, SRP, DRY, DIP/ACL, casing
+├── ENGINEERING.md          # Code quality principles: KISS/YAGNI, SRP, DRY, DIP/ACL, casing, research, trade-offs
 ├── DESIGN.md               # Context-aware design: UI/UX tokens or content/editorial standards
 ├── TESTING.md              # Testing standards, contract invariants, input partitioning, and test hygiene
 ├── CHANGES.md              # Historical ledger of pivots, replacements, and deprecations
@@ -82,7 +82,7 @@ Spectrace isolates **durable governance contracts** at the project root from **t
 Modern AI coding agents (Claude Code, Cursor, Copilot, Antigravity, Windsurf) immediately scan the repository root on startup. Placing clear, single-responsibility files at the root guarantees immediate context discovery without wasting tokens searching nested folders:
 - **`PRODUCT.md`**: Prevents scope creep by declaring explicit boundaries.
 - **`ARCHITECTURE.md`**: Tells the agent *where code lives* and *how components wire together*.
-- **`ENGINEERING.md`**: Tells the agent *how to write clean, decoupled code* (KISS, SRP, DIP).
+- **`ENGINEERING.md`**: Tells the agent *how to write clean, decoupled code* (KISS, SRP, DIP, research when it pays, trade-offs).
 - **`DESIGN.md`**: Governs visual tokens for UI apps, or document/editorial conventions for documentation repos (**Context-Aware Design** prevents injecting CSS tokens into non-UI repos).
 - **`TESTING.md`**: Enforces invariant testing, input partitioning, and clean AAA table tests.
 - **`CHANGES.md`**: Provides historical memory so obsolete patterns are not re-introduced.

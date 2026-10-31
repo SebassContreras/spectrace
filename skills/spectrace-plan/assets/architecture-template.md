@@ -39,4 +39,4 @@ flowchart TD
 
 1. **Dependency Direction:** Dependencies flow inward toward domain models. Domain logic must never import from `adapters/` or `entrypoints/`.
 2. **Framework Seams:** Framework-specific annotations or transport decorators stay isolated in `entrypoints/` or `adapters/`.
-3. **Engineering Standards:** For coding conventions, error handling, and design patterns (KISS, SRP, DIP), consult [ENGINEERING.md](./ENGINEERING.md).
+3. **Engineering Standards:** For coding conventions, error handling, and design patterns (KISS, SRP, DIP, research when it pays, trade-offs), consult [ENGINEERING.md](./ENGINEERING.md).

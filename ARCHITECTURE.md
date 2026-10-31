@@ -85,3 +85,6 @@ The repository strictly isolates **governance/decision contracts** at the projec
 
 4. **Skill Standards:**
    - Every skill in `skills/` complies with the Agent Skills specification (`SKILL.md` with YAML frontmatter `name` and `description` under 1024 characters).
+
+5. **Principle Propagation:**
+   - A principle added to `ENGINEERING.md` ships in the same spec to the starter asset (`skills/spectrace-plan/assets/engineering-template.md`), to all three entry points (greenfield scaffold, upgrade/migration, adoption into an initialized repo) and to every place that enumerates the principles. Prose must never list fewer principles than the file defines.

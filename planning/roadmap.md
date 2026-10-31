@@ -11,6 +11,7 @@ Specs in execution order. `Status` (`todo`, `in progress`, `done`) is maintained
 | 030 | separation-of-concerns-and-context-aware-design | done | 029 |
 | 031 | extract-engineering-principles | done | 030 |
 | 032 | spectrace-init-and-upgrade | done | 031 |
+| 033 | research-principle | done | 031 |
 
 ## Ideas
 

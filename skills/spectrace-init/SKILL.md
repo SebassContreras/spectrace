@@ -23,7 +23,7 @@ When Spectrace is installed or updated, the repository maintains 7 single-respon
 |:---|:---|:---|
 | **`PRODUCT.md`** | Vision, target audience, problems solved, and **explicit non-goals**. | Keep existing vision; populate from README if missing. |
 | **`ARCHITECTURE.md`** | System topology, directory map, layer boundaries, and Mermaid diagrams. | Purify: remove code quality / engineering rules and keep topology. |
-| **`ENGINEERING.md`** | Core principles (KISS/YAGNI, SRP, DRY, DIP/ACL, casing conventions). | Extract from old `ARCHITECTURE.md` or `DESIGN.md`, or scaffold from template. |
+| **`ENGINEERING.md`** | Core principles (KISS/YAGNI, SRP, DRY, DIP/ACL, casing conventions, research only when the decision requires it, trade-offs). | Extract from old `ARCHITECTURE.md` or `DESIGN.md`, scaffold from template, or reconcile an existing file by appending the principles it lacks. |
 | **`DESIGN.md`** | UI/UX visual tokens OR documentation/editorial guidelines (**Context-Aware**). | Split out non-design rules; align with target repo type. |
 | **`TESTING.md`** | Invariant testing, input partitioning, table tests, and test hygiene. | Extract test guidelines if mixed in other docs; initialize from template. |
 | **`CHANGES.md`** | Historical append-only ledger of pivots, replacements, and deprecations. | Preserve existing history; record this migration as an entry. |
@@ -60,7 +60,7 @@ For new repositories or existing codebases adopting Spectrace for the first time
    - **`AGENTS.md`:** Adapt from `skills/spectrace-plan/assets/agents-block.md`. Add exact project verification commands (build, test, lint, format) for the detected stack. Keep under 150 lines.
    - **`PRODUCT.md`:** Adapt from `skills/spectrace-plan/assets/product-template.md`. Summarize project vision, target personas, and explicit non-goals based on existing README or conversation.
    - **`ARCHITECTURE.md`:** Adapt from `skills/spectrace-plan/assets/architecture-template.md`. Document current directory map, component communications, and Mermaid topology diagram.
-   - **`ENGINEERING.md`:** Adapt from `skills/spectrace-plan/assets/engineering-template.md`. Document KISS/YAGNI, SRP, DRY, DIP/ACL, and stack casing standards.
+   - **`ENGINEERING.md`:** Adapt from `skills/spectrace-plan/assets/engineering-template.md`. Document KISS/YAGNI, SRP, DRY, DIP/ACL, stack casing, research only when it changes the decision, and trade-offs. If the repository already has the file, append only the principle sections it lacks (see Step 3).
    - **`DESIGN.md` (Context-Aware Selection):**
      - For UI apps: use `assets/design-template.md` (tokens, colors, typography, states, accessibility).
      - For Docs/Governance: use `assets/design-docs-template.md` (editorial standards, frontmatter, callouts).
@@ -85,6 +85,7 @@ For repositories already using an older version of Spectrace:
      - Check if `TESTING.md`, `PRODUCT.md`, `ENGINEERING.md`, or `CHANGES.md` are missing.
 2. **Non-Destructive Extraction & Refactoring:**
    - **Create `ENGINEERING.md`:** If missing, extract existing craftsmanship and code rules from `ARCHITECTURE.md` or `DESIGN.md` into a new `ENGINEERING.md`. Fill any gaps using `skills/spectrace-plan/assets/engineering-template.md`.
+   - **Reconcile `ENGINEERING.md` when it exists:** append the principle sections the file lacks (compare `### ` headings against the template), keep the repository's own principles and wording, delete nothing, and record the reconciliation in `CHANGES.md`. Never overwrite the file with the template.
    - **Purify `ARCHITECTURE.md`:** Keep only system topology, layer boundaries, directory map, and component communication. Remove redundant engineering guidelines.
    - **Refactor `DESIGN.md`:** Ensure `DESIGN.md` contains only design/UI or editorial guidelines. Remove engineering or testing principles.
    - **Ensure `TESTING.md` exists:** If testing rules were scattered in `AGENTS.md` or `ARCHITECTURE.md`, extract them into `TESTING.md`.

@@ -18,6 +18,20 @@ When an existing architectural design or requirement needs to change:
 
 ## 📜 Change Log
 
+### 2026-10-31 — Principle 7: Validate with Research, Propagated to Every Entry Point
+
+- **Scope:** Engineering standards, starter asset, `spectrace-init`, `spectrace-plan`, `spectrace-review`, `bin/spectrace-init.mjs`, and `ARCHITECTURE.md` invariant 4.
+- **What Changed:**
+  - Added `### 7. Validate with Research — Only When It Changes the Decision` to `ENGINEERING.md`: research only when the choice is hard to reverse, depends on a fact outside the repository, or breaks a factual tie; fixed source order; citations as `Source: <url> (accessed YYYY-MM-DD)`.
+  - Mirrored the section in `skills/spectrace-plan/assets/engineering-template.md`, so every scaffolded repository inherits it.
+  - Upgrade and adoption paths now reconcile an existing `ENGINEERING.md` instead of skipping it: `spectrace-init` Step 3, `spectrace-plan` Step 4 and `bin/spectrace-init.mjs` append the principle sections the file lacks, keep repository-specific principles, and never overwrite.
+  - `spectrace-review` flags an uncited hard-to-reverse choice and contract drift: a principle the skill lists, missing from `ENGINEERING.md`, with no excusing entry here.
+  - Every enumeration now lists the same seven principles: init table and Step 2, plan table and Step 4, the review read-list, `assets/agents-block.md` and this repository's `AGENTS.md`.
+- **Why:**
+  - Research had no home after the extraction of six principles, so agents either guessed platform facts or browsed ritualistically.
+  - A principle that lives only in this repository never reaches repositories that already carry `ENGINEERING.md`. The enumerations had already drifted: four of six lists omitted trade-offs.
+- **Rejected Alternative — do not reintroduce:** Mandatory research on every task (invites invented citations and ritual browsing); overwriting `ENGINEERING.md` from the template on upgrade (destroys repository-specific principles); leaving propagation to memory without an invariant (it fails silently, as the trade-offs omission shows).
+
 ### 2026-10-31 — Small Fixes Tracked by Git, Not by a Fix List
 
 - **Scope:** Bug and correction routing (`spectrace-change`, `AGENTS.md` block).
