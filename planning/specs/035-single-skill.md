@@ -29,14 +29,22 @@ One skill, `spectrace`, scaffolds a project: eight single-responsibility root co
 
 ## Tasks
 
-- [ ] 035/T001 [agent] `guard.mjs` core: quote-aware tokeniser and the commit, push and `.env` rules — covers R4, D1, D2
-- [ ] 035/T002 [agent][test] Table-driven tests for those rules, including quoted-text false positives — covers R4, D2
-- [ ] 035/T003 [agent] Spec lint and roadmap coherence — covers R4, D3
-- [ ] 035/T004 [agent][test] Table-driven tests: missing section, uncovered R, no `[test]` task, `[x]` without `verified:`, struck item, done with open tasks — covers R4, D3
-- [ ] 035/T005 [agent] Contract headers, `AGENTS.md` length, `--commits` range scan and `--all` — covers R4
-- [ ] 035/T006 [agent][test] Tests for headers, length thresholds and range scan — covers R4
-- [ ] 035/T007 [agent] Claude and Antigravity payload translators, output formats and `--record` — covers R4, R6, D1
-- [ ] 035/T008 [agent][test] Tests of both translators against payloads copied from the docs — covers R4, R6
+- [x] 035/T001 [agent] `guard.mjs` core: quote-aware tokeniser and the commit, push and `.env` rules — covers R4, D1, D2
+      verified: guard.mjs: quote-aware parseShell plus commit, push and .env rules; mutation check (rule disabled) fails 8 tests
+- [x] 035/T002 [agent][test] Table-driven tests for those rules, including quoted-text false positives — covers R4, D2
+      verified: tests/guard.test.mjs: 29 command rows incl. quoted flag text and heredocs with unbalanced parens; all pass
+- [x] 035/T003 [agent] Spec lint and roadmap coherence — covers R4, D3
+      verified: lintSpec, parseSpec, checkRoadmap implemented; guard passes spec 035 itself
+- [x] 035/T004 [agent][test] Table-driven tests: missing section, uncovered R, no `[test]` task, `[x]` without `verified:`, struck item, done with open tasks — covers R4, D3
+      verified: 17 spec rows and 11 roadmap rows pass; removing the verified: check fails 7 tests, removing per-R test coverage fails 2
+- [x] 035/T005 [agent] Contract headers, `AGENTS.md` length, `--commits` range scan and `--all` — covers R4
+      verified: checkContract, checkContracts, checkCommitMessages, checkAll; range scan tested against a real temp git repo
+- [x] 035/T006 [agent][test] Tests for headers, length thresholds and range scan — covers R4
+      verified: 7 contract rows (header, 100/101/200/201 line boundaries) plus 4 repo rows and 2 range rows pass
+- [x] 035/T007 [agent] Claude and Antigravity payload translators, output formats and `--record` — covers R4, R6, D1
+      verified: contextOf, handleHook, render for claude (exit 2) and antigravity (JSON, provisional), plus --record
+- [x] 035/T008 [agent][test] Tests of both translators against payloads copied from the docs — covers R4, R6
+      verified: 11 adapter rows with payload shapes taken from the hook docs; Stop with stop_hook_active allows; 95/95 pass
 - [ ] 035/T009 [agent] Templates: eight contracts, `AGENTS.md` router and three playbooks, distilled from the author's repos — covers R2, R3, D5, D6
 - [ ] 035/T010 [agent][test] Contract suite over the templates: headers, no non-goals, one owner per command, router targets exist, 100-line cap — covers R2, R3
 - [ ] 035/T011 [agent] `SKILL.md` (init and update) and the adapter templates (`settings.json`, `hooks.json`, `CLAUDE.md`, CI workflow) — covers R1, R5, D4
