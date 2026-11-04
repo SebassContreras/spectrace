@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { LIMITS, checkContract, errorsOf, lintSpec } from '../skills/spectrace/assets/guard/guard.mjs';
 
 const ASSETS = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills', 'spectrace', 'assets');
-const read = (...parts) => readFileSync(join(ASSETS, ...parts), 'utf8');
+// Git on Windows may check files out with CRLF (core.autocrlf); the tests read them as LF.
+const read = (...parts) => readFileSync(join(ASSETS, ...parts), 'utf8').replace(/\r\n/g, '\n');
 
 const CONTRACT_FILES = ['AGENTS', 'PRODUCT', 'ARCHITECTURE', 'ENGINEERING', 'TESTING', 'CHANGES', 'OPERATIONS', 'design-ui', 'design-content', 'design-interface'];
 const PLAYBOOKS = ['plan', 'change', 'review'];

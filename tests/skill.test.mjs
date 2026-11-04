@@ -8,8 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 const SKILL = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills', 'spectrace');
 const ASSETS = join(SKILL, 'assets');
-const read = (...parts) => readFileSync(join(ASSETS, ...parts), 'utf8');
-const skillText = readFileSync(join(SKILL, 'SKILL.md'), 'utf8');
+// Git on Windows may check files out with CRLF (core.autocrlf); the tests read them as LF.
+const lf = (text) => text.replace(/\r\n/g, '\n');
+const read = (...parts) => lf(readFileSync(join(ASSETS, ...parts), 'utf8'));
+const skillText = lf(readFileSync(join(SKILL, 'SKILL.md'), 'utf8'));
 
 const made = [];
 after(() => made.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
@@ -75,7 +77,7 @@ for (const kind of Object.keys(DESIGN_BY_KIND)) {
 test('a scaffold fails the guard after a contract loses its ownership header', () => {
   const root = scaffold('ui');
   const path = join(root, 'PRODUCT.md');
-  writeFileSync(path, readFileSync(path, 'utf8').replace(/^> Owns:.*\n/m, ''));
+  writeFileSync(path, lf(readFileSync(path, 'utf8')).replace(/^> Owns:.*\n/m, ''));
   const result = guard(root, ['--all']);
   assert.deepEqual([result.status, /error \[contract-header\] PRODUCT\.md/.test(result.stdout)], [1, true]);
 });
