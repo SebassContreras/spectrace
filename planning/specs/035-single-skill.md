@@ -45,11 +45,17 @@ One skill, `spectrace`, scaffolds a project: eight single-responsibility root co
       verified: contextOf, handleHook, render for claude (exit 2) and antigravity (JSON, provisional), plus --record
 - [x] 035/T008 [agent][test] Tests of both translators against payloads copied from the docs — covers R4, R6
       verified: 11 adapter rows with payload shapes taken from the hook docs; Stop with stop_hook_active allows; 95/95 pass
-- [ ] 035/T009 [agent] Templates: eight contracts, `AGENTS.md` router and three playbooks, distilled from the author's repos — covers R2, R3, D5, D6
-- [ ] 035/T010 [agent][test] Contract suite over the templates: headers, no non-goals, one owner per command, router targets exist, 100-line cap — covers R2, R3
-- [ ] 035/T011 [agent] `SKILL.md` (init and update) and the adapter templates (`settings.json`, `hooks.json`, `CLAUDE.md`, CI workflow) — covers R1, R5, D4
-- [ ] 035/T012 [agent][test] Scaffold into a temp repo and assert `guard --all` passes, then fails after a deliberate break; adapter JSON is valid — covers R1, R5
+- [x] 035/T009 [agent] Templates: eight contracts, `AGENTS.md` router and three playbooks, distilled from the author's repos — covers R2, R3, D5, D6
+      verified: 14 template files written from the principles and rules shared by browser-nav, job and lienzo; principle 4 now carries the 2+ vendors condition
+- [x] 035/T010 [agent][test] Contract suite over the templates: headers, no non-goals, one owner per command, router targets exist, 100-line cap — covers R2, R3
+      verified: tests/templates.test.mjs: 40 rows (headers, owner uniqueness, section ownership, router targets, spec example lints clean); 3 mutations (non-goals, broken router, example without [test]) each fail the suite
+- [x] 035/T011 [agent] `SKILL.md` (init and update) and the adapter templates (`settings.json`, `hooks.json`, `CLAUDE.md`, CI workflow) — covers R1, R5, D4
+      verified: SKILL.md (82 lines) plus claude-settings.json, antigravity-hooks.json, CLAUDE.md and guard.yml; ${CLAUDE_PROJECT_DIR} in args confirmed in the hooks docs (exec form substitutes each args element)
+- [x] 035/T012 [agent][test] Scaffold into a temp repo and assert `guard --all` passes, then fails after a deliberate break; adapter JSON is valid — covers R1, R5
+      verified: tests/skill.test.mjs: scaffold of all three kinds passes guard --all, breaks as expected; hooks run with the exact args from claude-settings.json give real exit code 2; 186/186 pass; 3 mutations fail 1, 1 and 4 tests
 - [ ] 035/T013 [agent] Delete the four old skills, `bin/`, `package.json` bin and specs 021–034; shrink README, PRODUCT, ARCHITECTURE; record the pivot in `CHANGES.md` — covers R1
+- [ ] 035/T015 [agent] Bring this repository to the new layout: its own eight contracts, `.claude/settings.json`, `.agents/hooks.json` and a CI workflow calling the guard from `skills/spectrace/assets/guard/` — covers R2, R5
+- [ ] 035/T016 [agent][test] A test runs `guard --all` on this repository and requires exit 0 — covers R2, R5
 - [ ] 035/T014 [human] Run `guard --record` inside real Claude Code and Antigravity sessions and confirm the payload fields and block behaviour — covers R6
 
 ## Changes

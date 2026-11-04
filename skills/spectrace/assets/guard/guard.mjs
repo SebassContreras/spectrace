@@ -486,6 +486,8 @@ export function checkContract(name, text) {
   if (!head.some((l) => /^>\s*Owns:.*Not here:/i.test(l))) {
     findings.push(error('contract-header', 'Open with "> Owns: … · Not here: …".', { file: name, line: 1 }));
   }
+  const unfilled = (text.match(/<fill:|\{\{[A-Z_]+\}\}/g) ?? []).length;
+  if (unfilled > 0) findings.push(warn('contract-unfilled', `${unfilled} placeholder(s) left to fill.`, { file: name }));
   if (name === 'AGENTS.md') {
     const count = text.replace(/\r\n/g, '\n').replace(/\n+$/, '').split('\n').length;
     if (count > LIMITS.agentsError) findings.push(error('agents-length', `${count} lines; the hard cap is ${LIMITS.agentsError}.`, { file: name }));

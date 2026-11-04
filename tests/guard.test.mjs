@@ -219,6 +219,8 @@ const contractCases = [
   { name: 'AGENTS.md at the hard cap', file: 'AGENTS.md', text: withLines(200), expect: ['warn:agents-length'] },
   { name: 'AGENTS.md over the hard cap', file: 'AGENTS.md', text: withLines(201), expect: ['error:agents-length'] },
   { name: 'other contracts have no length limit', file: 'TESTING.md', text: withLines(400), expect: [] },
+  { name: 'a <fill:> marker left behind is a warning', file: 'PRODUCT.md', text: `${HEADER}<fill: users>\n`, expect: ['warn:contract-unfilled'] },
+  { name: 'a {{TOKEN}} left behind is a warning', file: 'PRODUCT.md', text: `${HEADER}{{GOAL}}\n`, expect: ['warn:contract-unfilled'] },
 ];
 
 for (const row of contractCases) {
