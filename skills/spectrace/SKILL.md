@@ -2,7 +2,7 @@
 name: spectrace
 description: >-
   Scaffolds the agent contracts of a project, software or not: an AGENTS.md router, seven
-  single-responsibility contracts plus DESIGN.md (PRODUCT, ARCHITECTURE, ENGINEERING, DESIGN, TESTING,
+  single-responsibility contracts (PRODUCT, ARCHITECTURE, ENGINEERING, DESIGN, TESTING,
   CHANGES, OPERATIONS), three playbooks (plan, change, review) and a roadmap. It only copies files;
   hooks, CI and other extras are suggested and added only if the user asks.
   Use when: "init spectrace", "set up the agent contracts", "scaffold this project",
@@ -31,7 +31,7 @@ Run **inside the target repository**. This skill copies and fits the scaffold; i
    | `playbooks/*.md` | `.agents/playbooks/` |
    | `CLAUDE.md` (Claude Code) | `CLAUDE.md` |
 
-3. **Fill the contracts.** Replace `{{PROJECT_NAME}}` and `{{GOAL}}`. For each `<fill: …>` marker, read the repository first (manifests and scripts, lockfiles, CI, folders, the README, existing docs) and write only what the repository cannot show on its own. If you cannot know it yet, leave the marker: the plan playbook fills it. Do not invent. Keep `AGENTS.md` under 100 lines and put the user's language in its language rule (hard rule 3) and the product's language in `DESIGN.md`. Each fact lives in one contract only: if another contract already owns it (see the `Owns` line), link to it instead of repeating it.
+3. **Fill the contracts.** Replace `{{PROJECT_NAME}}` and `{{GOAL}}`. For each `<fill: …>` marker, read the repository first (manifests and scripts, lockfiles, CI, folders, the README, existing docs) and write only what the repository cannot show on its own. If you cannot know it yet, leave the marker: the plan playbook fills it. Do not invent. Keep `AGENTS.md` at most 100 lines and put the user's language in its language rule (hard rule 3) and the product's language in `DESIGN.md`. Each fact lives in one contract only: if another contract already owns it (see the `Owns` line), link to it instead of repeating it.
 
    For a project that is not software (video, writing, research), keep the same files and change what they hold: `ENGINEERING.md` holds the production standards (tools, file naming, review steps) and drops the code principles that do not apply; `TESTING.md` holds the review checklist that says when a piece is done; `DESIGN.md` is the content variant.
 4. **Report** the files created and the unfilled markers, and suggest the first commit as `chore: add agent contracts` (no trailers). Tell the user the next step is to ask the agent to plan the project; `AGENTS.md` routes that to `.agents/playbooks/plan.md`. Then offer the optional extras below as a question, not as something already installed. Stop there.
