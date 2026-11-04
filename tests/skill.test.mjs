@@ -64,7 +64,3 @@ for (const variant of ['design-ui', 'design-interface', 'design-content']) {
     assert.match(read('contracts', `${variant}.md`), /language/i);
   });
 }
-
-test('CLAUDE.md only imports AGENTS.md', () => {
-  assert.equal(read('CLAUDE.md').trim(), '@AGENTS.md');
-});

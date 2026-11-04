@@ -29,7 +29,6 @@ Run **inside the target repository**. This skill copies and fits the scaffold; i
    | `contracts/design-ui.md` or `design-interface.md` or `design-content.md` (by kind) | `DESIGN.md` |
    | `planning/roadmap.md` | `planning/roadmap.md`, and create `planning/specs/` with an empty `.gitkeep` so git keeps the folder |
    | `playbooks/*.md` | `.agents/playbooks/` |
-   | `CLAUDE.md` (Claude Code) | `CLAUDE.md` |
 
 3. **Fill the contracts.** Replace `{{PROJECT_NAME}}` and `{{GOAL}}`. For each `<fill: …>` marker, read the repository first (manifests and scripts, lockfiles, CI, folders, the README, existing docs) and write only what the repository cannot show on its own. If you cannot know it yet, leave the marker: the plan playbook fills it. Do not invent. Keep `AGENTS.md` at most 100 lines and put the user's language in its language rule (hard rule 3) and the product's language in `DESIGN.md`. Each fact lives in one contract only: if another contract already owns it (see the `Owns` line), link to it instead of repeating it.
 
@@ -38,7 +37,7 @@ Run **inside the target repository**. This skill copies and fits the scaffold; i
 
 ## Update
 
-For each shipped file (contracts, playbooks, `CLAUDE.md`) compare it with the repository's copy and show a diff per file; apply only what the user approves.
+For each shipped file (contracts, playbooks) compare it with the repository's copy and show a diff per file; apply only what the user approves.
 
 - A contract the repository has edited: propose only sections or rules it lacks. Never replace its text.
 - The playbooks: replace only when the user approves the diff.
@@ -50,7 +49,7 @@ Move it over with diffs. Leave the user's own uncommitted changes alone: the mig
 
 1. Add the `> Owns: … · Not here: …` line to each existing contract, then move each project rule to the contract whose `Owns` line fits it: code rules to `ENGINEERING.md`, layers and invariants to `ARCHITECTURE.md`, test rules and the verify commands to `TESTING.md`, run and release steps to `OPERATIONS.md`. Only a rule that must hold on every task and that no contract owns stays in `AGENTS.md`.
 2. Create `OPERATIONS.md`. Replace the old `<!-- spectrace -->` block in `AGENTS.md` with the router. Remove a non-goals section from `PRODUCT.md` and keep its text in the migration entry of `CHANGES.md`; the new design has none.
-3. Install the playbooks and `CLAUDE.md` as in Init.
+3. Install the playbooks as in Init.
 4. Old specs must match the format in `plan.md`. Never invent evidence: for a task already checked write `verified: carried over from the previous format, not re-run`; for a requirement with no test task add a real `[agent][test]` task that names the test file or behavior it covers, not one task for "all requirements". A finished spec that gains an open task goes back to `in progress`; a finished spec with nothing open is deleted and keeps its roadmap row. Keep a spec under 80 lines.
 5. Remove what the new design drops: the four `spectrace-*` skills (in `.agents/skills/` and `.claude/skills/`) and their entries in `skills-lock.json`, `.agentignore`, retired git hooks, `.agents/guard/`, `.agents/hooks.json`, spectrace hook entries in `.claude/settings.json`, the guard CI workflow and commit-trailer checks. Record the migration in `CHANGES.md`.
 

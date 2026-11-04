@@ -8,6 +8,13 @@ Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and, wh
 
 ## Ledger
 
+### 2026-11-04 — The scaffold no longer creates CLAUDE.md
+
+- **What changed:** `assets/CLAUDE.md` is gone and `SKILL.md` copies only `AGENTS.md`, the contracts, the roadmap and the playbooks. This repository keeps its own `CLAUDE.md` (`@AGENTS.md`) as a project file, no longer tested as a copy of an asset.
+- **Why:** the author wants `AGENTS.md` as the only entry file the skill creates.
+- **Replaces:** the `CLAUDE.md` row of the copy table and its identical-copy test.
+- **Trade-offs:** Claude Code reads `CLAUDE.md`, not `AGENTS.md`, so a project scaffolded for Claude Code needs its own one-line `CLAUDE.md` (`@AGENTS.md`) or a symlink for the router to load.
+
 ### 2026-11-04 — Wording aligned with the code after an audit
 
 - **What changed:**

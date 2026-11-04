@@ -5,8 +5,8 @@
 ## Layers
 
 - **Skill** (`skills/spectrace/SKILL.md`): the procedure an agent follows to scaffold or update a project. Depends on the assets only.
-- **Assets** (`skills/spectrace/assets/`): files copied verbatim into a target repository, in `contracts/`, `playbooks/` and `planning/`, plus `CLAUDE.md`. They are Markdown only: no script, hook or workflow.
-- **Installed copy** (`.agents/playbooks/`, `CLAUDE.md`): this repository installs what it ships, the way any project that runs the skill would.
+- **Assets** (`skills/spectrace/assets/`): files copied verbatim into a target repository, in `contracts/`, `playbooks/` and `planning/`. They are Markdown only: no script, hook or workflow.
+- **Installed copy** (`.agents/playbooks/`): this repository installs what it ships, the way any project that runs the skill would.
 - **Tests** (`tests/`): inspect the assets. Nothing depends on them.
 
 ## Boundaries
@@ -17,6 +17,6 @@
 ## Invariants
 
 - Every asset is accounted for in `SKILL.md`.
-- The installed copy of the playbooks and `CLAUDE.md` is identical to the asset it comes from; a test fails when they drift.
+- The installed copy of the playbooks is identical to the asset it comes from; a test fails when they drift.
 - Every file the router in `AGENTS.md` names has a template; a test checks it.
 - Nothing under `skills/spectrace/assets/` is executable.

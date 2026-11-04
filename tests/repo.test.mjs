@@ -13,7 +13,6 @@ const INSTALLED = [
   ['skills/spectrace/assets/playbooks/plan.md', '.agents/playbooks/plan.md'],
   ['skills/spectrace/assets/playbooks/change.md', '.agents/playbooks/change.md'],
   ['skills/spectrace/assets/playbooks/review.md', '.agents/playbooks/review.md'],
-  ['skills/spectrace/assets/CLAUDE.md', 'CLAUDE.md'],
 ];
 
 for (const [shipped, installed] of INSTALLED) {

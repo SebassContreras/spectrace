@@ -19,7 +19,6 @@ This repository installs what it ships. After changing a file under `skills/spec
 
 ```sh
 cp skills/spectrace/assets/playbooks/*.md .agents/playbooks/
-cp skills/spectrace/assets/CLAUDE.md CLAUDE.md
 ```
 
 ## Environment
@@ -28,4 +27,4 @@ No variables.
 
 ## Recover
 
-- A test names a shipped file and its installed copy that differ: run the `cp` lines above.
+- A test names a shipped file and its installed copy that differ: run the `cp` line above.
