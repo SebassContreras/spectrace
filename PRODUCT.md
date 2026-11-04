@@ -13,7 +13,7 @@ One agent skill that scaffolds the contracts and playbooks a project needs, so c
 
 ## Capabilities
 
-- Scaffolds eight single-responsibility contracts, an `AGENTS.md` router, a roadmap and three playbooks (plan, change, review) into any project.
+- Scaffolds an `AGENTS.md` router, seven single-responsibility contracts, a roadmap and three playbooks (plan, change, review) into any project.
 - Fits the contracts to the project by reading the repository, and writes only what the repository cannot show.
 - Asks the language of the product text (UI or messages) apart from the language the agent speaks, and records it in `DESIGN.md`.
 - Suggests optional extras (git and Claude hooks, `permissions.deny`, CI) and adds one only when the user says yes.
