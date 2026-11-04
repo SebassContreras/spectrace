@@ -28,7 +28,7 @@ Run **inside the target repository**. This skill copies and fits the scaffold; i
    |---|---|
    | `contracts/AGENTS.md`, `PRODUCT.md`, `ARCHITECTURE.md`, `ENGINEERING.md`, `TESTING.md`, `CHANGES.md`, `OPERATIONS.md` | the root, same names |
    | `contracts/design-ui.md` or `design-interface.md` or `design-content.md` (by kind) | `DESIGN.md` |
-   | `planning/roadmap.md` | `planning/roadmap.md`, and create `planning/specs/` |
+   | `planning/roadmap.md` | `planning/roadmap.md`, and create `planning/specs/` with an empty `.gitkeep` so git keeps the folder |
    | `playbooks/*.md` | `.agents/playbooks/` |
    | `guard/guard.mjs` | `.agents/guard/guard.mjs` |
    | `adapters/claude-settings.json` (Claude Code) | merged into `.claude/settings.json` |
@@ -53,13 +53,13 @@ For each shipped file (contracts, playbooks, `guard.mjs`, adapters) compare it w
 
 ### A repository from the previous four-skill spectrace
 
-Move it over with diffs and delete nothing on your own. This procedure has not been run on a real repository yet; report what did not fit.
+Move it over with diffs. Leave the user's own uncommitted changes alone: the migration goes in its own commit. Edit files in place instead of rewriting them, so line endings and unrelated lines stay, and check `git diff --stat` as you go. This procedure has been run once, on a copy of a real repository; report what did not fit.
 
-1. Add the `> Owns: … · Not here: …` line to each existing contract, then move what is misplaced to its owner: commands to `OPERATIONS.md` or `TESTING.md`, layer rules to `ARCHITECTURE.md`, a non-goals section out of `PRODUCT.md` (show it first; the new design has none).
-2. Create `OPERATIONS.md`. Replace the old `<!-- spectrace -->` block in `AGENTS.md` with the router, keeping the project's own commands by moving them to the contract that owns them.
+1. Add the `> Owns: … · Not here: …` line to each existing contract, then move each project rule to the contract whose `Owns` line fits it: code rules to `ENGINEERING.md`, layers and invariants to `ARCHITECTURE.md`, test rules and the verify commands to `TESTING.md`, run and release steps to `OPERATIONS.md`. Only a rule that must hold on every task and that no contract owns stays in `AGENTS.md`.
+2. Create `OPERATIONS.md`. Replace the old `<!-- spectrace -->` block in `AGENTS.md` with the router. Remove a non-goals section from `PRODUCT.md` and keep its text in the migration entry of `CHANGES.md`; the new design has none.
 3. Install the playbooks, `guard.mjs` and the adapters as in Init, then run the guard.
-4. Old specs will fail the lint. For a spec still open, propose the missing `[test]` tasks and `verified:` lines. For a finished one, delete the file and keep its roadmap row.
-5. Remove what the new design drops: `.agentignore`, retired git hooks and commit-trailer checks. Record the migration in `CHANGES.md`.
+4. Old specs fail the lint. Never invent evidence: for a task already checked write `verified: carried over from the previous format, not re-run`; for a requirement with no test task add a real `[agent][test]` task that names the test file or behavior it covers, not one task for "all requirements". A finished spec that gains an open task goes back to `in progress`; a finished spec with nothing open is deleted and keeps its roadmap row. A spec over 80 lines is only a warning.
+5. Remove what the new design drops: the four `spectrace-*` skills (in `.agents/skills/` and `.claude/skills/`) and their entries in `skills-lock.json`, `.agentignore`, retired git hooks and commit-trailer checks. Record the migration in `CHANGES.md`.
 
 ## Limits to tell the user
 

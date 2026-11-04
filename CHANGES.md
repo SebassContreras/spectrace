@@ -8,6 +8,16 @@ Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **R
 
 ## Ledger
 
+### 2026-11-04 — Checked in real sessions
+
+- **What changed:**
+  - Claude Code hooks (Bash and PowerShell tools), `attribution`, `permissions.deny` (Read, `cat`, `Get-Content`), the `skills add` installer, `init` run by an agent and the migration of a copy of a real repository were run for real, in throwaway repositories. Nothing failed; the findings below changed the docs.
+  - AGENTS rule 3 has two fills (the project language and the language the user speaks); `planning/specs/` is created with a `.gitkeep`; the migration path says where project rules go, what to do with the old skills and the evidence of old tasks, and to edit in place.
+  - This repository's tests no longer branch or loop inside a test body, as its own TESTING.md asks.
+- **Why:** the `init` run found the language rule ambiguous and the empty folder untracked. The migration run found the procedure silent about project rules and old skills, and its agent admitted that "one task that covers everything" satisfies the lint without adding coverage, so the procedure now forbids it.
+- **Not verified:** Antigravity's hooks, because headless Antigravity needs a permission flag that only the author can run.
+- **Sources:** https://code.claude.com/docs/en/permissions.md, https://code.claude.com/docs/en/hooks.md (accessed 2026-11-04).
+
 ### 2026-11-04 — Audit: PowerShell, a checked router, a repository that installs what it ships
 
 - **What changed:**

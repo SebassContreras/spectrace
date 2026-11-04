@@ -61,8 +61,12 @@ test('SKILL.md: stays short enough to read in one go', () => {
 const migrationSteps = [
   { name: 'adds the ownership header to existing contracts', needle: '> Owns: … · Not here: …' },
   { name: 'creates OPERATIONS.md', needle: 'Create `OPERATIONS.md`' },
-  { name: 'says what to do with old specs', needle: 'Old specs will fail the lint' },
+  { name: 'says what to do with old specs', needle: 'Old specs fail the lint' },
   { name: 'removes what the new design drops', needle: '`.agentignore`' },
+  { name: 'removes the old skills and their lock entries', needle: '`skills-lock.json`' },
+  { name: 'forbids inventing evidence for old tasks', needle: 'Never invent evidence' },
+  { name: 'says where project rules go', needle: 'whose `Owns` line fits it' },
+  { name: 'asks to edit in place', needle: 'Edit files in place' },
   { name: 'adapts the contracts to a project that is not software', needle: 'not software' },
 ];
 

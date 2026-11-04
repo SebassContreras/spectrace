@@ -69,22 +69,29 @@ fix: it's about --no-verify handling (partial
 Body with ) and ( and "quotes".
 '@`;
 
-const parseCases = [
+const statementCountCases = [
   { name: 'a PowerShell here-string stays inside one statement', cmd: PS_HERESTRING_CLEAN, statements: 1 },
   { name: 'splits on && and ;', cmd: 'a && b; c', statements: 3 },
+  { name: 'a heredoc inside $() stays one statement', cmd: HEREDOC_CLEAN, statements: 1 },
+  { name: '2>&1 does not split the statement', cmd: 'npm test 2>&1 | tee out.log', statements: 2 },
+];
+
+const firstStatementCases = [
   { name: 'keeps a quoted message as one word', cmd: 'git commit -m "feat: add x"', words: ['git', 'commit', '-m', 'feat: add x'] },
   { name: 'single quotes are literal', cmd: "echo 'a && b'", words: ['echo', 'a && b'] },
   { name: 'an escaped quote stays inside the word', cmd: 'echo "say \\"hi\\""', words: ['echo', 'say "hi"'] },
-  { name: 'a heredoc inside $() stays one statement', cmd: HEREDOC_CLEAN, statements: 1 },
-  { name: '2>&1 does not split the statement', cmd: 'npm test 2>&1 | tee out.log', statements: 2 },
   { name: 'an empty string is an empty word', cmd: 'echo ""', words: ['echo', ''] },
 ];
 
-for (const row of parseCases) {
+for (const row of statementCountCases) {
   test(`parseShell: ${row.name}`, () => {
-    const statements = parseShell(row.cmd);
-    assert.equal(row.statements ?? statements.length, statements.length);
-    assert.deepEqual(row.words ?? statements[0].words, statements[0].words);
+    assert.equal(parseShell(row.cmd).length, row.statements);
+  });
+}
+
+for (const row of firstStatementCases) {
+  test(`parseShell: ${row.name}`, () => {
+    assert.deepEqual(parseShell(row.cmd)[0].words, row.words);
   });
 }
 
@@ -129,9 +136,11 @@ const commandCases = [
   { name: 'compound violation reports both', cmd: 'git add .env && git commit --no-verify -m x', expect: ['env-add', 'no-verify'] },
 ];
 
-for (const row of commandCases) {
+const commandRows = commandCases.map((c) => ({ branch: '', ...c }));
+
+for (const row of commandRows) {
   test(`checkCommand: ${row.name}`, () => {
-    assert.deepEqual(rules(checkCommand(row.cmd, { branch: () => row.branch ?? '' })), row.expect);
+    assert.deepEqual(rules(checkCommand(row.cmd, { branch: () => row.branch })), row.expect);
   });
 }
 
@@ -261,8 +270,8 @@ const goodRepo = (extra = {}) =>
 const repoCases = [
   { name: 'a consistent repository passes', files: {}, expect: [] },
   { name: 'a broken spec is reported', files: { [SPEC_FILE]: VALID_SPEC.replace(/ {6}verified: ran it\n/, '') }, expect: ['error:task-verified'] },
-  { name: 'a missing contract is a warning', files: { 'OPERATIONS.md': null }, expect: ['warn:contract-missing'] },
-  { name: 'a missing AGENTS.md is an error', files: { 'AGENTS.md': null }, expect: ['error:contract-missing'] },
+  { name: 'a missing contract is a warning', remove: ['OPERATIONS.md'], expect: ['warn:contract-missing'] },
+  { name: 'a missing AGENTS.md is an error', remove: ['AGENTS.md'], expect: ['error:contract-missing'] },
   { name: 'a router row pointing at a missing file is an error', files: { 'AGENTS.md': `${HEADER}| plan | .agents/playbooks/plan.md |\n` }, expect: ['error:router-target'] },
   { name: 'a router row pointing at an existing file passes', files: { 'AGENTS.md': `${HEADER}| scope | PRODUCT.md |\n` }, expect: [] },
 ];
@@ -281,14 +290,17 @@ for (const row of routerCases) {
   });
 }
 
-for (const row of repoCases) {
+const repoWith = ({ files, remove }) => {
+  const root = goodRepo(files);
+  for (const name of remove) rmSync(join(root, name));
+  return root;
+};
+
+const repoRows = repoCases.map((c) => ({ files: {}, remove: [], ...c }));
+
+for (const row of repoRows) {
   test(`checkAll: ${row.name}`, () => {
-    const root = goodRepo();
-    for (const [name, content] of Object.entries(row.files)) {
-      if (content === null) rmSync(join(root, name));
-      else writeFileSync(join(root, name), content);
-    }
-    assert.deepEqual(ids(checkAll(root)), row.expect);
+    assert.deepEqual(ids(checkAll(repoWith(row))), row.expect);
   });
 }
 
@@ -340,6 +352,13 @@ for (const row of adapterCases) {
   });
 }
 
+// Runs a Stop hook `times` times and returns the last answer.
+const stopTimes = (times, run) => {
+  let last;
+  for (let i = 0; i < times; i += 1) last = run();
+  return last;
+};
+
 const stopRuns = [
   { name: 'the first report asks the agent to continue', runs: 1, decision: 'continue', expect: ['error:task-verified'] },
   { name: 'the second identical report still asks to continue', runs: 2, decision: 'continue', expect: ['error:task-verified'] },
@@ -351,8 +370,7 @@ for (const row of stopRuns) {
     const root = goodRepo({ [SPEC_FILE]: BROKEN });
     const stateDir = makeRepo();
     const payload = { conversationId: 'c1', workspacePaths: [root] };
-    const results = Array.from({ length: row.runs }, () => handleHook('antigravity', payload, { event: 'Stop', root, stateDir }));
-    const last = results.at(-1);
+    const last = stopTimes(row.runs, () => handleHook('antigravity', payload, { event: 'Stop', root, stateDir }));
     assert.deepEqual([JSON.parse(render('antigravity', 'Stop', last).stdout).decision, ids(last)], [row.decision, row.expect]);
   });
 }

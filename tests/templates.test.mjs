@@ -55,7 +55,7 @@ const oneOwner = [
   { fact: 'docs travel with behavior', pattern: /docs travel with behavior/i, owner: 'ENGINEERING' },
   { fact: 'commit format', pattern: /conventional commits/i, owner: 'AGENTS' },
   { fact: 'no Claude attribution', pattern: /co-author/i, owner: 'AGENTS' },
-  { fact: 'the language of code and commits', pattern: /commits in english/i, owner: 'AGENTS' },
+  { fact: 'the language of code and commits', pattern: /docs and commits in/i, owner: 'AGENTS' },
   { fact: 'the guard script', pattern: /guard\.mjs/i, owner: 'AGENTS' },
   { fact: 'the verification evidence line', pattern: /`verified:`/, owner: 'AGENTS' },
   { fact: 'what a layer may import', pattern: /never imports/i, owner: 'ARCHITECTURE' },
@@ -90,11 +90,16 @@ test('the router names every contract and playbook', () => {
   );
 });
 
+// Where the template for a router target lives under assets/.
+const templatePathFor = (target) => {
+  const inPlaybooks = /^\.agents\/playbooks\/(.+)$/.exec(target);
+  if (inPlaybooks) return ['playbooks', inPlaybooks[1]];
+  return ['contracts', target === 'DESIGN.md' ? 'design-ui.md' : target];
+};
+
 for (const target of routerTargets) {
   test(`router target ${target} has a template`, () => {
-    const inPlaybooks = /^\.agents\/playbooks\/(.+)$/.exec(target);
-    const path = inPlaybooks ? ['playbooks', inPlaybooks[1]] : ['contracts', target === 'DESIGN.md' ? 'design-ui.md' : target];
-    assert.ok(read(...path).length > 0);
+    assert.ok(read(...templatePathFor(target)).length > 0);
   });
 }
 

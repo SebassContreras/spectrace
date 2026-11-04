@@ -8,7 +8,7 @@
 
 1. Never add Claude as co-author or "Generated with Claude Code" to commits or pull requests. Commits are Conventional Commits with no trailers.
 2. Never bypass hooks (`--no-verify`), force-push `main`, or stage `.env` files or secrets.
-3. Code, comments, docs and commits in English. <fill: the language you speak with the user>
+3. Write code, comments, docs and commits in <fill: the project language, English unless the project says otherwise>. Talk to the user in <fill: the language the user speaks>.
 4. If a rule here is wrong, say so and propose the change. Do not work around it.
 
 ## Before you act, open the contract
