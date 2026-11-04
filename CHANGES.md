@@ -8,6 +8,14 @@ Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **R
 
 ## Ledger
 
+### 2026-11-04 — No hooks: the skill copies files and suggests the rest
+
+- **What changed:**
+  - `guard.mjs`, its tests, the Claude and Antigravity hook files, `permissions.deny`, `attribution` and the CI workflow are no longer shipped or installed, here or in the scaffold. `SKILL.md` lists them as optional extras to offer as a question; the skill writes one only when the user says yes. Specs 035 (open task T014 about Antigravity payloads) and its guard requirements are closed with this change.
+  - The skill asks for the language of the product's own text, apart from the language the agent speaks. The three `DESIGN.md` variants now carry it (UI: a Language section; interface: the language of messages; content: the language of the piece), and AGENTS rule 3 points there.
+- **Why:** the hooks and the guard added more to maintain than they protected, and the author was not convinced by them. Scaffolding should stay a file copy.
+- **Replaces:** the 2026-11-04 entries that describe the guard, the hooks and the real-session checks of them; read them as history.
+
 ### 2026-11-04 — Checked in real sessions
 
 - **What changed:**

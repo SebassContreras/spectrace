@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { LIMITS, checkContract, errorsOf, lintSpec } from '../skills/spectrace/assets/guard/guard.mjs';
 
+const AGENTS_MAX_LINES = 100;
 const ASSETS = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills', 'spectrace', 'assets');
 // Git on Windows may check files out with CRLF (core.autocrlf); the tests read them as LF.
 const read = (...parts) => readFileSync(join(ASSETS, ...parts), 'utf8').replace(/\r\n/g, '\n');
@@ -14,12 +14,6 @@ const PLAYBOOKS = ['plan', 'change', 'review'];
 const contractName = (file) => (file.startsWith('design-') ? 'DESIGN.md' : `${file}.md`);
 const ownsOf = (text) => /^>\s*Owns:(.*?)·/m.exec(text)?.[1].trim();
 const headingsOf = (text) => text.split('\n').filter((l) => l.startsWith('## ')).map((l) => l.slice(3).trim());
-
-for (const file of CONTRACT_FILES) {
-  test(`template ${file}: passes the guard's contract check with no errors`, () => {
-    assert.deepEqual(errorsOf(checkContract(contractName(file), read('contracts', `${file}.md`))), []);
-  });
-}
 
 for (const file of CONTRACT_FILES) {
   test(`template ${file}: says what it must not contain`, () => {
@@ -56,7 +50,7 @@ const oneOwner = [
   { fact: 'commit format', pattern: /conventional commits/i, owner: 'AGENTS' },
   { fact: 'no Claude attribution', pattern: /co-author/i, owner: 'AGENTS' },
   { fact: 'the language of code and commits', pattern: /docs and commits in/i, owner: 'AGENTS' },
-  { fact: 'the guard script', pattern: /guard\.mjs/i, owner: 'AGENTS' },
+  { fact: 'the language of the product text', pattern: /language of the product/i, owner: 'AGENTS' },
   { fact: 'the verification evidence line', pattern: /`verified:`/, owner: 'AGENTS' },
   { fact: 'what a layer may import', pattern: /never imports/i, owner: 'ARCHITECTURE' },
   { fact: 'accessibility', pattern: /WCAG/, owner: 'DESIGN' },
@@ -76,9 +70,9 @@ test('PRODUCT has no non-goals section', () => {
   assert.doesNotMatch(read('contracts', 'PRODUCT.md'), /non-?goals?|out of scope/i);
 });
 
-test('AGENTS.md stays inside the length the guard enforces', () => {
+test('AGENTS.md stays inside the length the router allows', () => {
   const lines = read('contracts', 'AGENTS.md').trimEnd().split('\n').length;
-  assert.ok(lines <= LIMITS.agentsWarn, `${lines} lines`);
+  assert.ok(lines <= AGENTS_MAX_LINES, `${lines} lines`);
 });
 
 const routerTargets = [...read('contracts', 'AGENTS.md').matchAll(/^\|[^|]+\|\s*([^|\s]+\.md)\s*\|$/gm)].map((m) => m[1]);
@@ -117,11 +111,6 @@ for (const name of PLAYBOOKS) {
   });
 }
 
-test('the spec example in plan.md passes the guard', () => {
-  const example = /```markdown\n([\s\S]*?)```/.exec(read('playbooks', 'plan.md'))[1];
-  assert.deepEqual(lintSpec(example, 'planning/specs/003-login.md'), []);
-});
-
-test('the roadmap template has the columns the guard reads', () => {
+test('the roadmap template has the columns the plan playbook uses', () => {
   assert.match(read('planning', 'roadmap.md'), /\| ID\s+\| Spec\s+\| Status\s+\| Depends on\s+\|/);
 });

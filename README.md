@@ -1,6 +1,6 @@
 # spectrace
 
-One agent skill that scaffolds the files a coding agent needs to decide well in a new project, plus a guard that stops it from skipping the rules that must always hold. It works with Claude Code and Antigravity, for software and non-software projects.
+One agent skill that scaffolds the files a coding agent needs to decide well in a new project. It only copies files; hooks, CI and other extras are offered as questions, never installed by default. It works with Claude Code and Antigravity, for software and non-software projects.
 
 ## Install
 
@@ -25,30 +25,24 @@ The skill only scaffolds. After that the repository owns everything. In a reposi
 | `PRODUCT.md` | Why the project exists, who it serves and what it does |
 | `ARCHITECTURE.md` | Layers, dependency direction and boundaries |
 | `ENGINEERING.md` | How code is written |
-| `DESIGN.md` | UI tokens, or the interface shape, or editorial rules, by project kind |
+| `DESIGN.md` | By project kind: UI (language of the interface, tokens, components, accessibility), interface shape (CLI, API) or editorial rules (content) |
 | `TESTING.md` | What "done" means and the command that verifies it |
 | `CHANGES.md` | Changes of direction and why |
 | `OPERATIONS.md` | Exact procedures to set up, run, build, release and recover |
 | `planning/` | The roadmap and the next spec |
 | `.agents/playbooks/` | `plan`, `change` and `review` |
-| `.agents/guard/guard.mjs` | The enforcement script |
 
-## How the rules are enforced
+## Optional extras
 
-Text is advisory, so the rules that must always hold are checked by one script, `guard.mjs`:
+The skill ships no hooks, scripts or CI. After scaffolding it asks whether you want any of these, and writes only what you pick, small and in your stack:
 
-- **Hooks** in Claude Code (`.claude/settings.json`) and Antigravity (`.agents/hooks.json`) block Claude attribution in commits and pull requests, `--no-verify`, force-push to `main` and staging `.env` files, and lint specs as they are edited.
-- **Secrets:** Claude Code's `permissions.deny` keeps the agent from reading `.env` files, `secrets/` and `*.pem` / `*.key` (`.env.example` stays readable). It covers the built-in file tools and `cat`-style commands, not a script that opens files itself. Antigravity has no repository-level equivalent.
-- **CI** runs `guard --all` over contracts, specs, the roadmap and commit messages. It is the only layer an agent cannot skip.
-- **Specs** must cover every requirement with a task and a `[test]` task, and every checked task needs a `verified:` line.
+- Block risky git commands (`--no-verify`, force-push `main`, staging `.env`, Claude trailers) with a hook.
+- Keep secrets unread with Claude Code's `permissions.deny`.
+- Drop Claude attribution with the `attribution` setting.
+- Run the verify command from `TESTING.md` in CI.
+- Lint specs, once there are many.
 
-## Limits
-
-- The hooks protect Claude Code and Antigravity only, and a hook that crashes does not block. On Windows Claude Code routes shell commands through its PowerShell tool, so the hooks match both `Bash` and `PowerShell`.
-- The guard reads the command text. It cannot see a commit message or pull request body passed through a file (`-F`, `--body-file`); CI scans commit messages, not pull request descriptions.
-- `permissions.deny` is documented for the built-in file tools and `cat`-style commands. Whether PowerShell file commands such as `Get-Content` are covered is not verified.
-- Antigravity's answer format and tool names are only partly documented; `guard --record` captures real payloads to confirm them.
-- The guard checks structure. Whether a spec respects KISS or a test partitions its inputs well still needs a review.
+Text in the contracts is advisory; an extra makes a rule hold at the cost of something to maintain.
 
 ## License
 

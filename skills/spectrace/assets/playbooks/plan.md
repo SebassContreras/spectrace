@@ -9,7 +9,7 @@
 3. Cut the plan into thin slices that each end in something running. Add one roadmap row per spec, and write a full spec only for the next one; later specs stay one line in the roadmap.
 4. Write the next spec in the format below. Keep it under 80 lines.
 5. List the contract changes the plan implies: a layer in ARCHITECTURE.md, a command in OPERATIONS.md, a framework in TESTING.md. Show them as a diff, apply them once the user approves, and record the change in CHANGES.md. Write only what the repo cannot show, and add a rule only after a failure you saw.
-6. Run `node .agents/guard/guard.mjs --all` and fix what it reports. Report, and stop: planning does not start executing.
+6. Report, and stop: planning does not start executing.
 
 ## Spec format
 

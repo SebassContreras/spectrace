@@ -11,5 +11,4 @@
    - TESTING.md: a requirement without a test; a test that cannot fail; branching in a test body; a mocked unit under test; a skipped or weakened test.
    - DESIGN.md: tokens, copy or interface shapes outside the rules.
    - Docs: behavior changed but the contract that describes it did not.
-3. Run `node .agents/guard/guard.mjs --all`. Its errors are findings.
-4. Report findings by severity, with file and line. Change nothing; the user decides.
+3. Report findings by severity, with file and line. Change nothing; the user decides.

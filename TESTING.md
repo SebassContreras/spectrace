@@ -4,7 +4,7 @@
 
 ## Verify
 
-- Narrowest, one test file: `node --test tests/guard.test.mjs`
+- Narrowest, one test file: `node --test tests/templates.test.mjs`
 - Full suite: `node --test "tests/*.test.mjs"`
 - Types and lint, if the stack has them: none; there are no dependencies and no build
 
@@ -29,5 +29,5 @@ A task is done when its check passes and you ran it. A bug fix ships with a test
 
 ## This project
 
-- Node's built-in `node:test`, no dependency. Tests are table-driven rows over temporary directories and repositories.
+- Node's built-in `node:test`, no dependency. Tests are table-driven rows over the shipped assets.
 - After adding or changing a rule, break it on purpose and confirm a test fails (a mutation check); a suite that stays green under a broken rule is not testing it.

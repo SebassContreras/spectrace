@@ -12,7 +12,7 @@
 
 ## Errors
 
-<fill: the error shape, the codes or exit codes, and the wording rule for messages>
+<fill: the error shape, the codes or exit codes, the wording rule for messages and the language they are written in>
 
 ## Compatibility
 

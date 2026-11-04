@@ -17,6 +17,5 @@
 2. Add a task that removes the old code, tests and docs (`— replaces D1`).
 3. Add an entry to CHANGES.md: what changed, why and what it replaces.
 4. List the contract lines the change makes false, show them as a diff and apply them once the user approves.
-5. Run `node .agents/guard/guard.mjs --all`.
 
 A recorded decision is revisable. If new evidence says an earlier choice was wrong, propose the change; do not work around it.

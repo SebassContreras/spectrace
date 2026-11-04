@@ -2,7 +2,7 @@
   "name": "spectrace",
   "version": "1.0.0",
   "private": true,
-  "description": "One agent skill that scaffolds a project's contracts, playbooks and guard for Claude Code and Antigravity.",
+  "description": "One agent skill that scaffolds a project's contracts and playbooks, with hooks and CI as optional suggestions.",
   "type": "module",
   "engines": {
     "node": ">=20"

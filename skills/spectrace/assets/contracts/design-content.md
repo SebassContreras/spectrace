@@ -4,7 +4,7 @@
 
 ## Audience and voice
 
-<fill: who reads or watches this, the tone, the person and tense, what to avoid>
+<fill: who reads or watches this, the language of the piece, the tone, the person and tense, what to avoid>
 
 ## Structure
 

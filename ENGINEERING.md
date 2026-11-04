@@ -16,5 +16,5 @@
 ## This project
 
 - JavaScript ES modules on Node 20 or later, no dependencies and no build step.
-- No shell scripts for hooks or checks: Node only, so Windows behaves like Linux.
+- The skill ships Markdown only. Any script a project adds later is Node, so Windows behaves like Linux.
 - A rule enters a template after a failure observed in a real project, not by adding principles up front.

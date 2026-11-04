@@ -18,5 +18,3 @@ Thumbs.db
 # Dependencies, if a dev tool is ever installed locally
 node_modules/
 
-# guard payload recordings
-.agents/guard/records/

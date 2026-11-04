@@ -4,7 +4,7 @@
 
 ## Audience and voice
 
-Developers and coding agents reading a contract in the middle of a task. Imperative and concise, one instruction per line, no filler and no speculation.
+Written in English. Developers and coding agents reading a contract in the middle of a task. Imperative and concise, one instruction per line, no filler and no speculation.
 
 ## Structure
 
@@ -16,7 +16,6 @@ Developers and coding agents reading a contract in the middle of a task. Imperat
 
 - **contract**: a root Markdown file with one responsibility.
 - **playbook**: a repository-owned procedure under `.agents/playbooks/`.
-- **guard**: the enforcement script, `guard.mjs`.
 - **spec**: a thin slice with requirements and tasks.
 
 Do not call these a "rules file", a "workflow" or a "linter".

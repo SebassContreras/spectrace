@@ -4,19 +4,17 @@
 
 ## Vision
 
-One agent skill that scaffolds the contracts, playbooks and guard a project needs, so coding agents decide well and cannot skip the rules that must always hold. It works with Claude Code and Antigravity, for software and non-software projects.
+One agent skill that scaffolds the contracts and playbooks a project needs, so coding agents decide well. Hooks and CI are suggestions, not part of the scaffold. It works with Claude Code and Antigravity, for software and non-software projects.
 
 ## Users and the problem
 
 - **A developer starting a project with coding agents.** Every new project means rewriting the same rules (principles, tests, specs, way of working), and the agent forgets or skips them.
-- **The same developer, mid-project.** Written rules are advisory text. The ones that must always hold, such as never adding Claude as co-author, need a hook or a CI check behind them.
+- **The same developer, mid-project.** Some rules must always hold, such as never adding Claude as co-author. Whether to back them with a hook or CI is the developer's call, so the skill suggests and does not install.
 
 ## Capabilities
 
 - Scaffolds eight single-responsibility contracts, an `AGENTS.md` router, a roadmap and three playbooks (plan, change, review) into any project.
 - Fits the contracts to the project by reading the repository, and writes only what the repository cannot show.
-- Blocks Claude attribution in commits and pull requests, `--no-verify`, force-push to `main` and staging `.env` files, from Claude Code and Antigravity hooks.
-- Lints specs and the roadmap: every requirement is covered by a task and by a `[test]` task, every checked task carries evidence, and the roadmap matches the specs.
-- Keeps Claude Code from reading `.env` files, `secrets/` and key files, with `.env.example` left readable.
-- Runs the same checks in CI, the one layer an agent cannot skip.
+- Asks the language of the product text (UI or messages) apart from the language the agent speaks, and records it in `DESIGN.md`.
+- Suggests optional extras (git and Claude hooks, `permissions.deny`, CI) and adds one only when the user says yes.
 - Moves a repository that uses an earlier spectrace to this layout, with a diff per file.
