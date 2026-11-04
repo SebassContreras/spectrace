@@ -19,7 +19,7 @@ after(() => made.forEach((dir) => rmSync(dir, { recursive: true, force: true }))
 const ROOT_CONTRACTS = ['AGENTS', 'PRODUCT', 'ARCHITECTURE', 'ENGINEERING', 'TESTING', 'CHANGES', 'OPERATIONS'];
 const DESIGN_BY_KIND = { ui: 'design-ui', interface: 'design-interface', content: 'design-content' };
 
-/** Performs the copy table of SKILL.md "Init" step 2 for a Claude Code and Antigravity repository. */
+/** Performs the copy table of SKILL.md "Init" step 2 for a repository that uses Claude Code, Antigravity and GitHub. */
 function scaffold(kind) {
   const root = mkdtempSync(join(tmpdir(), 'scaffold-'));
   made.push(root);
@@ -29,6 +29,12 @@ function scaffold(kind) {
   cpSync(join(ASSETS, 'planning', 'roadmap.md'), join(root, 'planning', 'roadmap.md'));
   cpSync(join(ASSETS, 'playbooks'), join(root, '.agents', 'playbooks'), { recursive: true });
   cpSync(join(ASSETS, 'guard', 'guard.mjs'), join(root, '.agents', 'guard', 'guard.mjs'));
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  cpSync(join(ASSETS, 'adapters', 'claude-settings.json'), join(root, '.claude', 'settings.json'));
+  cpSync(join(ASSETS, 'adapters', 'CLAUDE.md'), join(root, 'CLAUDE.md'));
+  cpSync(join(ASSETS, 'adapters', 'antigravity-hooks.json'), join(root, '.agents', 'hooks.json'));
+  mkdirSync(join(root, '.github', 'workflows'), { recursive: true });
+  cpSync(join(ASSETS, 'adapters', 'guard.yml'), join(root, '.github', 'workflows', 'guard.yml'));
   spawnSync('git', ['init', '-q'], { cwd: root });
   return root;
 }
@@ -51,6 +57,20 @@ test('SKILL.md: the description stays under the 1024 characters the spec allows'
 test('SKILL.md: stays short enough to read in one go', () => {
   assert.ok(skillText.trimEnd().split('\n').length <= 150);
 });
+
+const migrationSteps = [
+  { name: 'adds the ownership header to existing contracts', needle: '> Owns: … · Not here: …' },
+  { name: 'creates OPERATIONS.md', needle: 'Create `OPERATIONS.md`' },
+  { name: 'says what to do with old specs', needle: 'Old specs will fail the lint' },
+  { name: 'removes what the new design drops', needle: '`.agentignore`' },
+  { name: 'adapts the contracts to a project that is not software', needle: 'not software' },
+];
+
+for (const row of migrationSteps) {
+  test(`SKILL.md: the migration path ${row.name}`, () => {
+    assert.ok(skillText.includes(row.needle));
+  });
+}
 
 const assetFiles = readdirSync(ASSETS, { recursive: true, withFileTypes: true })
   .filter((entry) => entry.isFile())
@@ -150,21 +170,35 @@ test('the CI workflow runs the guard over files and commits', () => {
   assert.match(read('adapters', 'guard.yml'), /guard\.mjs --all --commits/);
 });
 
+// On Windows Claude Code routes shell commands through the PowerShell tool; a matcher of Bash alone never fires there.
+test('claude settings: the PreToolUse matcher covers both shell tools', () => {
+  assert.deepEqual(claudeSettings.hooks.PreToolUse[0].matcher.split('|'), ['Bash', 'PowerShell']);
+});
+
 const hookRuns = [
-  { name: 'claude blocks --no-verify with a real exit code 2', event: 'PreToolUse', agent: 'claude', command: 'git commit --no-verify -m x', status: 2, stdout: /^$/ },
-  { name: 'claude lets a clean commit through', event: 'PreToolUse', agent: 'claude', command: 'git commit -m "feat: x"', status: 0, stdout: /^$/ },
-  { name: 'claude blocks a Claude co-author trailer', event: 'PreToolUse', agent: 'claude', command: 'git commit -m "x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"', status: 2, stdout: /^$/ },
+  { name: 'blocks --no-verify with a real exit code 2', tool: 'Bash', command: 'git commit --no-verify -m x', status: 2 },
+  { name: 'lets a clean commit through', tool: 'Bash', command: 'git commit -m "feat: x"', status: 0 },
+  { name: 'blocks a Claude co-author trailer', tool: 'Bash', command: 'git commit -m "x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"', status: 2 },
+  { name: 'blocks --no-verify through the PowerShell tool', tool: 'PowerShell', command: 'git commit --no-verify -m x', status: 2 },
+  { name: 'blocks a co-author trailer in a PowerShell here-string', tool: 'PowerShell', command: "git commit -m @'\nfeat: x\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n'@", status: 2 },
+  { name: 'lets a clean PowerShell commit through', tool: 'PowerShell', command: 'git commit -m "feat: x"', status: 0 },
 ];
 
 for (const row of hookRuns) {
-  test(`hook as claude runs it: ${row.name}`, () => {
+  test(`hook as claude runs it, from the scaffolded settings: ${row.name}`, () => {
     const root = scaffold('ui');
-    const args = claudeSettings.hooks[row.event][0].hooks[0].args.map((a) => a.replace('${CLAUDE_PROJECT_DIR}', root));
-    const payload = JSON.stringify({ hook_event_name: row.event, tool_name: 'Bash', tool_input: { command: row.command }, cwd: root });
+    const installed = JSON.parse(readFileSync(join(root, '.claude', 'settings.json'), 'utf8'));
+    const args = installed.hooks.PreToolUse[0].hooks[0].args.map((a) => a.replace('${CLAUDE_PROJECT_DIR}', root));
+    const payload = JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: row.tool, tool_input: { command: row.command }, cwd: root });
     const result = spawnSync('node', args, { cwd: root, input: payload, encoding: 'utf8' });
-    assert.deepEqual([result.status, row.stdout.test(result.stdout)], [row.status, true]);
+    assert.equal(result.status, row.status, result.stderr);
   });
 }
+
+test('the guard prints its usage and exits 0 on --help', () => {
+  const result = guard(scaffold('ui'), ['--help']);
+  assert.deepEqual([result.status, /Usage:/.test(result.stdout)], [0, true]);
+});
 
 test('hook as antigravity runs it: a force push to main is denied in JSON', () => {
   const root = scaffold('ui');

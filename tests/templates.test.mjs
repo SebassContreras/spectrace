@@ -48,6 +48,30 @@ for (const row of ownerOfSection) {
   });
 }
 
+// One fact, one owner: each statement below appears in a single contract (the three DESIGN variants count as one).
+const oneOwner = [
+  { fact: 'never weaken, skip or delete a test', pattern: /skip or delete a test/i, owner: 'TESTING' },
+  { fact: 'file and identifier casing', pattern: /kebab-case/i, owner: 'ENGINEERING' },
+  { fact: 'docs travel with behavior', pattern: /docs travel with behavior/i, owner: 'ENGINEERING' },
+  { fact: 'commit format', pattern: /conventional commits/i, owner: 'AGENTS' },
+  { fact: 'no Claude attribution', pattern: /co-author/i, owner: 'AGENTS' },
+  { fact: 'the language of code and commits', pattern: /commits in english/i, owner: 'AGENTS' },
+  { fact: 'the guard script', pattern: /guard\.mjs/i, owner: 'AGENTS' },
+  { fact: 'the verification evidence line', pattern: /`verified:`/, owner: 'AGENTS' },
+  { fact: 'what a layer may import', pattern: /never imports/i, owner: 'ARCHITECTURE' },
+  { fact: 'accessibility', pattern: /WCAG/, owner: 'DESIGN' },
+];
+
+const holdersOf = (pattern) => [
+  ...new Set(CONTRACT_FILES.filter((f) => pattern.test(read('contracts', `${f}.md`))).map((f) => contractName(f).replace('.md', ''))),
+];
+
+for (const row of oneOwner) {
+  test(`${row.fact} is stated in ${row.owner} only`, () => {
+    assert.deepEqual(holdersOf(row.pattern), [row.owner]);
+  });
+}
+
 test('PRODUCT has no non-goals section', () => {
   assert.doesNotMatch(read('contracts', 'PRODUCT.md'), /non-?goals?|out of scope/i);
 });

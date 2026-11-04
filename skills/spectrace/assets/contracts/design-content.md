@@ -16,4 +16,4 @@
 
 ## Format
 
-<fill: file formats, naming, language policy, how diagrams, tables, callouts or media are used>
+<fill: file formats, and how diagrams, tables, callouts or media are used>

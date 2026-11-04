@@ -7,6 +7,7 @@ Specs in execution order. Status is `todo`, `in progress` or `done` and stays in
 | ID  | Spec | Status | Depends on |
 |-----|------|--------|------------|
 | 035 | single-skill | in progress | — |
+| 036 | audit-alignment | done | 035 |
 
 ## Ideas
 

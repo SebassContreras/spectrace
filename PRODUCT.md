@@ -17,4 +17,6 @@ One agent skill that scaffolds the contracts, playbooks and guard a project need
 - Fits the contracts to the project by reading the repository, and writes only what the repository cannot show.
 - Blocks Claude attribution in commits and pull requests, `--no-verify`, force-push to `main` and staging `.env` files, from Claude Code and Antigravity hooks.
 - Lints specs and the roadmap: every requirement is covered by a task and by a `[test]` task, every checked task carries evidence, and the roadmap matches the specs.
+- Keeps Claude Code from reading `.env` files, `secrets/` and key files, with `.env.example` left readable.
 - Runs the same checks in CI, the one layer an agent cannot skip.
+- Moves a repository that uses an earlier spectrace to this layout, with a diff per file.

@@ -37,7 +37,9 @@ Run **inside the target repository**. This skill copies and fits the scaffold; i
    | `adapters/guard.yml` (repository on GitHub) | `.github/workflows/guard.yml` |
 
    Add `.agents/guard/records/` to `.gitignore`. When a settings or hooks file already exists, merge by key (join the arrays, such as `permissions.deny`), keep what the user has, and show the diff. After writing JSON, parse it to confirm it is valid.
-3. **Fill the contracts.** Replace `{{PROJECT_NAME}}` and `{{GOAL}}`. For each `<fill: …>` marker, read the repository first (manifests and scripts, lockfiles, CI, folders, the README, existing docs) and write only what the repository cannot show on its own. If you cannot know it yet, leave the marker: the guard lists it as unfilled and the plan playbook fills it. Do not invent. Keep `AGENTS.md` under 100 lines and put the user's language in hard rule 5.
+3. **Fill the contracts.** Replace `{{PROJECT_NAME}}` and `{{GOAL}}`. For each `<fill: …>` marker, read the repository first (manifests and scripts, lockfiles, CI, folders, the README, existing docs) and write only what the repository cannot show on its own. If you cannot know it yet, leave the marker: the guard lists it as unfilled and the plan playbook fills it. Do not invent. Keep `AGENTS.md` under 100 lines and put the user's language in its language rule (hard rule 3). Each fact lives in one contract only: if another contract already owns it (see the `Owns` line), link to it instead of repeating it.
+
+   For a project that is not software (video, writing, research), keep the same files and change what they hold: `ENGINEERING.md` holds the production standards (tools, file naming, review steps) and drops the code principles that do not apply; `TESTING.md` holds the review checklist that says when a piece is done; `DESIGN.md` is the content variant.
 4. **Check.** Run `node .agents/guard/guard.mjs --all`. Fix every error; unfilled markers are warnings you report.
 5. **Report** the files created and the unfilled markers, and suggest the first commit as `chore: add agent contracts` (no trailers). Tell the user the next step is to ask the agent to plan the project; `AGENTS.md` routes that to `.agents/playbooks/plan.md`. Stop there.
 
@@ -49,7 +51,18 @@ For each shipped file (contracts, playbooks, `guard.mjs`, adapters) compare it w
 - `guard.mjs` and the playbooks: replace only when the user approves the diff.
 - Record the update in `CHANGES.md` with what changed and why.
 
+### A repository from the previous four-skill spectrace
+
+Move it over with diffs and delete nothing on your own. This procedure has not been run on a real repository yet; report what did not fit.
+
+1. Add the `> Owns: … · Not here: …` line to each existing contract, then move what is misplaced to its owner: commands to `OPERATIONS.md` or `TESTING.md`, layer rules to `ARCHITECTURE.md`, a non-goals section out of `PRODUCT.md` (show it first; the new design has none).
+2. Create `OPERATIONS.md`. Replace the old `<!-- spectrace -->` block in `AGENTS.md` with the router, keeping the project's own commands by moving them to the contract that owns them.
+3. Install the playbooks, `guard.mjs` and the adapters as in Init, then run the guard.
+4. Old specs will fail the lint. For a spec still open, propose the missing `[test]` tasks and `verified:` lines. For a finished one, delete the file and keep its roadmap row.
+5. Remove what the new design drops: `.agentignore`, retired git hooks and commit-trailer checks. Record the migration in `CHANGES.md`.
+
 ## Limits to tell the user
 
 - The hooks protect Claude Code and Antigravity only. A hook that crashes does not block, so the CI workflow is the backstop.
-- Antigravity's answer format and tool names are not fully documented. After the first real session, add `--record` to one hook command, read `.agents/guard/records/`, and adjust.
+- `permissions.deny` keeps Claude Code from reading `.env` and key files. Antigravity has no repository-level equivalent.
+- Antigravity's answer format and tool names are not fully documented. After the first real session, add `--record` to one hook command, read `.agents/guard/records/`, and adjust. Those recordings hold raw commands and payloads: they are git-ignored, so delete them when done.

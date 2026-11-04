@@ -1,21 +1,12 @@
-# Dependencies and environment
+# Environment and secrets
 .env
 .env.*
 !.env.example
 
-# Caches and builds
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-dist/
-build/
-
-# Testing and diagnostics
-coverage/
+# Logs
 *.log
 
-# OS & Editor
+# OS and editor
 .DS_Store
 Thumbs.db
 .vscode/
@@ -23,6 +14,9 @@ Thumbs.db
 
 # Local tools
 .muxel/
+
+# Dependencies, if a dev tool is ever installed locally
+node_modules/
 
 # guard payload recordings
 .agents/guard/records/

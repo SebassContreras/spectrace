@@ -15,7 +15,7 @@ pnpm dlx skills add SebassContreras/spectrace
 3. **"Execute the specs."** The agent takes the next open task, reads the contract the router names, runs the checks, marks `[x]` with a `verified:` line and commits.
 4. **Pivots, bugs and reviews** go through `change.md` and `review.md`.
 
-The skill only scaffolds. After that the repository owns everything.
+The skill only scaffolds. After that the repository owns everything. In a repository that already has a setup, including one from the previous four-skill spectrace, the skill enters update mode and moves it over with a diff per file.
 
 ## What you get
 
@@ -44,7 +44,9 @@ Text is advisory, so the rules that must always hold are checked by one script, 
 
 ## Limits
 
-- The hooks protect Claude Code and Antigravity only, and a hook that crashes does not block.
+- The hooks protect Claude Code and Antigravity only, and a hook that crashes does not block. On Windows Claude Code routes shell commands through its PowerShell tool, so the hooks match both `Bash` and `PowerShell`.
+- The guard reads the command text. It cannot see a commit message or pull request body passed through a file (`-F`, `--body-file`); CI scans commit messages, not pull request descriptions.
+- `permissions.deny` is documented for the built-in file tools and `cat`-style commands. Whether PowerShell file commands such as `Get-Content` are covered is not verified.
 - Antigravity's answer format and tool names are only partly documented; `guard --record` captures real payloads to confirm them.
 - The guard checks structure. Whether a spec respects KISS or a test partitions its inputs well still needs a review.
 

@@ -23,4 +23,4 @@ Do not call these a "rules file", a "workflow" or a "linter".
 
 ## Format
 
-GitHub-flavoured Markdown in English, `kebab-case` file names, tables for routers and comparisons, fenced blocks for examples.
+GitHub-flavoured Markdown, tables for routers and comparisons, fenced blocks for examples.

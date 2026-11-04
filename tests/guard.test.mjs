@@ -15,6 +15,7 @@ import {
   parseShell,
   parseSpec,
   render,
+  routerTargets,
 } from '../skills/spectrace/assets/guard/guard.mjs';
 
 const made = [];
@@ -55,7 +56,21 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
 EOF
 )"`;
 
+// PowerShell here-strings: the body may hold apostrophes, parentheses and quotes.
+const PS_HERESTRING_TRAILER = `git commit -m @'
+feat: don't skip this
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+'@`;
+
+const PS_HERESTRING_CLEAN = `git commit -m @'
+fix: it's about --no-verify handling (partial
+
+Body with ) and ( and "quotes".
+'@`;
+
 const parseCases = [
+  { name: 'a PowerShell here-string stays inside one statement', cmd: PS_HERESTRING_CLEAN, statements: 1 },
   { name: 'splits on && and ;', cmd: 'a && b; c', statements: 3 },
   { name: 'keeps a quoted message as one word', cmd: 'git commit -m "feat: add x"', words: ['git', 'commit', '-m', 'feat: add x'] },
   { name: 'single quotes are literal', cmd: "echo 'a && b'", words: ['echo', 'a && b'] },
@@ -92,6 +107,9 @@ const commandCases = [
   { name: 'trailer in a second -m', cmd: 'git commit -m "feat: x" -m "Co-Authored-By: Claude <noreply@anthropic.com>"', expect: ['no-claude-attribution'] },
   { name: 'trailer inside a heredoc', cmd: HEREDOC_TRAILER, expect: ['no-claude-attribution'] },
   { name: 'heredoc with parens, quotes and --no-verify text is clean', cmd: HEREDOC_CLEAN, expect: [] },
+  { name: 'trailer inside a PowerShell here-string, after an apostrophe', cmd: PS_HERESTRING_TRAILER, expect: ['no-claude-attribution'] },
+  { name: 'PowerShell here-string with --no-verify as text is clean', cmd: PS_HERESTRING_CLEAN, expect: [] },
+  { name: 'PowerShell double-quoted message with --no-verify as text is clean', cmd: 'git commit -m "docs: why we never use --no-verify"', expect: [] },
   { name: 'a human co-author is allowed', cmd: 'git commit -m x -m "Co-Authored-By: Ana <ana@example.com>"', expect: [] },
   { name: 'Generated with Claude Code line', cmd: 'git commit -m "x" -m "Generated with [Claude Code](https://claude.com/claude-code)"', expect: ['no-claude-attribution'] },
   { name: 'pull request body with attribution', cmd: 'gh pr create --title t --body "🤖 Generated with [Claude Code](https://claude.com/claude-code)"', expect: ['no-claude-attribution'] },
@@ -245,7 +263,23 @@ const repoCases = [
   { name: 'a broken spec is reported', files: { [SPEC_FILE]: VALID_SPEC.replace(/ {6}verified: ran it\n/, '') }, expect: ['error:task-verified'] },
   { name: 'a missing contract is a warning', files: { 'OPERATIONS.md': null }, expect: ['warn:contract-missing'] },
   { name: 'a missing AGENTS.md is an error', files: { 'AGENTS.md': null }, expect: ['error:contract-missing'] },
+  { name: 'a router row pointing at a missing file is an error', files: { 'AGENTS.md': `${HEADER}| plan | .agents/playbooks/plan.md |\n` }, expect: ['error:router-target'] },
+  { name: 'a router row pointing at an existing file passes', files: { 'AGENTS.md': `${HEADER}| scope | PRODUCT.md |\n` }, expect: [] },
 ];
+
+const routerCases = [
+  { name: 'reads the second column of a table', text: '| a | X.md |\n| b | dir/Y.md |\n', expect: ['X.md', 'dir/Y.md'] },
+  { name: 'ignores the header and separator rows', text: '| You are about to… | Read first |\n|---|---|\n| a | X.md |\n', expect: ['X.md'] },
+  { name: 'ignores a second column that is not a Markdown file', text: '| a | something else |\n', expect: [] },
+  { name: 'reads CRLF text', text: '| a | X.md |\r\n| b | Y.md |\r\n', expect: ['X.md', 'Y.md'] },
+  { name: 'an empty text has no targets', text: '', expect: [] },
+];
+
+for (const row of routerCases) {
+  test(`routerTargets: ${row.name}`, () => {
+    assert.deepEqual(routerTargets(row.text), row.expect);
+  });
+}
 
 for (const row of repoCases) {
   test(`checkAll: ${row.name}`, () => {
@@ -282,6 +316,7 @@ const BROKEN = VALID_SPEC.replace(/ {6}verified: ran it\n/, '');
 
 const adapterCases = [
   { name: 'claude blocks a bad commit with exit 2', agent: 'claude', event: 'PreToolUse', payload: (r) => claudePre(r, 'git commit --no-verify -m x'), code: 2, stdout: /^$/, stderr: /no-verify/ },
+  { name: 'claude blocks --no-verify sent through the PowerShell tool', agent: 'claude', event: 'PreToolUse', payload: (r) => ({ ...claudePre(r, 'git commit --no-verify -m x'), tool_name: 'PowerShell' }), code: 2, stdout: /^$/, stderr: /no-verify/ },
   { name: 'claude allows a clean commit', agent: 'claude', event: 'PreToolUse', payload: (r) => claudePre(r, 'git commit -m "feat: x"'), code: 0, stdout: /^$/, stderr: /^$/ },
   { name: 'claude ignores a non-shell tool on PreToolUse', agent: 'claude', event: 'PreToolUse', payload: (r) => ({ ...claudePost(r, 'a.md'), hook_event_name: 'PreToolUse' }), code: 0, stdout: /^$/, stderr: /^$/ },
   { name: 'claude reports a broken spec after a write', agent: 'claude', event: 'PostToolUse', repo: { [SPEC_FILE]: BROKEN }, payload: (r) => claudePost(r, join(r, SPEC_FILE)), code: 2, stdout: /^$/, stderr: /task-verified/ },
@@ -298,12 +333,65 @@ for (const row of adapterCases) {
   test(`adapter: ${row.name}`, () => {
     const root = goodRepo(row.repo);
     const payload = row.payload(root);
-    const out = render(row.agent, row.event, handleHook(row.agent, payload, { event: row.event, root }));
+    const out = render(row.agent, row.event, handleHook(row.agent, payload, { event: row.event, root, stateDir: makeRepo() }));
     assert.equal(out.code, row.code);
     assert.match(out.stdout, row.stdout);
     assert.match(out.stderr, row.stderr);
   });
 }
+
+const stopRuns = [
+  { name: 'the first report asks the agent to continue', runs: 1, decision: 'continue', expect: ['error:task-verified'] },
+  { name: 'the second identical report still asks to continue', runs: 2, decision: 'continue', expect: ['error:task-verified'] },
+  { name: 'the third identical report lets the agent stop, with a warning', runs: 3, decision: 'allow', expect: ['warn:stop-budget'] },
+];
+
+for (const row of stopRuns) {
+  test(`antigravity Stop: ${row.name}`, () => {
+    const root = goodRepo({ [SPEC_FILE]: BROKEN });
+    const stateDir = makeRepo();
+    const payload = { conversationId: 'c1', workspacePaths: [root] };
+    const results = Array.from({ length: row.runs }, () => handleHook('antigravity', payload, { event: 'Stop', root, stateDir }));
+    const last = results.at(-1);
+    assert.deepEqual([JSON.parse(render('antigravity', 'Stop', last).stdout).decision, ids(last)], [row.decision, row.expect]);
+  });
+}
+
+test('antigravity Stop: fixing the problem resets the count, so a later break is reported again', () => {
+  const root = goodRepo({ [SPEC_FILE]: BROKEN });
+  const stateDir = makeRepo();
+  const payload = { conversationId: 'c2', workspacePaths: [root] };
+  const stop = () => handleHook('antigravity', payload, { event: 'Stop', root, stateDir });
+  [stop(), stop()];
+  writeFileSync(join(root, SPEC_FILE), VALID_SPEC);
+  const clean = ids(stop());
+  writeFileSync(join(root, SPEC_FILE), BROKEN);
+  assert.deepEqual([clean, ids(stop())], [[], ['error:task-verified']]);
+});
+
+test('antigravity Stop: two conversations keep separate counts', () => {
+  const root = goodRepo({ [SPEC_FILE]: BROKEN });
+  const stateDir = makeRepo();
+  const stop = (id) => handleHook('antigravity', { conversationId: id, workspacePaths: [root] }, { event: 'Stop', root, stateDir });
+  [stop('a'), stop('a'), stop('a')];
+  assert.deepEqual(ids(stop('b')), ['error:task-verified']);
+});
+
+test('antigravity Stop: without a conversation id each workspace keeps its own count', () => {
+  const [one, two] = [goodRepo({ [SPEC_FILE]: BROKEN }), goodRepo({ [SPEC_FILE]: BROKEN })];
+  const stateDir = makeRepo();
+  const stop = (root) => handleHook('antigravity', { workspacePaths: [root] }, { event: 'Stop', root, stateDir });
+  [stop(one), stop(one), stop(one)];
+  assert.deepEqual([ids(stop(one)), ids(stop(two))], [['warn:stop-budget'], ['error:task-verified']]);
+});
+
+test('main: --help prints the usage and succeeds', () => {
+  assert.equal(main(['--help']), 0);
+});
+
+test('main: hook mode with nothing to read, as on a terminal, prints the usage and exits 2', () => {
+  assert.equal(main(['--agent', 'claude', '--event', 'Stop'], () => null), 2);
+});
 
 test('main: a payload that is not JSON blocks nothing', () => {
   assert.equal(main(['--agent', 'claude', '--event', 'PreToolUse'], () => 'not json'), 0);

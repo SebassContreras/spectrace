@@ -32,35 +32,36 @@ One skill, `spectrace`, scaffolds a project: eight single-responsibility root co
 - [x] 035/T001 [agent] `guard.mjs` core: quote-aware tokeniser and the commit, push and `.env` rules — covers R4, D1, D2
       verified: guard.mjs: quote-aware parseShell plus commit, push and .env rules; mutation check (rule disabled) fails 8 tests
 - [x] 035/T002 [agent][test] Table-driven tests for those rules, including quoted-text false positives — covers R4, D2
-      verified: tests/guard.test.mjs: 29 command rows incl. quoted flag text and heredocs with unbalanced parens; all pass
+      verified: tests/guard.test.mjs: table-driven command rows incl. quoted flag text and heredocs with unbalanced parens; all pass
 - [x] 035/T003 [agent] Spec lint and roadmap coherence — covers R4, D3
       verified: lintSpec, parseSpec, checkRoadmap implemented; guard passes spec 035 itself
 - [x] 035/T004 [agent][test] Table-driven tests: missing section, uncovered R, no `[test]` task, `[x]` without `verified:`, struck item, done with open tasks — covers R4, D3
-      verified: 17 spec rows and 11 roadmap rows pass; removing the verified: check fails 7 tests, removing per-R test coverage fails 2
+      verified: spec and roadmap rows pass; removing the verified: check fails 7 tests, removing per-R test coverage fails 2
 - [x] 035/T005 [agent] Contract headers, `AGENTS.md` length, `--commits` range scan and `--all` — covers R4
       verified: checkContract, checkContracts, checkCommitMessages, checkAll; range scan tested against a real temp git repo
 - [x] 035/T006 [agent][test] Tests for headers, length thresholds and range scan — covers R4
-      verified: 7 contract rows (header, 100/101/200/201 line boundaries) plus 4 repo rows and 2 range rows pass
+      verified: contract rows (header, 100/101/200/201 line boundaries), repository rows and commit-range rows pass
 - [x] 035/T007 [agent] Claude and Antigravity payload translators, output formats and `--record` — covers R4, R6, D1
       verified: contextOf, handleHook, render for claude (exit 2) and antigravity (JSON, provisional), plus --record
 - [x] 035/T008 [agent][test] Tests of both translators against payloads copied from the docs — covers R4, R6
-      verified: 11 adapter rows with payload shapes taken from the hook docs; Stop with stop_hook_active allows; 95/95 pass
+      verified: adapter rows with payload shapes taken from the hook docs; Stop with stop_hook_active allows; suite passes
 - [x] 035/T009 [agent] Templates: eight contracts, `AGENTS.md` router and three playbooks, distilled from the author's repos — covers R2, R3, D5, D6
       verified: 14 template files written from the principles and rules shared by browser-nav, job and lienzo; principle 4 now carries the 2+ vendors condition
 - [x] 035/T010 [agent][test] Contract suite over the templates: headers, no non-goals, one owner per command, router targets exist, 100-line cap — covers R2, R3
-      verified: tests/templates.test.mjs: 40 rows (headers, owner uniqueness, section ownership, router targets, spec example lints clean); 3 mutations (non-goals, broken router, example without [test]) each fail the suite
+      verified: tests/templates.test.mjs: headers, owner uniqueness, section ownership, router targets, spec example lints clean; 3 mutations (non-goals, broken router, example without [test]) each fail the suite
 - [x] 035/T011 [agent] `SKILL.md` (init and update) and the adapter templates (`settings.json`, `hooks.json`, `CLAUDE.md`, CI workflow) — covers R1, R5, D4
-      verified: SKILL.md (82 lines) plus claude-settings.json, antigravity-hooks.json, CLAUDE.md and guard.yml; ${CLAUDE_PROJECT_DIR} in args confirmed in the hooks docs (exec form substitutes each args element)
+      verified: SKILL.md plus claude-settings.json, antigravity-hooks.json, CLAUDE.md and guard.yml; ${CLAUDE_PROJECT_DIR} in args confirmed in the hooks docs (exec form substitutes each args element)
 - [x] 035/T012 [agent][test] Scaffold into a temp repo and assert `guard --all` passes, then fails after a deliberate break; adapter JSON is valid — covers R1, R5
-      verified: tests/skill.test.mjs: scaffold of all three kinds passes guard --all, breaks as expected; hooks run with the exact args from claude-settings.json give real exit code 2; 186/186 pass; 3 mutations fail 1, 1 and 4 tests
+      verified: tests/skill.test.mjs: scaffold of all three kinds passes guard --all, breaks as expected; hooks run with the exact args from claude-settings.json give real exit code 2; 3 mutations fail 1, 1 and 4 tests
 - [x] 035/T013 [agent] Delete the four old skills, `bin/`, `package.json` bin and specs 021–034; shrink README, PRODUCT, ARCHITECTURE; record the pivot in `CHANGES.md` — covers R1
       verified: skills/ holds only spectrace; bin/, package bin entry and specs 021-034 removed; README, PRODUCT, ARCHITECTURE rewritten; CHANGES.md records the pivot with sources; no stale references left
+- [ ] 035/T014 [human] Run `guard --record` inside real Claude Code and Antigravity sessions and confirm the payload fields and block behaviour — covers R6
 - [x] 035/T015 [agent] Bring this repository to the new layout: its own eight contracts, `.claude/settings.json`, `.agents/hooks.json` and a CI workflow calling the guard from `skills/spectrace/assets/guard/` — covers R2, R5
       verified: this repo now has its own eight contracts with Owns headers, .claude/settings.json, .agents/hooks.json and .github/workflows/guard.yml; guard --all: 0 errors, 0 warnings
 - [x] 035/T016 [agent][test] A test runs `guard --all` on this repository and requires exit 0 — covers R2, R5
-      verified: tests/repo.test.mjs runs the guard on this repository and checks that exactly one SKILL.md ships; 189/189 pass
-- [ ] 035/T014 [human] Run `guard --record` inside real Claude Code and Antigravity sessions and confirm the payload fields and block behaviour — covers R6
+      verified: tests/repo.test.mjs runs the guard on this repository and checks that exactly one SKILL.md ships
 
 ## Changes
 
+- 2026-11-04: the audit of this spec (036) found its evidence lines wrong in two places and drifting in others: T002 said 29 command rows (31 measured) and T011 said SKILL.md had 82 lines (55). Evidence lines no longer quote counts that change.
 - 2026-11-04: added `permissions.deny` for `.env`, `secrets/` and key files to the Claude adapter (R5), with `!` carve-outs for `.env.example`; dropped `.agentignore`, which no agent reads. Source: https://code.claude.com/docs/en/permissions.md (accessed 2026-11-04).

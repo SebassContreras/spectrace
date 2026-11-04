@@ -13,7 +13,8 @@
  * the field names inside toolCall.args). They are confirmed with --record (spec 035 T014).
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -27,7 +28,7 @@ export const CONTRACTS = [
   'CHANGES.md',
   'OPERATIONS.md',
 ];
-export const LIMITS = { agentsWarn: 100, agentsError: 200, specWarn: 80 };
+export const LIMITS = { agentsWarn: 100, agentsError: 200, specWarn: 80, stopNudges: 2 };
 const STATUSES = ['todo', 'in progress', 'done'];
 const PROTECTED = /(^|[:+]|refs\/heads\/)(main|master)$/;
 
@@ -174,6 +175,12 @@ export function parseShell(src) {
       cur += `$(${sub.text})`;
       started = true;
       i = sub.next;
+    } else if (c === '@' && (src[i + 1] === "'" || src[i + 1] === '"') && /^\r?\n/.test(src.slice(i + 2, i + 4))) {
+      // PowerShell here-string: @'  ...  '@ (or with double quotes), closed by a line that starts with '@
+      const end = src.indexOf(`\n${src[i + 1]}@`, i + 2);
+      cur += src.slice(i + 2, end < 0 ? src.length : end);
+      started = true;
+      i = end < 0 ? src.length : end + 3;
     } else if (c === '<' && src[i + 1] === '<' && src[i + 2] !== '<') {
       const h = parseHeredocStart(src, i);
       if (h) {
@@ -481,9 +488,20 @@ export function checkRoadmap(text, specs, file = 'planning/roadmap.md') {
 // Contracts.
 // ---------------------------------------------------------------------------
 
-export function checkContract(name, text) {
+/** The files named in the second column of the router table in AGENTS.md. */
+export function routerTargets(text) {
+  return [...text.replace(/\r\n/g, '\n').matchAll(/^\|[^|]+\|\s*([^|\s]+\.md)\s*\|$/gm)].map((m) => m[1]);
+}
+
+/** `root`, when given, lets AGENTS.md be checked against the files it routes to. */
+export function checkContract(name, text, root = null) {
   const head = text.replace(/\r\n/g, '\n').split('\n').slice(0, 8);
   const findings = [];
+  if (name === 'AGENTS.md' && root) {
+    for (const target of routerTargets(text).filter((t) => !existsSync(join(root, t)))) {
+      findings.push(error('router-target', `The router points at ${target}, which does not exist.`, { file: name }));
+    }
+  }
   if (!head.some((l) => /^>\s*Owns:.*Not here:/i.test(l))) {
     findings.push(error('contract-header', 'Open with "> Owns: … · Not here: …".', { file: name, line: 1 }));
   }
@@ -504,7 +522,7 @@ export function checkContracts(root) {
     if (!existsSync(path)) {
       findings.push((name === 'AGENTS.md' ? error : warn)('contract-missing', `${name} is missing.`, { file: name }));
     } else {
-      findings.push(...checkContract(name, readFileSync(path, 'utf8')));
+      findings.push(...checkContract(name, readFileSync(path, 'utf8'), root));
     }
   }
   return findings;
@@ -544,7 +562,7 @@ export function checkPaths(root, paths) {
     } else if (rel === 'planning/roadmap.md') {
       roadmapChecked ||= roadmap !== null;
     } else if (CONTRACTS.includes(rel) && existsSync(join(root, rel))) {
-      findings.push(...checkContract(rel, readFileSync(join(root, rel), 'utf8')));
+      findings.push(...checkContract(rel, readFileSync(join(root, rel), 'utf8'), root));
     }
   }
   if (roadmapChecked) findings.push(...checkRoadmap(roadmap, specs));
@@ -611,7 +629,9 @@ export function contextOf(agent, payload, eventArg) {
     input: payload.tool_input ?? {},
     root: payload.cwd,
     stopActive: Boolean(payload.stop_hook_active),
-    shell: payload.tool_name === 'Bash',
+    // On Windows Claude Code routes shell commands through the PowerShell tool, and a hook that
+    // matches only Bash never fires there.
+    shell: payload.tool_name === 'Bash' || payload.tool_name === 'PowerShell',
   };
 }
 
@@ -625,14 +645,42 @@ export function editedPaths(root, input) {
     .filter((p) => !p.startsWith('..'));
 }
 
-export function handleHook(agent, payload, { event: eventArg, root: rootArg } = {}) {
+/**
+ * Antigravity sends no stop_hook_active, so a Stop hook that keeps answering "continue" could loop
+ * forever on a problem the agent cannot fix. After the same errors were reported LIMITS.stopNudges
+ * times in a conversation, report a warning instead and let the agent stop; CI still fails.
+ */
+export function limitRepeats(findings, key, dir = tmpdir()) {
+  const file = join(dir, `spectrace-guard-${String(key).replace(/[^\w-]/g, '_')}.json`);
+  const errors = errorsOf(findings);
+  if (errors.length === 0) {
+    rmSync(file, { force: true });
+    return findings;
+  }
+  const signature = errors.map(formatFinding).join('\n');
+  let previous = { signature: '', count: 0 };
+  try {
+    previous = JSON.parse(readFileSync(file, 'utf8'));
+  } catch {
+    // first report in this conversation
+  }
+  const count = previous.signature === signature ? previous.count + 1 : 1;
+  writeFileSync(file, JSON.stringify({ signature, count }), 'utf8');
+  if (count <= LIMITS.stopNudges) return findings;
+  return [warn('stop-budget', `The same ${errors.length} problem(s) were reported ${LIMITS.stopNudges} times; letting the agent stop. CI will still fail.`)];
+}
+
+export function handleHook(agent, payload, { event: eventArg, root: rootArg, stateDir } = {}) {
   const ctx = contextOf(agent, payload, eventArg);
   const root = resolve(rootArg ?? ctx.root ?? process.cwd());
   if (ctx.event === 'PreToolUse' && ctx.shell) {
     return checkCommand(commandOf(ctx.input), { branch: () => git(root, ['rev-parse', '--abbrev-ref', 'HEAD']).trim() });
   }
   if (ctx.event === 'PostToolUse') return checkPaths(root, editedPaths(root, ctx.input));
-  if (ctx.event === 'Stop' && !ctx.stopActive) return checkPaths(root, changedPlanningFiles(root));
+  if (ctx.event === 'Stop' && !ctx.stopActive) {
+    const found = checkPaths(root, changedPlanningFiles(root));
+    return agent === 'antigravity' ? limitRepeats(found, payload.conversationId ?? root, stateDir) : found;
+  }
   return [];
 }
 
@@ -656,11 +704,21 @@ export function render(agent, event, findings) {
 // CLI.
 // ---------------------------------------------------------------------------
 
+const USAGE = `Usage:
+  guard.mjs --all [--commits <range>] [--root <dir>]
+      check contracts, specs, roadmap and, with --commits, commit messages
+  guard.mjs --agent claude|antigravity --event PreToolUse|PostToolUse|Stop [--record] [--root <dir>]
+      hook mode: the agent's payload JSON arrives on stdin`;
+
+/** Reads the hook payload; returns null on a terminal, where there is nothing to read and waiting would hang. */
+const stdinText = () => (process.stdin.isTTY ? null : readFileSync(0, 'utf8'));
+
 function parseArgs(argv) {
-  const opts = { all: false, record: false };
+  const opts = { all: false, record: false, help: false };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
-    if (a === '--all') opts.all = true;
+    if (a === '--help' || a === '-h') opts.help = true;
+    else if (a === '--all') opts.all = true;
     else if (a === '--record') opts.record = true;
     else if (['--agent', '--event', '--commits', '--root'].includes(a)) opts[a.slice(2)] = argv[(i += 1)];
   }
@@ -674,9 +732,13 @@ function record(root, agent, event, raw) {
   writeFileSync(join(dir, `${agent}-${event ?? 'event'}-${stamp}.json`), raw, 'utf8');
 }
 
-export function main(argv, readStdin = () => readFileSync(0, 'utf8')) {
+export function main(argv, readStdin = stdinText) {
   const opts = parseArgs(argv);
   const root = resolve(opts.root ?? process.cwd());
+  if (opts.help) {
+    console.log(USAGE);
+    return 0;
+  }
   if (opts.all || opts.commits) {
     const findings = checkAll(root, { range: opts.commits });
     for (const f of findings) console.log(formatFinding(f));
@@ -686,6 +748,10 @@ export function main(argv, readStdin = () => readFileSync(0, 'utf8')) {
   }
   const agent = opts.agent ?? 'claude';
   const raw = readStdin();
+  if (raw === null) {
+    console.error(USAGE);
+    return 2;
+  }
   if (opts.record) record(root, agent, opts.event, raw);
   let payload;
   try {

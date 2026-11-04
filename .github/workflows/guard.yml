@@ -18,4 +18,4 @@ jobs:
       - name: Tests
         run: node --test "tests/*.test.mjs"
       - name: Contracts, specs, roadmap and commit messages
-        run: node skills/spectrace/assets/guard/guard.mjs --all --commits "origin/${{ github.base_ref || 'main' }}..HEAD"
+        run: node .agents/guard/guard.mjs --all --commits "origin/${{ github.base_ref || 'main' }}..HEAD"

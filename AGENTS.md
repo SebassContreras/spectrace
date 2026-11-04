@@ -8,10 +8,8 @@ One agent skill that scaffolds a project's contracts, playbooks and guard for Cl
 
 1. Never add Claude as co-author or "Generated with Claude Code" to commits or pull requests. Commits are Conventional Commits with no trailers.
 2. Never bypass hooks (`--no-verify`), force-push `main`, or stage `.env` files or secrets.
-3. Never weaken, skip or delete a test to make a change pass.
-4. A task is done only after a check you ran passes; write the evidence as `verified: …` under the task.
-5. Code, comments, docs and commits in English. Talk to the user in Spanish.
-6. If a rule here is wrong, say so and propose the change. Do not work around it.
+3. Code, comments, docs and commits in English. Talk to the user in Spanish.
+4. If a rule here is wrong, say so and propose the change. Do not work around it.
 
 ## Before you act, open the contract
 
@@ -19,7 +17,7 @@ One agent skill that scaffolds a project's contracts, playbooks and guard for Cl
 |---|---|
 | write or change code | ENGINEERING.md |
 | add or move a module, layer or dependency | ARCHITECTURE.md |
-| write or change a test, or decide what "done" means | TESTING.md |
+| write or change a test, make a failing check pass, or decide what "done" means | TESTING.md |
 | touch UI, copy, tone or an interface shape | DESIGN.md |
 | accept or propose a feature, or change scope | PRODUCT.md |
 | run, build, configure or release the project | OPERATIONS.md |
@@ -34,7 +32,7 @@ When you decide something, name the contract and section you used ("per ENGINEER
 
 1. `planning/roadmap.md` lists specs in order with a status. Take the first open `[agent]` task of the first spec that is not `done`.
 2. Read the contract the router names for that task. Implement only that task.
-3. Run the checks from TESTING.md. Mark `[x]`, add the `verified:` line, commit.
+3. Run the checks from TESTING.md. Mark `[x]`, add a `verified:` line with the evidence, commit.
 4. Stuck? Add an indented `blocked: <reason>` under the task, commit it, tell the user and move on.
 
 The spec format and its rules are in `.agents/playbooks/plan.md`.

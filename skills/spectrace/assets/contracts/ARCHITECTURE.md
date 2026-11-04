@@ -12,4 +12,4 @@
 
 ## Invariants
 
-<fill: rules that hold across layers, for example "domain code never imports an adapter">
+<fill: rules that hold across layers, for example "domain code never imports an adapter or a transport">

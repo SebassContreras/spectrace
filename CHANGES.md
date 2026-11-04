@@ -8,6 +8,21 @@ Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **R
 
 ## Ledger
 
+### 2026-11-04 — Audit: PowerShell, a checked router, a repository that installs what it ships
+
+- **What changed:**
+  - The Claude hooks match `Bash|PowerShell`. The guard also reads PowerShell here-strings, checks that every file the `AGENTS.md` router names exists, stops answering "continue" to Antigravity after the same problem was reported twice, and prints its usage instead of waiting on a terminal.
+  - This repository installs exactly what it ships (`.agents/`, `.claude/`, `CLAUDE.md`, the workflow), and a test keeps the copies identical. `.gitattributes` forces LF.
+  - No fact has two owners any more. The hard rules in `AGENTS.md` are the cross-cutting ones; the test and "done" rules live only in `TESTING.md`; the layer rule left `ENGINEERING.md`; language and naming left `DESIGN.md` and `ENGINEERING.md`.
+  - `SKILL.md` gained the migration path from the previous design and how to adapt the contracts to a project that is not software.
+- **Why:**
+  - On Windows Claude Code routes shell commands through its PowerShell tool, and a hook that matches only `Bash` never fires there, so the commit rules did not apply on the author's machine.
+  - The router of this repository pointed at files that did not exist and nothing checked it.
+  - Several rules were written in two contracts, against the one-owner rule.
+  - Antigravity sends no `stop_hook_active`, so a Stop hook that keeps answering "continue" could loop on a problem the agent cannot fix.
+- **Replaces:** the Bash-only matcher, and hard rules 3 and 4 of `AGENTS.md`, now owned by `TESTING.md`.
+- **Sources:** https://code.claude.com/docs/en/hooks.md#powershell, https://code.claude.com/docs/en/tools-reference.md#powershell-tool (accessed 2026-11-04).
+
 ### 2026-11-04 — One skill; the repository owns the workflow
 
 - **What changed:**
