@@ -4,9 +4,17 @@
 
 A decision recorded here is revisable. It explains why we moved; it does not forbid moving again. Entries older than 2026-11-04 use the wording of the previous design, where some say "do not reintroduce"; read those as history.
 
-Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **Replaces**. Newest first.
+Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and, when something is replaced, **Replaces**. Newest first.
 
 ## Ledger
+
+### 2026-11-04 — Wording aligned with the code after an audit
+
+- **What changed:**
+  - The contract count reads "an `AGENTS.md` router, seven single-responsibility contracts" in `PRODUCT.md` and `SKILL.md`; `SKILL.md` says AGENTS.md has "at most 100 lines", as the test allows.
+  - Principle 6 of `ENGINEERING.md`, in this repository and in the shipped template, excepts contract names such as `AGENTS.md` from `kebab-case`. Projects scaffolded from now on inherit the exception.
+  - This repository's "A rule enters a template…" line also allows a decision recorded here, so restoring principles in the previous entry does not contradict it. The entry-format line above makes **Replaces** conditional.
+- **Why:** an audit of the documents against the code found these statements inconsistent; the code was right in every case.
 
 ### 2026-11-04 — Stricter vendor isolation, "when in doubt" and research restored
 
