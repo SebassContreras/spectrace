@@ -15,3 +15,4 @@ Specs in execution order. Status is `todo`, `in progress` or `done` and stays in
 Anything worth doing later, including small fixes not done right away.
 
 - **Glossary contract:** an optional ninth file for canonical terms, if a project's vocabulary keeps drifting.
+- **Agent control redesign:** ceremony levels, workaround signals, discard-and-redo, a dead-code gate, and where specs live. In discussion; see [research/2026-11-04-agent-control.md](research/2026-11-04-agent-control.md).
