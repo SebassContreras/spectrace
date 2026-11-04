@@ -63,4 +63,4 @@ One skill, `spectrace`, scaffolds a project: eight single-responsibility root co
 
 ## Changes
 
-None yet.
+- 2026-11-04: added `permissions.deny` for `.env`, `secrets/` and key files to the Claude adapter (R5), with `!` carve-outs for `.env.example`; dropped `.agentignore`, which no agent reads. Source: https://code.claude.com/docs/en/permissions.md (accessed 2026-11-04).

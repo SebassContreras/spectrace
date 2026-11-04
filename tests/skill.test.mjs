@@ -99,6 +99,24 @@ test('claude settings: attribution uses the form older Claude Code versions acce
   assert.deepEqual(claudeSettings.attribution, { commit: '', pr: '', sessionUrl: false });
 });
 
+const deny = claudeSettings.permissions.deny;
+
+for (const rule of ['Read(.env)', 'Read(.env.*)', 'Read(secrets/**)', 'Read(*.pem)', 'Read(*.key)']) {
+  test(`claude settings: denies ${rule}`, () => {
+    assert.ok(deny.includes(rule));
+  });
+}
+
+for (const keep of ['Read(!.env.example)', 'Read(!.env.sample)', 'Read(!.env.template)']) {
+  test(`claude settings: ${keep} comes after the .env.* rule it carves out of`, () => {
+    assert.ok(deny.indexOf(keep) > deny.indexOf('Read(.env.*)') && deny.indexOf('Read(.env.*)') >= 0);
+  });
+}
+
+test('claude settings: no rule denies the .env.example files outright', () => {
+  assert.deepEqual(deny.filter((rule) => /example|sample|template/.test(rule) && !rule.startsWith('Read(!')), []);
+});
+
 test('claude settings: hooks cover exactly PreToolUse, PostToolUse and Stop', () => {
   assert.deepEqual(Object.keys(claudeSettings.hooks).sort(), ['PostToolUse', 'PreToolUse', 'Stop']);
 });

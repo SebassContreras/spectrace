@@ -1,5 +1,17 @@
 {
   "attribution": { "commit": "", "pr": "", "sessionUrl": false },
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Read(!.env.sample)",
+      "Read(!.env.template)",
+      "Read(secrets/**)",
+      "Read(*.pem)",
+      "Read(*.key)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

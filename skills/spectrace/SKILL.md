@@ -36,7 +36,7 @@ Run **inside the target repository**. This skill copies and fits the scaffold; i
    | `adapters/antigravity-hooks.json` (Antigravity) | merged into `.agents/hooks.json` |
    | `adapters/guard.yml` (repository on GitHub) | `.github/workflows/guard.yml` |
 
-   Add `.agents/guard/records/` to `.gitignore`. When a settings or hooks file already exists, merge by key, keep what the user has, and show the diff. After writing JSON, parse it to confirm it is valid.
+   Add `.agents/guard/records/` to `.gitignore`. When a settings or hooks file already exists, merge by key (join the arrays, such as `permissions.deny`), keep what the user has, and show the diff. After writing JSON, parse it to confirm it is valid.
 3. **Fill the contracts.** Replace `{{PROJECT_NAME}}` and `{{GOAL}}`. For each `<fill: …>` marker, read the repository first (manifests and scripts, lockfiles, CI, folders, the README, existing docs) and write only what the repository cannot show on its own. If you cannot know it yet, leave the marker: the guard lists it as unfilled and the plan playbook fills it. Do not invent. Keep `AGENTS.md` under 100 lines and put the user's language in hard rule 5.
 4. **Check.** Run `node .agents/guard/guard.mjs --all`. Fix every error; unfilled markers are warnings you report.
 5. **Report** the files created and the unfilled markers, and suggest the first commit as `chore: add agent contracts` (no trailers). Tell the user the next step is to ask the agent to plan the project; `AGENTS.md` routes that to `.agents/playbooks/plan.md`. Stop there.

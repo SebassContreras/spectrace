@@ -15,6 +15,7 @@ Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **R
   - OPERATIONS.md is the eighth contract, every contract opens with `> Owns: … · Not here: …`, and non-goals left PRODUCT.md.
   - `guard.mjs` enforces the deterministic rules from Claude Code hooks, Antigravity hooks and CI. Claude attribution is switched off through the `attribution` setting.
   - Specs 001–034 were retired, including the unbuilt overlay of 034.
+  - `.agentignore` was dropped: neither Claude Code nor Antigravity reads it, per their docs. Secrets are protected by `permissions.deny` in the Claude adapter, with `!` carve-outs so `.env.example` stays readable.
 - **Why:**
   - An audit of this repository and of seven repositories that use it showed the contracts were useful and customised, while the specs and the four skills were overhead. The CLI had defects and no tests: a UI design template as the default, the `AGENTS.md` block never installed where a file already existed, and a migration entry that could not be written.
   - Skills are not reliably invoked, while a router in `AGENTS.md` is always read. Text rules are advisory, so rules that must always hold need hooks and CI.

@@ -38,6 +38,7 @@ The skill only scaffolds. After that the repository owns everything.
 Text is advisory, so the rules that must always hold are checked by one script, `guard.mjs`:
 
 - **Hooks** in Claude Code (`.claude/settings.json`) and Antigravity (`.agents/hooks.json`) block Claude attribution in commits and pull requests, `--no-verify`, force-push to `main` and staging `.env` files, and lint specs as they are edited.
+- **Secrets:** Claude Code's `permissions.deny` keeps the agent from reading `.env` files, `secrets/` and `*.pem` / `*.key` (`.env.example` stays readable). It covers the built-in file tools and `cat`-style commands, not a script that opens files itself. Antigravity has no repository-level equivalent.
 - **CI** runs `guard --all` over contracts, specs, the roadmap and commit messages. It is the only layer an agent cannot skip.
 - **Specs** must cover every requirement with a task and a `[test]` task, and every checked task needs a `verified:` line.
 
