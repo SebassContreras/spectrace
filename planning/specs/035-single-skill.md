@@ -1,0 +1,49 @@
+# 035 — single-skill
+
+## Goal
+
+One skill, `spectrace`, scaffolds a project: eight single-responsibility root contracts, three repo-owned playbooks, and a `guard` that enforces the deterministic rules in Claude Code, Antigravity and CI. Planning, change handling and review live in the repository, not in the skill. Verify: scaffold a temp repo, run `guard --all` (passes), break a spec, run it again (fails with the rule named).
+
+## Requirements
+
+- R1: `skills/` holds exactly one skill, `spectrace`, with modes `init` and `update` (diff per file, applies only what the user approves). The four old skills, `bin/` and the package `bin` entry are gone.
+- R2: Eight root contracts (AGENTS, PRODUCT, ARCHITECTURE, ENGINEERING, DESIGN, TESTING, CHANGES, OPERATIONS), each opening with `> Owns: … · Not here: …`. PRODUCT has no non-goals section.
+- R3: `AGENTS.md` is a router of at most 100 lines (hard rules first, then a "before you act, open" table) pointing at `.agents/playbooks/{plan,change,review}.md`.
+- R4: `guard` blocks, deterministically: Claude co-author trailers and "Generated with" lines, `--no-verify`, force-push to main, `git add` of `.env`. It lints specs (structure, every R covered by a task and by a `[test]` task, `[x]` needs `verified:`), roadmap coherence, contract headers, and scans a commit range.
+- R5: Adapters: `.claude/settings.json` (`attribution` and hooks), `.agents/hooks.json` (Antigravity), `CLAUDE.md` (`@AGENTS.md`) and a CI workflow, all calling the one script.
+- R6: Payload shapes of both agents are recorded from real sessions before the adapters are trusted.
+
+## Design
+
+- D1 (R4, R5): `guard.mjs`, zero dependencies, pure functions behind a thin CLI: `--agent claude|antigravity`, `--event PreToolUse|PostToolUse|Stop`, `--all`, `--commits <range>`, `--record`. Claude blocks with exit 2 and stderr; Antigravity with JSON `{"decision":"deny"}` on stdout. Antigravity's payload has no event name, so the event comes from the argument. Source: https://code.claude.com/docs/en/hooks.md, https://antigravity.google/docs/hooks (accessed 2026-11-04).
+- D2 (R4): Shell commands are tokenised respecting quotes before any rule runs, so `git commit -m "explain --no-verify"` is not blocked. A hook that fails is not a block (Claude: any exit except 2; Antigravity: undocumented), so CI runs `guard --all` and `--commits`.
+- D3 (R4): A spec's `[test]` task tags a task that writes or runs a test. Struck items (`~~D1~~ → D2`) are ignored for coverage; the arrow target must exist. Length over 80 lines is a warning, never an error.
+- D4 (R5): `attribution` is written in its compatible object form (`commit` and `pr` empty, `sessionUrl` false) because `false` is rejected by Claude Code before 2.1.281 and the whole file is then skipped. Source: https://code.claude.com/docs/en/settings-reference.md#attribution (accessed 2026-11-04).
+- D5 (R3): Playbooks are plain Markdown routed from `AGENTS.md`, not skills or vendor rules, so both agents reach them without invocation. Antigravity loads `AGENTS.md` natively; Claude Code reads it through `CLAUDE.md`. Source: https://code.claude.com/docs/en/memory.md (accessed 2026-11-04).
+- D6 (R1, R2): Templates come from what the author's own repos share (browser-nav, job, lienzo), with project specifics stripped.
+
+### Trade-offs
+
+- Repo-owned playbooks may drift from the skill's newest copy; `update` shows the diff. In exchange they work without invoking a skill and the repo can edit them.
+- No Stop-time test run in v1: it would run a suite at every turn end. Left in `## Ideas`.
+
+## Tasks
+
+- [ ] 035/T001 [agent] `guard.mjs` core: quote-aware tokeniser and the commit, push and `.env` rules — covers R4, D1, D2
+- [ ] 035/T002 [agent][test] Table-driven tests for those rules, including quoted-text false positives — covers R4, D2
+- [ ] 035/T003 [agent] Spec lint and roadmap coherence — covers R4, D3
+- [ ] 035/T004 [agent][test] Table-driven tests: missing section, uncovered R, no `[test]` task, `[x]` without `verified:`, struck item, done with open tasks — covers R4, D3
+- [ ] 035/T005 [agent] Contract headers, `AGENTS.md` length, `--commits` range scan and `--all` — covers R4
+- [ ] 035/T006 [agent][test] Tests for headers, length thresholds and range scan — covers R4
+- [ ] 035/T007 [agent] Claude and Antigravity payload translators, output formats and `--record` — covers R4, R6, D1
+- [ ] 035/T008 [agent][test] Tests of both translators against payloads copied from the docs — covers R4, R6
+- [ ] 035/T009 [agent] Templates: eight contracts, `AGENTS.md` router and three playbooks, distilled from the author's repos — covers R2, R3, D5, D6
+- [ ] 035/T010 [agent][test] Contract suite over the templates: headers, no non-goals, one owner per command, router targets exist, 100-line cap — covers R2, R3
+- [ ] 035/T011 [agent] `SKILL.md` (init and update) and the adapter templates (`settings.json`, `hooks.json`, `CLAUDE.md`, CI workflow) — covers R1, R5, D4
+- [ ] 035/T012 [agent][test] Scaffold into a temp repo and assert `guard --all` passes, then fails after a deliberate break; adapter JSON is valid — covers R1, R5
+- [ ] 035/T013 [agent] Delete the four old skills, `bin/`, `package.json` bin and specs 021–034; shrink README, PRODUCT, ARCHITECTURE; record the pivot in `CHANGES.md` — covers R1
+- [ ] 035/T014 [human] Run `guard --record` inside real Claude Code and Antigravity sessions and confirm the payload fields and block behaviour — covers R6
+
+## Changes
+
+None yet.
