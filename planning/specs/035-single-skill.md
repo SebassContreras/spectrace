@@ -53,9 +53,12 @@ One skill, `spectrace`, scaffolds a project: eight single-responsibility root co
       verified: SKILL.md (82 lines) plus claude-settings.json, antigravity-hooks.json, CLAUDE.md and guard.yml; ${CLAUDE_PROJECT_DIR} in args confirmed in the hooks docs (exec form substitutes each args element)
 - [x] 035/T012 [agent][test] Scaffold into a temp repo and assert `guard --all` passes, then fails after a deliberate break; adapter JSON is valid — covers R1, R5
       verified: tests/skill.test.mjs: scaffold of all three kinds passes guard --all, breaks as expected; hooks run with the exact args from claude-settings.json give real exit code 2; 186/186 pass; 3 mutations fail 1, 1 and 4 tests
-- [ ] 035/T013 [agent] Delete the four old skills, `bin/`, `package.json` bin and specs 021–034; shrink README, PRODUCT, ARCHITECTURE; record the pivot in `CHANGES.md` — covers R1
-- [ ] 035/T015 [agent] Bring this repository to the new layout: its own eight contracts, `.claude/settings.json`, `.agents/hooks.json` and a CI workflow calling the guard from `skills/spectrace/assets/guard/` — covers R2, R5
-- [ ] 035/T016 [agent][test] A test runs `guard --all` on this repository and requires exit 0 — covers R2, R5
+- [x] 035/T013 [agent] Delete the four old skills, `bin/`, `package.json` bin and specs 021–034; shrink README, PRODUCT, ARCHITECTURE; record the pivot in `CHANGES.md` — covers R1
+      verified: skills/ holds only spectrace; bin/, package bin entry and specs 021-034 removed; README, PRODUCT, ARCHITECTURE rewritten; CHANGES.md records the pivot with sources; no stale references left
+- [x] 035/T015 [agent] Bring this repository to the new layout: its own eight contracts, `.claude/settings.json`, `.agents/hooks.json` and a CI workflow calling the guard from `skills/spectrace/assets/guard/` — covers R2, R5
+      verified: this repo now has its own eight contracts with Owns headers, .claude/settings.json, .agents/hooks.json and .github/workflows/guard.yml; guard --all: 0 errors, 0 warnings
+- [x] 035/T016 [agent][test] A test runs `guard --all` on this repository and requires exit 0 — covers R2, R5
+      verified: tests/repo.test.mjs runs the guard on this repository and checks that exactly one SKILL.md ships; 189/189 pass
 - [ ] 035/T014 [human] Run `guard --record` inside real Claude Code and Antigravity sessions and confirm the payload fields and block behaviour — covers R6
 
 ## Changes

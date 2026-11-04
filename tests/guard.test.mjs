@@ -192,6 +192,7 @@ const roadmapCases = [
   { name: 'todo without a file', text: table('todo'), specs: [], expect: ['error:roadmap-file'] },
   { name: 'in progress with everything done', text: table('in progress'), specs: [specOf(DONE)], expect: ['warn:roadmap-close'] },
   { name: 'in progress with work left', text: table('in progress'), specs: [specOf(DONE, OPEN)], expect: [] },
+  { name: 'in progress with only a human task left stays quiet', text: table('in progress'), specs: [specOf(DONE, { done: false, kind: 'human' })], expect: [] },
   { name: 'invalid status', text: table('blocked'), specs: [specOf(OPEN)], expect: ['error:roadmap-status'] },
   { name: 'duplicate row', text: `${table('todo')}| 009 | x | todo | — |\n`, specs: [specOf(OPEN)], expect: ['error:roadmap-duplicate'] },
   { name: 'spec file with no row', text: '| ID | Spec | Status | Depends on |\n|---|---|---|---|\n', specs: [specOf(OPEN)], expect: ['error:roadmap-missing'] },

@@ -466,8 +466,9 @@ export function checkRoadmap(text, specs, file = 'planning/roadmap.md') {
     if (row.status === 'todo' && tasks.some((t) => t.done)) {
       findings.push(error('roadmap-todo', `Spec ${row.id} has completed tasks; mark it in progress.`, where));
     }
-    if (row.status === 'in progress' && tasks.length > 0 && tasks.every((t) => t.done)) {
-      findings.push(warn('roadmap-close', `Spec ${row.id}: every [agent] task is done; mark it done.`, where));
+    const everything = entry ? entry.spec.tasks.filter((t) => !t.struck) : [];
+    if (row.status === 'in progress' && everything.length > 0 && everything.every((t) => t.done)) {
+      findings.push(warn('roadmap-close', `Spec ${row.id}: every task is done; mark it done.`, where));
     }
   }
   for (const [id, entry] of specs) {

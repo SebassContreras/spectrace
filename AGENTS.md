@@ -1,63 +1,44 @@
-# AGENTS.md
+# spectrace
 
-Instructions and operational constraints for AI coding agents.
+> Owns: the router to every other contract, the hard rules and the working flow · Not here: standards, commands, vision or history → see the contract the router names
 
-## 🚀 Quick Reference & Commands
-- **Environment:** Pure Markdown and Git. No runtime, daemons, or custom binaries needed.
-- **Verification:** Always verify changes locally before marking any task as complete.
-- **Clean Commits:** Use standard Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`). No rigid hook trailers or custom formats required.
+One agent skill that scaffolds a project's contracts, playbooks and guard for Claude Code and Antigravity.
 
-## 🧭 Repository Blueprint & Pointers
-This codebase uses a progressive disclosure model with clear separation of concerns across 7 root contracts:
-- **[PRODUCT.md](./PRODUCT.md):** Product vision, target audience, core user problems, and functional boundaries (including explicit non-goals). Read before proposing scope changes or features.
-- **[ARCHITECTURE.md](./ARCHITECTURE.md):** System topology, directory layout, layer boundaries, and structural patterns. Read before modifying structural code.
-- **[ENGINEERING.md](./ENGINEERING.md):** Code quality standards, craftsmanship principles (KISS/YAGNI, SRP, DRY, DIP/ACL, research when it pays, trade-offs), and stack conventions. Read before writing or refactoring modules.
-- **[DESIGN.md](./DESIGN.md):** Context-aware design: visual UI/UX tokens and component states for frontend apps, or content/editorial design guidelines for documentation/governance repos. Read before writing user interfaces or documentation.
-- **[TESTING.md](./TESTING.md):** Testing standards, contract invariants, input partitioning, table-driven tests, and test hygiene. Read before writing or auditing tests.
-- **[CHANGES.md](./CHANGES.md):** Historical log of architecture pivots, deprecated decisions, and migration reasons. Consult when altering existing behavior.
-- **[planning/roadmap.md](./planning/roadmap.md):** Ordered roadmap of specs, dependencies, current statuses, and backlog ideas.
+## Hard rules (always)
 
----
+1. Never add Claude as co-author or "Generated with Claude Code" to commits or pull requests. Commits are Conventional Commits with no trailers.
+2. Never bypass hooks (`--no-verify`), force-push `main`, or stage `.env` files or secrets.
+3. Never weaken, skip or delete a test to make a change pass.
+4. A task is done only after a check you ran passes; write the evidence as `verified: …` under the task.
+5. Code, comments, docs and commits in English. Talk to the user in Spanish.
+6. If a rule here is wrong, say so and propose the change. Do not work around it.
 
-## 📋 Task Execution Workflow
+## Before you act, open the contract
 
-Agents execute work incrementally using the specs in `planning/`:
+| You are about to… | Read first |
+|---|---|
+| write or change code | ENGINEERING.md |
+| add or move a module, layer or dependency | ARCHITECTURE.md |
+| write or change a test, or decide what "done" means | TESTING.md |
+| touch UI, copy, tone or an interface shape | DESIGN.md |
+| accept or propose a feature, or change scope | PRODUCT.md |
+| run, build, configure or release the project | OPERATIONS.md |
+| reverse or question an earlier decision | CHANGES.md |
+| plan a feature or a project | .agents/playbooks/plan.md |
+| fix a bug, change direction or record a decision | .agents/playbooks/change.md |
+| review a diff or close a spec | .agents/playbooks/review.md |
 
-1. **Find Next Task:**
-   - Open `planning/roadmap.md`. Find the first spec with status `todo` or `in progress` whose dependencies are `done`.
-   - Open the corresponding spec file in `planning/specs/NNN-name.md`.
-   - Take the first uncompleted agent task: `- [ ] NNN/TNNN [agent] ...`.
-   - Note: Skip `[human]` tasks and notify the user if one blocks execution.
+When you decide something, name the contract and section you used ("per ENGINEERING.md §2"). If none applied, say so.
 
-2. **Execute & Follow Constraints:**
-   - Implement only the scope described by the task.
-   - Respect structural boundaries in [ARCHITECTURE.md](./ARCHITECTURE.md), craftsmanship principles in [ENGINEERING.md](./ENGINEERING.md), design guidelines in [DESIGN.md](./DESIGN.md), and test requirements in [TESTING.md](./TESTING.md).
-   - Maintain documentation integrity: do not delete or alter comments/docstrings unrelated to your changes.
+## Working flow
 
-3. **Verify:**
-   - Run the relevant test suite, build, or type check.
-   - For `Verify:` tasks, perform the explicit check and record results under the task (e.g., `verified: <summary>`).
+1. `planning/roadmap.md` lists specs in order with a status. Take the first open `[agent]` task of the first spec that is not `done`.
+2. Read the contract the router names for that task. Implement only that task.
+3. Run the checks from TESTING.md. Mark `[x]`, add the `verified:` line, commit.
+4. Stuck? Add an indented `blocked: <reason>` under the task, commit it, tell the user and move on.
 
-4. **Close Task & Commit:**
-   - Mark the checkbox as completed: `- [x] NNN/TNNN [agent] ...`.
-   - If all tasks in the spec are complete, update the spec's status to `done` in `planning/roadmap.md`.
-   - Stage touched files by name and commit with a clear Conventional Commit message.
+The spec format and its rules are in `.agents/playbooks/plan.md`.
 
-### Small Fixes
+## Enforcement
 
-Never create a spec just to hold a fix, and keep no separate fix list — git is the record (see [CHANGES.md](./CHANGES.md), 2026-10-31).
-
-- **Trivial correction** (breaks no `R`/`D`, fits in one commit — typo, stale doc, wrong message, small defect): commit it directly as `fix:` or `docs:`, with a regression test if behavior changes. Not doing it now? One bullet under `## Ideas` in [planning/roadmap.md](./planning/roadmap.md).
-- **Bug against a requirement:** add a regression test task and a fix task to the spec that owns it. If that spec is `done`, set it back to `in progress` and note the reopening under its `## Changes`.
-- **The fix needs a different `R` or `D`:** it is a change of direction — use `spectrace-change`.
-
----
-
-## ⚠️ Critical Rules & Boundary Conditions
-1. **Never Bypass Checks:** Never use `--no-verify` or bypass lint/test checks.
-2. **Never Break Working Specs:** If an existing requirement needs to change, follow the protocol in [CHANGES.md](./CHANGES.md) instead of silently breaking old assumptions.
-3. **Keep `planning/` Clean:** Only actionable specs and the roadmap belong in `planning/`. Broad system design belongs in `ARCHITECTURE.md` and `ENGINEERING.md`.
-4. **When Blocked:** Add an indented `blocked: <reason>` line below the task, commit the note, inform the user, and move to unblocked work.
-5. **Enforce Engineering & Testing Invariants:** Adhere strictly to the Core Engineering Principles in [ENGINEERING.md](./ENGINEERING.md) (KISS/YAGNI, Anti-Corruption Layer, SRP, research only when the decision requires it, trade-offs) and the Testing Standards in [TESTING.md](./TESTING.md) (Table-Driven Testing, Input Partitioning, Clean Test Bodies).
-6. **No Speculative Abstractions:** Never introduce premature interfaces, adapters, or base classes for single-use cases. Abstract only for 2+ concrete consumers or vendors.
-7. **Context-Aware Design:** Never inject CSS tokens, component states, or HTML tags into non-UI repositories. Use [DESIGN.md](./DESIGN.md) for editorial and document standards in documentation or governance repos.
+`.agents/guard/guard.mjs` blocks rules 1 and 2 and lints specs in the Claude Code and Antigravity hooks and in CI. A hook that crashes does not block, so CI is the backstop: do not rely on the hook alone.

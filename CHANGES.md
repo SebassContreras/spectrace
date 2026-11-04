@@ -1,22 +1,26 @@
-# Architecture & Decision Changes
+# Changes
 
-This document maintains a permanent ledger of architectural pivots, deprecated decisions, and significant scope modifications. It prevents agents from reintroducing rejected patterns and provides context on why the system evolved.
+> Owns: changes of direction: what was replaced, when and why · Not here: release notes or commit history (git), plans (planning/), standing rules (the other contracts)
 
----
+A decision recorded here is revisable. It explains why we moved; it does not forbid moving again. Entries older than 2026-11-04 use the wording of the previous design, where some say "do not reintroduce"; read those as history.
 
-## 🔄 Change Protocol
+Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **Replaces**. Newest first.
 
-When an existing architectural design or requirement needs to change:
+## Ledger
 
-1. **Document the Rationale:** Add a new entry to the [Change Log](#change-log) below with date, what changed, why, and what was replaced.
-2. **Update the Spec:** In the affected spec (`planning/specs/NNN-name.md`):
-   - Strike through the obsolete item and point to the replacement (e.g., `- ~~D1: Sessions in localStorage~~ → D2`).
-   - Add explicit cleanup tasks to remove obsolete code, tests, and documentation.
-3. **Update Root Context:** If the change modifies system boundaries or visual guidelines, update [PRODUCT.md](./PRODUCT.md), [ARCHITECTURE.md](./ARCHITECTURE.md), or [DESIGN.md](./DESIGN.md) accordingly.
+### 2026-11-04 — One skill; the repository owns the workflow
 
----
-
-## 📜 Change Log
+- **What changed:**
+  - The four skills (init, plan, change, review) and `bin/spectrace-init.mjs` became one skill, `spectrace`, that only scaffolds. Planning, change handling and review are three playbooks the scaffold installs under `.agents/playbooks/`.
+  - OPERATIONS.md is the eighth contract, every contract opens with `> Owns: … · Not here: …`, and non-goals left PRODUCT.md.
+  - `guard.mjs` enforces the deterministic rules from Claude Code hooks, Antigravity hooks and CI. Claude attribution is switched off through the `attribution` setting.
+  - Specs 001–034 were retired, including the unbuilt overlay of 034.
+- **Why:**
+  - An audit of this repository and of seven repositories that use it showed the contracts were useful and customised, while the specs and the four skills were overhead. The CLI had defects and no tests: a UI design template as the default, the `AGENTS.md` block never installed where a file already existed, and a migration entry that could not be written.
+  - Skills are not reliably invoked, while a router in `AGENTS.md` is always read. Text rules are advisory, so rules that must always hold need hooks and CI.
+- **Replaces:** the four `spectrace-*` skills, the CLI, specs 021–034, and the "do not reintroduce" wording in favour of revisable decisions.
+- **Trade-offs:** repository-owned playbooks can drift from the newest copy in the skill, so update mode shows a diff. Hooks protect only Claude Code and Antigravity and a crashing hook does not block, so CI is the backstop.
+- **Sources:** https://code.claude.com/docs/en/hooks.md, https://code.claude.com/docs/en/settings-reference.md, https://antigravity.google/docs/hooks (accessed 2026-11-04).
 
 ### 2026-10-31 — Principle 7: Validate with Research, Propagated to Every Entry Point
 

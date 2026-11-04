@@ -1,22 +1,21 @@
 {
   "name": "spectrace",
-  "version": "0.32.0",
-  "description": "Spec-driven development for AI coding agents with decoupled root contracts and zero runtime friction.",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One agent skill that scaffolds a project's contracts, playbooks and guard for Claude Code and Antigravity.",
   "type": "module",
-  "bin": {
-    "spectrace-init": "./bin/spectrace-init.mjs"
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
-    "init": "node ./bin/spectrace-init.mjs"
+    "test": "node --test \"tests/*.test.mjs\""
   },
   "keywords": [
     "agentskills",
     "ai",
     "specs",
-    "governance",
-    "sdd",
     "claude",
-    "cursor"
+    "antigravity"
   ],
   "author": "SebassContreras",
   "license": "MIT"

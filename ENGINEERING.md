@@ -1,50 +1,21 @@
-# Engineering Principles & Code Standards
+# Engineering
 
-This document defines the engineering standards, code craftsmanship, and architectural quality principles for `spectrace` and its Agent Skills. AI agents must apply these principles proportionally to prevent code rot, over-engineering, and scope drift.
+> Owns: how code is written here, the principles and the stack conventions · Not here: commands (OPERATIONS.md), what to test and how (TESTING.md), the layer map (ARCHITECTURE.md)
 
----
+## Principles
 
-## ⚙️ Core Engineering Principles
+1. **KISS / YAGNI.** Build for today's need. Add an interface, adapter or abstraction only with 2+ concrete uses, 2+ implementations or a real test seam. Simple beats clever.
+2. **One responsibility.** A file, module or function does one thing. If it does two unrelated things, split it.
+3. **Compose, don't inherit.** Share logic through small functions and injected dependencies, not class hierarchies. A rule applied in two places lives in one function both call.
+4. **Isolate vendors when it pays.** Wrap a third-party SDK or external API behind a project-owned interface when there are 2+ vendors or a test needs a seam; otherwise call it directly. Domain code never imports transport or persistence.
+5. **Follow the stack.** Use the language and framework's idiomatic conventions and match the existing code before adding a new style. Casing: `kebab-case` files, `PascalCase` types, `camelCase` functions and variables, `UPPER_SNAKE_CASE` constants.
+6. **Write down trade-offs.** A significant choice records its pros, cons and mitigation where the decision lives: the spec's Design, a code comment or CHANGES.md.
+7. **Research only when it changes the decision.** Look it up when the choice is hard to reverse, depends on a fact outside the repo, or two options tie on a fact. Prefer the official specification or docs and cite `Source: <url> (accessed YYYY-MM-DD)`. Do not research what a contract already says or what running it settles.
+8. **Docs travel with behavior.** A change of behavior updates the contract or doc that describes it in the same task.
 
-### 1. KISS / YAGNI — No Over-Engineering
-- Apply every principle with proportionality.
-- Do not create premature interfaces, adapters, or abstractions for a single use case or a hypothetical future.
-- Introduce an abstraction **only** when there are 2+ concrete uses, 2+ distinct vendors/implementations, or when automated testing genuinely requires a boundary seam.
-- **Simple > clever:** Prefer readable, straightforward code over complex metaprogramming or speculative design patterns.
+## This project
 
-### 2. SRP / Separation of Concerns
-- One file / module / class = one single responsibility.
-- Maximize cohesion, minimize coupling. If a unit does two unrelated things, split it cleanly.
-- Keep business domain logic, data persistence, and transport/presentation layers strictly separated.
-
-### 3. DRY via Composition, Not Inheritance
-- Avoid code duplication by extracting shared logic into small, injectable utilities, services, or helper functions.
-- Avoid deep inheritance hierarchies. Default to **composition + dependency injection**.
-
-### 4. Service Layer + Anti-Corruption / Dependency Inversion (DIP)
-- Never call third-party libraries, vendor SDKs, or external APIs directly from domain business logic.
-- Place an anti-corruption layer in `services/` or `adapters/` declaring your own project-scoped interface wrapper.
-- Inject that interface into domain logic. Vendors must be swappable without altering domain code.
-
-### 5. Follow the Stack's Standards
-- Strictly adhere to official conventions, idiomatic patterns, and style guides of the language and framework in use.
-- Harmonize with the existing codebase before introducing external stylistic preferences.
-- Standard casing:
-  - `kebab-case`: files, directories, Markdown documents.
-  - `PascalCase`: classes, types, interfaces, React components.
-  - `camelCase`: functions, methods, variables, properties.
-  - `UPPER_SNAKE_CASE`: true constants, configuration globals, enum keys.
-
-### 6. Document Trade-offs
-- Every significant technical choice has trade-offs.
-- Document pros, cons, and active mitigations directly in the relevant spec, code comments, or [CHANGES.md](./CHANGES.md).
-
-### 7. Validate with Research — Only When It Changes the Decision
-- Research is not a ritual. Look it up only when at least one holds:
-  - the choice is hard to reverse (file format, protocol, public surface, contract shape);
-  - the answer is a fact outside this repository (version behaviour, platform limits, licence terms, API quotas, specification rules such as agentskills.io);
-  - two credible options tie and the tie-break is factual, not stylistic.
-- Do not research what a root contract already states, what the stack's own documentation defines, or a local, reversible change you can settle by running it.
-- Source order: official specification or documentation, then maintainer issue or release notes, then vendor blog. One or two sources per question; stop when a primary source settles it.
-- Cite what you used where the decision lives — `D<n>` in the spec, a code comment, or `CHANGES.md` — as `Source: <url> (accessed YYYY-MM-DD)`.
-- A non-obvious claim that could have a source and has none is a review finding.
+- JavaScript ES modules on Node 20 or later, no dependencies and no build step.
+- Docs, templates and commit messages in English; chat with the user in Spanish.
+- No shell scripts for hooks or checks: Node only, so Windows behaves like Linux.
+- A rule enters a template after a failure observed in a real project, not by adding principles up front.

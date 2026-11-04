@@ -1,49 +1,26 @@
-# Documentation & Content Design Guidelines
+# Design
 
-This document governs editorial style, Markdown formatting, visual conventions, and content hierarchy for `spectrace`. As a framework built on pure Markdown and Agent Skills, its design focuses on document clarity, scannable information architecture, and rigorous schema compliance.
+> Owns: how the content reads and is laid out: audience, voice, structure, terminology and format · Not here: how the project is built or run (ARCHITECTURE.md, OPERATIONS.md), code rules (ENGINEERING.md)
 
----
+## Audience and voice
 
-## 📝 Document Hierarchy & Structure
+Developers and coding agents reading a contract in the middle of a task. Imperative and concise, one instruction per line, no filler and no speculation.
 
-### 1. Spec & Document Layout
-- **Single H1 (`#`):** Exactly one H1 per file, strictly matching the spec ID/name (e.g., `# 030 — separation-of-concerns...`) or document title.
-- **Sectioning (H2 `##` & H3 `###`):** Use standardized sections:
-  - For specs: `## Goal`, `## Requirements`, `## Design`, `## Tasks`, `## Changes`.
-  - For governance docs: `## Overview`, `## Principles`, `## Invariants`.
-- **Task Formatting:** Strictly follow `- [ ] NNN/TNNN [agent|human] <action> — covers <R/D>`. Completed tasks use `- [x]`.
+## Structure
 
-### 2. Skill Frontmatter Specification
-Every skill in `skills/` must follow the Agent Skills standard:
-- Valid YAML frontmatter enclosed in `---`.
-- Required fields: `name` (matching directory name in kebab-case) and `description` (under 1024 characters, clear trigger phrases).
-- Single H1 matching `name` followed by clear step-by-step procedures (`## Step 1`, `## Step 2`).
+- Every contract opens with `> Owns: … · Not here: …`.
+- Specs use Goal, Requirements, Design (optional), Tasks and Changes.
+- Skill and playbook procedures use numbered steps.
 
----
+## Terminology
 
-## 🎨 Visual Formatting & Alert Callouts
+- **contract**: a root Markdown file with one responsibility.
+- **playbook**: a repository-owned procedure under `.agents/playbooks/`.
+- **guard**: the enforcement script, `guard.mjs`.
+- **spec**: a thin slice with requirements and tasks.
 
-### 1. Alert Callouts
-Use standard GitHub markdown alerts sparingly to emphasize critical information:
-- `> [!NOTE]`: Contextual background or non-critical hints.
-- `> [!TIP]`: Workflow efficiencies and shortcuts.
-- `> [!IMPORTANT]`: Essential prerequisites or constraints.
-- `> [!WARNING]`: Breaking changes or deprecated behaviors.
-- `> [!CAUTION]`: Destructive actions.
+Do not call these a "rules file", a "workflow" or a "linter".
 
-### 2. Diagrammatic Conventions (Mermaid)
-- Prefer `flowchart TD` or `flowchart LR` for workflows and architectures.
-- Keep diagrams readable: maximum 10–12 nodes per diagram.
-- Always quote node labels containing special characters (e.g., `id["Node (detail)"]`).
+## Format
 
----
-
-## 🗣️ Tone, Voice & Language
-
-### 1. Voice & Tone
-- **Imperative & Action-Oriented:** For instructions and task definitions, write in clear imperative form ("Create template", "Update skill", "Verify output").
-- **Concise & Direct:** Omit pleasantries, conversational filler, and speculative statements.
-- **Traceable:** Every decision, requirement, or change must link to its rationale.
-
-### 2. Language Standard
-- All framework code, skill definitions, templates, and specs in `spectrace` are written in **English**.
+GitHub-flavoured Markdown in English, `kebab-case` file names, tables for routers and comparisons, fenced blocks for examples.

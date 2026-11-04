@@ -1,54 +1,20 @@
-# Product Vision & Scope
+# Product
 
-This document defines the product purpose, target audience, core user problems, and functional boundaries for Spectrace. AI agents must consult this document to understand the *why* and *what* before proposing features or modifying scope.
+> Owns: why the project exists, who it serves and what it does today · Not here: status or order of work (planning/roadmap.md), technical choices (ARCHITECTURE.md), standards (ENGINEERING.md)
 
----
+## Vision
 
-## 1. Value Proposition & Vision
+One agent skill that scaffolds the contracts, playbooks and guard a project needs, so coding agents decide well and cannot skip the rules that must always hold. It works with Claude Code and Antigravity, for software and non-software projects.
 
-Spectrace is a lightweight, spec-driven development framework designed for developers collaborating with AI coding agents. It bridges the gap between high-level human planning and autonomous execution by establishing durable governance contracts at the repository root and managing actionable execution slices in `planning/`.
+## Users and the problem
 
-Unlike traditional planning tools or rigid git-enforcement mechanisms, Spectrace operates entirely through standard Markdown and Git—requiring zero runtime, no daemons, and no fragile shell hooks.
+- **A developer starting a project with coding agents.** Every new project means rewriting the same rules (principles, tests, specs, way of working), and the agent forgets or skips them.
+- **The same developer, mid-project.** Written rules are advisory text. The ones that must always hold, such as never adding Claude as co-author, need a hook or a CI check behind them.
 
----
+## Capabilities
 
-## 2. Target Audience & Personas
-
-- **Autonomous Agent Operators:** Developers utilizing AI coding assistants (Claude Code, Cursor, Copilot, Antigravity, Windsurf) to execute complex, multi-step features.
-- **Fast-Iterating Engineers:** Developers who frequently pivot, discover new constraints mid-development, and need to change their architectural direction without accumulating technical debt.
-- **Small Teams & Solo Builders:** Builders who want structured, traceable engineering discipline without setting up heavy project management software.
-
----
-
-## 3. Core Problems Solved
-
-| Problem | How Spectrace Solves It |
-|---|---|
-| **Context Loss & Agent Hallucinations** | Establishes durable root contracts (`PRODUCT.md`, `ARCHITECTURE.md`, `DESIGN.md`, `CHANGES.md`) discovered instantly by AI tools through progressive disclosure. |
-| **Execution Blockers & Hook Failures** | Eliminates shell git hooks, trailer checkers, and CI scripts that break on cross-platform environments (Windows CRLF, missing sh permissions). |
-| **Code Rot & Premature Over-Engineering** | Enforces the 10 core engineering and testing principles in `DESIGN.md` and provides automated read-only audits via `spectrace-review`. |
-| **Stale Code from Pivots** | When a decision changes, the change protocol strikes obsolete requirements (`~~D1~~ → D2`), records rationale in `CHANGES.md`, and schedules explicit cleanup tasks to eliminate dead code. |
-| **Monolithic, Unverifiable Specs** | Slices features into thin, demonstrable increments ending in running software, verified via simple Markdown checkboxes (`[ ]` / `[x]`). |
-
----
-
-## 4. Key Functional Capabilities
-
-1. **Foundational Spec Generation (`spectrace-plan`):**
-   - Ingests high-level plans or conversational briefs and automatically outputs root contracts, `planning/roadmap.md`, and thin-slice specs in `planning/specs/`.
-2. **Adaptive Change Management (`spectrace-change`):**
-   - Classifies pivots, bugs, small fixes, and new requirements.
-   - Routes trivial corrections straight to a Conventional Commit (no spec, no fix list) and bugs into the spec that owns the broken requirement.
-   - Updates `CHANGES.md`, strikes deprecated decisions, and generates regression and cleanup tasks.
-3. **Architectural & Quality Auditing (`spectrace-review`):**
-   - Conducts objective, read-only audits against the 10 core engineering and testing principles in `DESIGN.md` (KISS/YAGNI, SRP, Anti-Corruption Layer, Invariant Testing, Input Partitioning, Clean Table Tests) before closing specs or merging PRs.
-4. **Progressive Disclosure Execution Protocol:**
-   - Provides a streamlined `< 150` line operational guide in `AGENTS.md` guiding agents to read only the specific context they need for a given task.
-
----
-
-## 5. Non-Goals & Boundaries
-
-- **Not an Issue Tracker:** Spectrace does not replace GitHub Issues, Linear, or Jira for team sprint planning; it governs code-level execution within a repository.
-- **Not a Runtime Linter or Daemon:** Spectrace does not run background processes or require custom CLI binaries to be installed.
-- **Not a Rigid Git Enforcer:** Spectrace avoids brittle pre-commit locks or commit-message rejections. Tracking relies on verifiable tests and Markdown state.
+- Scaffolds eight single-responsibility contracts, an `AGENTS.md` router, a roadmap and three playbooks (plan, change, review) into any project.
+- Fits the contracts to the project by reading the repository, and writes only what the repository cannot show.
+- Blocks Claude attribution in commits and pull requests, `--no-verify`, force-push to `main` and staging `.env` files, from Claude Code and Antigravity hooks.
+- Lints specs and the roadmap: every requirement is covered by a task and by a `[test]` task, every checked task carries evidence, and the roadmap matches the specs.
+- Runs the same checks in CI, the one layer an agent cannot skip.
