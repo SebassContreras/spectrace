@@ -8,6 +8,15 @@ Entry format: `### YYYY-MM-DD — Title`, then **What changed**, **Why** and **R
 
 ## Ledger
 
+### 2026-11-04 — Stricter vendor isolation, "when in doubt" and research restored
+
+- **What changed:**
+  - `ENGINEERING.md` principle 4 now says business logic does not call a third-party SDK or API directly, with one exception: a stable, single-use helper, stated in a comment. "When in doubt" (small interface, pure function, injected dependency) is principle 5 again. The research principle became "Confirm with a source": look it up whenever the approach rests on a fact outside the repo. Principles renumber to 9; the template and this repository change together.
+  - `review.md` checks the new wording: a vendor called directly with no stated exception, a choice resting on an outside fact with no cited source.
+- **Why:** the earlier condensing made vendor wrapping and research conditional on conditions the agent rarely meets at the start of a project, so the original intent (swappable vendors, decisions checked against a source) was lost.
+- **Replaces:** principles 4 and 7 of the 2026-11-04 version ("when it pays", "only when it changes the decision").
+- **Trade-offs:** more adapters and more lookups at the start; the single-use exception and "skip what a contract already says" keep them proportionate.
+
 ### 2026-11-04 — No hooks: the skill copies files and suggests the rest
 
 - **What changed:**
